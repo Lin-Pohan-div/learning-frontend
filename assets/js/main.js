@@ -1,3 +1,5 @@
+import axios from "axios";
+
 let loginForm = document.getElementById("loginForm");
 
 if (!loginForm) {
@@ -26,11 +28,12 @@ if (!loginForm) {
       .post("/api/auth/login", inputPost)
       .then(function (resp) {
         console.log(resp.data);
+        alert("OK");
         if (resp && resp.data && resp.data.success === false) {
           alert("帳號或密碼錯誤");
           return;
         }
-        window.location.href = "index.html";
+        window.location.href = "/index.html";
       })
       .catch(function (err) {
         const status = err?.response?.status;
