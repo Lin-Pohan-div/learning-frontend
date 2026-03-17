@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KiwiTutor | 老師專屬後台</title>
+    
+    <!-- 載入 Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- 載入字體與 Material Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    
+    <!-- 本頁專屬 CSS -->
+    <style>
+        :root {
+            --brand-yellow: #FFD000;
+            --brand-navy: #1A2238;
+            --brand-bg: #F8FAFC;
+            --text-main: #334155;
+            --text-light: #94A3B8;
+        }
+
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: var(--brand-bg);
+            color: var(--text-main);
+        }
+
+        /* Material Icons 微調 */
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400; font-size: 22px; }
+        .icon-filled { font-variation-settings: 'FILL' 1 !important; }
+
+        /* 左側導覽列樣式 */
+        .sidebar { width: 260px; background-color: #fff; border-right: 1px solid #f1f5f9; }
+        
+        .nav-item-link {
+            display: flex; align-items: center; gap: 12px; padding: 14px 24px;
+            color: var(--text-light); font-weight: 600; text-decoration: none;
+            transition: all 0.2s; position: relative; border-radius: 0 16px 16px 0;
+            margin-right: 16px; margin-bottom: 4px;
+        }
+        
+        .nav-item-link:hover { background-color: #f8fafc; color: var(--text-main); }
+        
+        .nav-item-link.active {
+            background-color: #FFFbeb; /* 淺黃底色 */
+            color: var(--text-main);
+        }
+        
+        .nav-item-link.active::before {
+            content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+            width: 4px; background-color: var(--brand-yellow); border-radius: 0 4px 4px 0;
+        }
+
+        /* 頂部歡迎卡片 (深藍色) */
+        .welcome-card {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border-radius: 24px; color: white; position: relative; overflow: hidden;
+        }
+
+        /* 數據卡片與共用卡片樣式 */
+        .stat-card {
+            background-color: #fff; border-radius: 20px; border: 1px solid #f1f5f9;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.02); padding: 24px; transition: transform 0.2s;
+        }
+        .stat-card:hover { transform: translateY(-2px); }
+
+        .stat-trend {
+            display: inline-flex; align-items: center; gap: 4px;
+            font-size: 13px; font-weight: 700; padding: 4px 10px; border-radius: 8px;
+        }
+        .trend-up { background-color: #ecfdf5; color: #10b981; }
+
+        /* 課程列表區塊 */
+        .course-card {
+            background: #fff; border-radius: 20px; border: 1px solid #f1f5f9;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.02);
+            overflow: hidden;
+        }
+        .course-item {
+            padding: 20px 24px; border-bottom: 1px solid #f1f5f9;
+            display: flex; align-items: center; gap: 20px;
+        }
+        .course-item:last-child { border-bottom: none; }
+        
+        /* 標籤徽章 */
+        .level-badge {
+            background-color: #e0e7ff; color: #4f46e5; font-size: 11px;
+            font-weight: 700; padding: 4px 8px; border-radius: 6px;
+        }
+
+        /* 按鈕樣式 */
+        .btn-yellow {
+            background-color: var(--brand-yellow); color: #1e293b; font-weight: 700;
+            border: none; border-radius: 12px; padding: 10px 20px; transition: all 0.2s;
+        }
+        .btn-yellow:hover { background-color: #e6bc00; }
+        
+        .btn-white {
+            background-color: #fff; color: #1e293b; font-weight: 700;
+            border: none; border-radius: 12px; padding: 10px 20px;
+        }
+
+        /* 捲軸美化 */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    </style>
+</head>
+<body class="d-flex vh-100 overflow-hidden">
+
+    <!-- ================= 左側導覽列 ================= -->
+    <aside class="sidebar d-none d-lg-flex flex-column z-1 shadow-sm h-100">
+        <!-- Logo -->
+        <div class="p-4 d-flex align-items-center gap-2 mb-2">
+            <div class="bg-warning text-dark rounded-3 d-flex align-items-center justify-content-center fw-bold fs-5" style="width: 36px; height: 36px;">
+                K
+            </div>
+            <div>
+                <div class="fw-bold fs-5 text-dark lh-1 mb-1">KiwiTutor</div>
+                <div class="text-muted" style="font-size: 11px; font-weight: 600;">老師專用後台</div>
+            </div>
+        </div>
+
+        <!-- 導覽選單 -->
+        <nav class="flex-grow-1 d-flex flex-column">
+            <a href="/teacher-dashboard.html" class="nav-item-link active">
+                <span class="material-symbols-outlined icon-filled text-warning">grid_view</span> 控制台
+            </a>
+            <a href="/teacher-schedule.html" class="nav-item-link">
+                <span class="material-symbols-outlined">calendar_month</span> 我的課表
+            </a>
+            <a href="/teacher-courses.html" class="nav-item-link">
+                <span class="material-symbols-outlined">menu_book</span> 我的課程
+            </a>
+            <a href="/teacher-income.html" class="nav-item-link">
+                <span class="material-symbols-outlined">account_balance_wallet</span> 收入概覽
+            </a>
+            <a href="/teacher-messages.html" class="nav-item-link">
+                <span class="material-symbols-outlined">chat_bubble</span> 訊息中心
+            </a>
+            <a href="/teacher-settings.html" class="nav-item-link">
+                <span class="material-symbols-outlined">settings</span> 設定
+            </a>
+        </nav>
+
+        <!-- 底部個人資訊 -->
+        <div class="p-4 border-top d-flex align-items-center justify-content-between" style="cursor: pointer;">
+            <div class="d-flex align-items-center gap-3">
+                <img src="https://ui-avatars.com/api/?name=Sunny+Chen&background=facc15&color=fff" alt="Sunny" class="rounded-circle" width="40" height="40">
+                <div>
+                    <div class="fw-bold text-dark fs-6 lh-1 mb-1">Sunny Chen</div>
+                    <div class="text-muted" style="font-size: 12px; font-weight: 600;">金牌講師</div>
+                </div>
+            </div>
+            <span class="material-symbols-outlined text-muted">logout</span>
+        </div>
+    </aside>
+
+    <!-- ================= 右側主內容區 ================= -->
+    <main class="flex-grow-1 overflow-auto p-4 p-md-5">
+        <div class="container-fluid mx-auto" style="max-width: 1200px;">
+            
+            <!-- 1. 頂部深藍色歡迎卡片 -->
+            <div class="welcome-card p-4 p-md-5 mb-4 d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-4 shadow-sm">
+                <div>
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <span class="material-symbols-outlined text-warning icon-filled fs-4">partly_cloudy_day</span>
+                        <span class="badge bg-white text-dark rounded-pill px-3 py-1 fw-bold">午安</span>
+                    </div>
+                    <h1 class="fw-bold fs-2 mb-2">Sunny 老師，午安！</h1>
+                    <h2 class="fw-bold fs-3 mb-3">今天有 <span class="text-warning">2 堂課</span> 喔！</h2>
+                    <p class="text-white-50 mb-0">讓我們一起開啟活力滿滿的一天！Keep shining!</p>
+                </div>
+                
+                <div class="d-flex gap-3 flex-column flex-sm-row">
+                    <button class="btn-yellow d-flex align-items-center justify-content-center gap-2 shadow-sm">
+                        <span class="material-symbols-outlined">add_circle</span> 發布新時段
+                    </button>
+                    <button class="btn-white d-flex align-items-center justify-content-center gap-2 shadow-sm position-relative">
+                        <span class="material-symbols-outlined text-muted">chat</span> 查看待處理評價
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-2 border-white">
+                            2
+                        </span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 2. 三大數據統計區塊 -->
+            <div class="row g-4 mb-4">
+                <!-- 本月收入 -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="stat-card h-100 border-bottom border-4 border-success">
+                        <div class="text-muted fw-bold mb-2">本月收入</div>
+                        <div class="d-flex justify-content-between align-items-end">
+                            <div class="fs-2 fw-bold text-dark">$24,500</div>
+                            <span class="material-symbols-outlined text-success opacity-25" style="font-size: 48px; margin-right: -10px;">trending_up</span>
+                        </div>
+                        <div class="stat-trend trend-up mt-2">
+                            <span class="material-symbols-outlined" style="font-size: 16px;">arrow_outward</span> +15%
+                        </div>
+                    </div>
+                </div>
+                <!-- 本週課堂數 -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="stat-card h-100 border-bottom border-4 border-primary">
+                        <div class="text-muted fw-bold mb-2">本週課堂數</div>
+                        <div class="d-flex justify-content-between align-items-end">
+                            <div class="fs-2 fw-bold text-dark">12 <span class="fs-5 text-muted">堂</span></div>
+                            <span class="material-symbols-outlined text-primary opacity-25" style="font-size: 48px; margin-right: -10px;">calendar_today</span>
+                        </div>
+                        <div class="stat-trend trend-up mt-2 text-primary bg-primary bg-opacity-10">
+                            <span class="material-symbols-outlined" style="font-size: 16px;">arrow_outward</span> +2 比上週
+                        </div>
+                    </div>
+                </div>
+                <!-- 學生好評數 -->
+                <div class="col-lg-4 col-md-12">
+                    <div class="stat-card h-100 border-bottom border-4 border-warning">
+                        <div class="text-muted fw-bold mb-2">學生好評數</div>
+                        <div class="d-flex justify-content-between align-items-end">
+                            <div class="fs-2 fw-bold text-dark">4.9 <span class="fs-5 text-muted">/ 5.0</span></div>
+                            <span class="material-symbols-outlined text-warning opacity-25 icon-filled" style="font-size: 48px; margin-right: -10px;">star</span>
+                        </div>
+                        <div class="stat-trend trend-up mt-2 text-success bg-success bg-opacity-10">
+                            <span class="material-symbols-outlined" style="font-size: 16px;">arrow_outward</span> Top 5%
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. 下半部：課程列表與系統通知 -->
+            <div class="row g-4">
+                
+                <!-- 左側：即將開始的課程 -->
+                <div class="col-xl-8">
+                    <div class="course-card">
+                        <div class="p-4 border-bottom d-flex justify-content-between align-items-center bg-white">
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="bg-warning rounded-pill" style="width: 4px; height: 16px;"></div>
+                                <h3 class="fs-5 fw-bold mb-0 text-dark">即將開始的課程</h3>
+                            </div>
+                            <a href="#" class="text-decoration-none text-muted fw-bold small d-flex align-items-center gap-1">
+                                查看全部行程 <span class="material-symbols-outlined" style="font-size: 18px;">arrow_forward</span>
+                            </a>
+                        </div>
+                        
+                        <div>
+                            <!-- 課程 1 (即將開始) -->
+                            <div class="course-item">
+                                <div class="position-relative d-none d-sm-block">
+                                    <img src="https://ui-avatars.com/api/?name=Leo&background=e2e8f0&color=475569" class="rounded-circle" width="56" height="56">
+                                    <span class="position-absolute bottom-0 end-0 bg-success border border-2 border-white rounded-circle p-1 d-flex">
+                                        <span class="material-symbols-outlined text-white" style="font-size: 10px;">videocam</span>
+                                    </span>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                                        <h4 class="fw-bold fs-6 mb-0 text-dark">趣味發音課 - 基礎</h4>
+                                        <span class="level-badge">Level 1</span>
+                                    </div>
+                                    <div class="d-flex flex-wrap align-items-center gap-3 text-muted small fw-medium">
+                                        <span class="d-flex align-items-center gap-1"><span class="material-symbols-outlined" style="font-size: 16px;">star</span> 學生：小明 (Leo)</span>
+                                        <span class="d-flex align-items-center gap-1 text-danger fw-bold"><span class="material-symbols-outlined" style="font-size: 16px;">schedule</span> 16:00 - 16:50 (即將開始)</span>
+                                    </div>
+                                </div>
+                                <button class="btn-yellow d-flex align-items-center gap-2 px-3 px-sm-4 shadow-sm text-nowrap">
+                                    <span class="material-symbols-outlined">videocam</span> <span class="d-none d-sm-inline">進入教室</span>
+                                </button>
+                            </div>
+
+                            <!-- 課程 2 (尚未開放) -->
+                            <div class="course-item bg-light">
+                                <div class="position-relative opacity-75 d-none d-sm-block">
+                                    <img src="https://ui-avatars.com/api/?name=Sophie&background=e2e8f0&color=475569" class="rounded-circle" width="56" height="56">
+                                </div>
+                                <div class="flex-grow-1 opacity-75">
+                                    <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                                        <h4 class="fw-bold fs-6 mb-0 text-dark">生活英語會話 - 購物篇</h4>
+                                        <span class="level-badge" style="background-color:#f3e8ff; color:#9333ea;">Level 3</span>
+                                    </div>
+                                    <div class="d-flex flex-wrap align-items-center gap-3 text-muted small fw-medium">
+                                        <span class="d-flex align-items-center gap-1"><span class="material-symbols-outlined" style="font-size: 16px;">star</span> 學生：Sophie</span>
+                                        <span class="d-flex align-items-center gap-1"><span class="material-symbols-outlined" style="font-size: 16px;">schedule</span> 19:00 - 19:50</span>
+                                    </div>
+                                </div>
+                                <button class="btn btn-light text-muted fw-bold d-flex align-items-center gap-2 px-3 px-sm-4 border text-nowrap" disabled>
+                                    <span class="material-symbols-outlined">lock</span> <span class="d-none d-sm-inline">尚未開放</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 右側：系統通知 -->
+                <div class="col-xl-4">
+                    <div class="course-card h-100 bg-white">
+                        <div class="p-4 border-bottom d-flex align-items-center gap-2">
+                            <div class="bg-primary rounded-pill" style="width: 4px; height: 16px;"></div>
+                            <h3 class="fs-5 fw-bold mb-0 text-dark">系統通知</h3>
+                        </div>
+                        <div class="p-4 d-flex flex-column gap-4">
+                            
+                            <!-- 通知 1 -->
+                            <div class="d-flex gap-3">
+                                <div class="bg-warning bg-opacity-10 text-warning rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width: 40px; height: 40px;">
+                                    <span class="material-symbols-outlined icon-filled" style="font-size: 20px;">star</span>
+                                </div>
+                                <div>
+                                    <div class="fw-bold text-dark small mb-1">小明媽媽給了你 5 星評價！</div>
+                                    <p class="text-muted small mb-1">「老師很有耐心，孩子很喜歡！」</p>
+                                    <div class="text-muted" style="font-size: 11px;">2 小時前</div>
+                                </div>
+                            </div>
+
+                            <!-- 通知 2 -->
+                            <div class="d-flex gap-3">
+                                <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width: 40px; height: 40px;">
+                                    <span class="material-symbols-outlined" style="font-size: 20px;">notifications</span>
+                                </div>
+                                <div>
+                                    <div class="fw-bold text-dark small mb-1">下週平台維護公告</div>
+                                    <p class="text-muted small mb-1">將於週二凌晨進行系統升級...</p>
+                                    <div class="text-muted" style="font-size: 11px;">昨天</div>
+                                </div>
+                            </div>
+
+                        </div>
+                        <div class="p-3 border-top text-center bg-light">
+                            <button class="btn btn-light w-100 fw-bold text-muted small border-0 bg-transparent">查看所有通知</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- JS 檔案載入 -->
+    <!-- <script type="module" src="./assets/js/main.js"></script> -->
+
+</body>
+</html>

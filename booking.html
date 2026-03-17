@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>【框線稿】預約結帳頁面</title>
+</head>
+<body style="font-family: sans-serif; color: #333; line-height: 1.5; padding: 20px; background-color: #f5f5f5;">
+
+    <header style="border: 2px solid #000; padding: 15px; margin-bottom: 20px; text-align: center; background-color: #fff;">
+        <h1>預約結帳頁面 (Wireframe)</h1>
+    </header>
+
+    <div style="display: flex; gap: 20px; align-items: flex-start;">
+
+        <main style="flex: 6.5; display: flex; flex-direction: column; gap: 20px;">
+
+            <section style="border: 1px solid #666; padding: 20px; background-color: #fff;">
+                <div style="display: flex; gap: 20px; align-items: flex-start;">
+                    <div style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
+                        <div style="width: 100px; height: 100px; border: 1px dashed #999; border-radius: 50%; display: flex; align-items: center; justify-content: center; background-color: #eee;">
+                            [大頭貼]
+                        </div>
+                        <span style="border: 1px solid #ccc; padding: 2px 8px; font-size: 0.8em;">⭐ 4.9 (120則)</span>
+                    </div>
+
+                    <div style="flex-grow: 1;">
+                        <h2 style="margin: 0 0 5px 0;">課程名稱</h2>
+                        <p style="margin: 0 0 10px 0; color: #666;">Sunny Chen 老師</p>
+                        
+
+                        <p style="border: 1px dashed #999; padding: 10px; background-color: #fafafa; margin: 0;">
+                            課程介紹
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <section style="border: 1px solid #666; padding: 20px; background-color: #fff;">
+                
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #ccc; padding-bottom: 10px;">
+                    <div>
+                        <h3 style="margin: 0;">📅 請選擇您想預約的時段</h3>
+                        <p style="margin: 0; font-size: 0.8em; color: #666;">可多選，每格為 1 小時</p>
+                    </div>
+                    <div style="border: 1px solid #ccc; padding: 5px 10px;">
+                        <strong>2023年 10月</strong>
+                        <button>&lt;</button>
+                        <button>&gt;</button>
+                    </div>
+                </div>
+
+                <div style="overflow-x: auto;">
+                    <div style="min-width: 600px;">
+                        
+                        <div style="display: grid; grid-template-columns: 80px repeat(7, 1fr); gap: 10px; margin-bottom: 10px; text-align: center;">
+                            <div></div>
+                            <div>週一<br><strong>23</strong></div>
+                            <div>週二<br><strong>24</strong></div>
+                            <div style="border: 2px solid #000;">週三<br><strong>25</strong> (今日)</div>
+                            <div>週四<br><strong>26</strong></div>
+                            <div>週五<br><strong>27</strong></div>
+                            <div>週六<br><strong>28</strong></div>
+                            <div>週日<br><strong>29</strong></div>
+                        </div>
+
+                        <div style="display: flex; flex-direction: column; gap: 10px;">
+                            
+                            <div style="display: grid; grid-template-columns: 80px repeat(7, 1fr); gap: 10px; align-items: center;">
+                                <div style="text-align: right; padding-right: 10px; font-size: 0.9em; color: #666;">09:00</div>
+                                <button style="padding: 10px; border: 1px dashed #999;">可預約</button>
+                                <button style="padding: 10px; border: 1px dashed #999;">可預約</button>
+                                <div style="padding: 10px; border: 1px solid #ccc; background-color: #eee; text-align: center; font-size: 0.8em;">- (無班)</div>
+                                <button style="padding: 10px; border: 1px dashed #999;">可預約</button>
+                                <button style="padding: 10px; border: 2px solid #000; font-weight: bold;">☑ 已選擇</button>
+                                <div style="padding: 10px; border: 1px solid #ccc; background-color: #ddd; text-align: center; font-size: 0.8em;">已滿</div>
+                                <button style="padding: 10px; border: 1px dashed #999;">可預約</button>
+                            </div>
+
+                            <div style="display: grid; grid-template-columns: 80px repeat(7, 1fr); gap: 10px; align-items: center;">
+                                <div style="text-align: right; padding-right: 10px; font-size: 0.9em; color: #666;">10:00</div>
+                                <button style="padding: 10px; border: 1px dashed #999;">可預約</button>
+                                <div style="padding: 10px; border: 1px solid #ccc; background-color: #ddd; text-align: center; font-size: 0.8em;">已滿</div>
+                                <button style="padding: 10px; border: 1px dashed #999;">可預約</button>
+                                <button style="padding: 10px; border: 1px dashed #999;">可預約</button>
+                                <button style="padding: 10px; border: 1px dashed #999;">可預約</button>
+                                <button style="padding: 10px; border: 1px dashed #999;">可預約</button>
+                                <div style="padding: 10px; border: 1px solid #ccc; background-color: #eee; text-align: center; font-size: 0.8em;">- (無班)</div>
+                            </div>
+
+                            <div style="text-align: center; color: #999; padding: 10px;">... 更多時間列 ...</div>
+
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+        <aside style="flex: 3.5; border: 2px solid #000; padding: 20px; background-color: #fff; position: sticky; top: 20px;">
+            
+            <div style="border-bottom: 1px solid #ccc; padding-bottom: 15px; margin-bottom: 15px;">
+                <h3 style="margin: 0 0 5px 0;">5 堂正式課 (9折)</h3>
+                <p style="margin: 0; font-size: 0.8em; color: #666;">方案總價：NT$ 2,250</p>
+            </div>
+
+            <div style="min-height: 100px; border: 1px dashed #999; padding: 10px; margin-bottom: 20px; background-color: #fafafa;">
+                <p style="margin: 0 0 10px 0; font-size: 0.9em; font-weight: bold;">已選取的時段：</p>
+                
+                <div style="display: flex; justify-content: space-between; border: 1px solid #ccc; padding: 8px; margin-bottom: 5px; background-color: #fff;">
+                    <span style="font-size: 0.9em;">10/25 (三) 09:00 - 10:00</span>
+                    <button style="border: none; background: none; cursor: pointer;">❌</button>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; border: 1px solid #ccc; padding: 8px; margin-bottom: 5px; background-color: #fff;">
+                    <span style="font-size: 0.9em;">10/27 (五) 09:00 - 10:00</span>
+                    <button style="border: none; background: none; cursor: pointer;">❌</button>
+                </div>
+            </div>
+
+            <div style="border-top: 1px solid #ccc; padding-top: 15px;">
+                
+            
+
+                <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px;">
+                    <div>
+                        <p style="margin: 0; font-size: 0.8em; color: #666;">共選取 2 堂課</p>
+                        <p style="margin: 0; font-size: 0.8em; color: orange;">(剩餘 3 堂可選)</p>
+                    </div>
+                    <div style="text-align: right;">
+                        <p style="margin: 0; font-size: 0.7em; color: #666;">總計金額</p>
+                        <strong style="font-size: 1.5em;">NT$ 2,250</strong>
+                    </div>
+                </div>
+
+                <button style="width: 100%; padding: 15px; background-color: #000; color: #fff; font-weight: bold; font-size: 1.1em; border: none; cursor: pointer; margin-bottom: 15px;">
+                    前往結帳 👉
+                </button>
+
+                <div style="text-align: center; font-size: 0.7em; color: #666;">
+                    🔒 256-bit 加密結帳<br>
+                    🛡️ ECPay 綠界科技
+                </div>
+            </div>
+
+        </aside>
+
+    </div>
+
+</body>
+</html>
