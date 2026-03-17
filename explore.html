@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>【框線稿】探索好老師 (完整版含導覽列與Hover面板)</title>
+</head>
+<body style="font-family: sans-serif; color: #333; line-height: 1.5; padding: 0; margin: 0; background-color: #f5f5f5;">
+
+    <nav style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eaeaea; padding: 12px 40px; background-color: #fff; position: sticky; top: 0; z-index: 100;">
+        
+        <div style="display: flex; align-items: center; gap: 40px;">
+            
+            <div style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                <div style="width: 32px; height: 32px; border: 1px dashed #999; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.6em; background-color: #fafafa;">
+                    Icon
+                </div>
+                <span style="font-weight: 900; font-size: 1.4em; letter-spacing: -0.5px;">(品牌名稱)</span>
+            </div>
+
+            <div style="display: flex; gap: 25px;">
+                <a href="#" style="text-decoration: none; color: #4a4a4a; font-weight: bold; display: flex; align-items: center; gap: 5px;">
+                    依課程媒合 <span style="font-size: 0.8em; color: #999;">∨</span>
+                </a>
+                <a href="#" style="text-decoration: none; color: #4a4a4a; font-weight: bold;">價格方案</a>
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 20px; align-items: center;">
+            <button style="padding: 10px 16px; background-color: #FFF9E6; color: #333; border: none; font-weight: bold; cursor: pointer; border-radius: 8px;">
+                成為老師
+            </button>
+            
+            <a href="#" style="text-decoration: none; color: #333; font-weight: bold;">登入</a>
+            
+            <button style="padding: 10px 24px; background-color: #2563EB; color: #fff; border: none; font-weight: bold; cursor: pointer; border-radius: 999px;">
+                註冊
+            </button>
+        </div>
+    </nav>
+    <div style="max-width: 1200px; margin: 0 auto; padding: 20px;">
+
+        <header style="border: 2px solid #000; padding: 30px 15px; margin-bottom: 20px; margin-top: 20px; text-align: center; background-color: #fff;">
+            <h1 style="margin: 0 0 10px 0;">探索好老師 🔍 (Wireframe)</h1>
+            <p style="margin: 0; color: #666;">在 (品牌名稱) 找到最適合孩子的啟蒙導師，讓學習變成每天最期待的遊戲時間！</p>
+        </header>
+
+        <section style="border: 2px solid #000; padding: 15px; background-color: #fff; margin-bottom: 30px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            
+            <div style="flex: 1; min-width: 150px; border: 1px solid #ccc; padding: 10px;">
+                🔍 <input type="text" placeholder="搜尋老師姓名..." style="border: none; outline: none; background: transparent;">
+            </div>
+            <div style="width: 1px; height: 30px; background-color: #ccc;"></div>
+            
+            <div style="flex: 1; min-width: 150px; border: 1px solid #ccc; padding: 10px;">
+                📖 <select style="border: none; outline: none; background: transparent; cursor: pointer;">
+                    <option>所有課程</option>
+                    <option>兒童英文</option>
+                </select>
+            </div>
+            <div style="width: 1px; height: 30px; background-color: #ccc;"></div>
+            
+            <div style="flex: 1; min-width: 150px; border: 1px solid #ccc; padding: 10px;">
+                📅 <select style="border: none; outline: none; background: transparent; cursor: pointer;">
+                    <option>所有日期 (全部)</option>
+                    <option>星期一</option>
+                </select>
+            </div>
+            <div style="width: 1px; height: 30px; background-color: #ccc;"></div>
+            
+            <div style="flex: 1; min-width: 150px; border: 1px solid #ccc; padding: 10px;">
+                🕒 <select style="border: none; outline: none; background: transparent; cursor: pointer;">
+                    <option>所有時段</option>
+                    <option>上午 (09:00-13:00)</option>
+                </select>
+            </div>
+
+            <button style="padding: 10px 20px; background-color: #000; color: #fff; font-weight: bold; border: none; cursor: pointer; min-width: 120px;">
+                🔍 開始尋找
+            </button>
+
+        </section>
+
+        <section style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 30px;">
+            
+            <div style="position: relative; border: 2px solid #000; background-color: #fff; padding: 20px; padding-top: 50px; margin-top: 40px; display: flex; flex-direction: column;">
+                <div style="position: absolute; top: -40px; left: 50%; transform: translateX(-50%); width: 80px; height: 80px; border: 2px dashed #999; border-radius: 50%; background-color: #eee; display: flex; align-items: center; justify-content: center;">
+                    [頭像]
+                    <div style="position: absolute; bottom: -5px; right: -5px; background: #fff; border: 1px solid #ccc; border-radius: 50%; padding: 2px; font-size: 0.8em;">🇦🇺</div>
+                </div>
+                <div style="text-align: center; margin-bottom: 15px;">
+                    <h2 style="margin: 0 0 5px 0;">老師名稱</h2>
+                    <span style="border: 1px solid #ccc; padding: 2px 10px; border-radius: 10px; font-size: 0.8em;">評價</span>
+                </div>
+                <h3 style="text-align: center; border-bottom: 1px solid #ccc; padding-bottom: 10px; margin-top: 0;">課程名稱</h3>
+                <p style="text-align: center; font-size: 0.9em; color: #666; flex-grow: 1;">
+                    課程說明
+                </p>
+                <div style="border-top: 1px solid #ccc; padding-top: 15px; margin-top: 15px; display: flex; justify-content: space-between; align-items: flex-end;">
+                    <div>
+                        <div style="font-size: 0.8em; color: #d9534f; margin-bottom: 5px;">🎁 體驗課 NT$ 150</div>
+                        <div style="font-size: 0.7em; color: #666;">正式課單堂</div>
+                        <div style="font-weight: bold; font-size: 1.2em;">NT$ 300 <span style="font-size: 0.6em; font-weight: normal; color: #666;">起</span></div>
+                    </div>
+                    <button style="padding: 10px 15px; background-color: #000; color: #fff; border: none; font-weight: bold; cursor: pointer;">
+                        認識老師 👉
+                    </button>
+                </div>
+
+                <div style="margin-top: 20px; border: 1px dashed #999; padding: 10px; background-color: #fafafa; position: relative;">
+                    <div style="position: absolute; top: -10px; left: 10px; background: #fff; padding: 0 5px; font-size: 0.8em; color: #666; font-weight: bold;">💡 Hover 展開面板示意</div>
+                    
+                    <div style="height: 120px; border: 1px solid #ccc; background-color: #eee; display: flex; align-items: center; justify-content: center; margin-bottom: 15px; margin-top: 10px;">
+                        <button style="padding: 10px 20px; font-size: 1.2em;">▶️ 播放影片</button>
+                    </div>
+
+                    <div>
+                        <div style="font-size: 0.8em; color: #999; margin-bottom: 10px;">* 時間以 台北 GMT+08:00 顯示</div>
+                        
+                        <div style="display: grid; grid-template-columns: 40px repeat(7, 1fr); gap: 5px; text-align: center; font-size: 0.8em; margin-bottom: 15px;">
+                            <div></div><div>日</div><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div>
+                            
+                            <div style="text-align: left;">上午</div>
+                            <div style="background-color: #ccc; height: 15px;" title="可預約"></div>
+                            <div style="background-color: #eee; height: 15px;" title="已被預約"></div>
+                            <div style="background-color: #eee; height: 15px;"></div>
+                            <div style="background-color: #ccc; height: 15px;"></div>
+                            <div style="background-color: #ccc; height: 15px;"></div>
+                            <div style="background-color: #eee; height: 15px;"></div>
+                            <div style="background-color: #ccc; height: 15px;"></div>
+
+                            <div style="text-align: left;">下午</div>
+                            <div style="background-color: #eee; height: 15px;"></div>
+                            <div style="background-color: #ccc; height: 15px;"></div>
+                            <div style="background-color: #ccc; height: 15px;"></div>
+                            <div style="background-color: #eee; height: 15px;"></div>
+                            <div style="background-color: #ccc; height: 15px;"></div>
+                            <div style="background-color: #ccc; height: 15px;"></div>
+                            <div style="background-color: #eee; height: 15px;"></div>
+
+                            <div style="text-align: left;">晚上</div>
+                            <div style="background-color: #eee; height: 15px;"></div>
+                            <div style="background-color: #ccc; height: 15px;"></div>
+                            <div style="background-color: #ccc; height: 15px;"></div>
+                            <div style="background-color: #ccc; height: 15px;"></div>
+                            <div style="background-color: #ccc; height: 15px;"></div>
+                            <div style="background-color: #ccc; height: 15px;"></div>
+                            <div style="background-color: #eee; height: 15px;"></div>
+                        </div>
+
+                        <button style="width: 100%; padding: 8px; border: 1px solid #ccc; background: none; cursor: pointer;">查看完整可預約時段</button>
+                    </div>
+                </div>
+                </div>
+
+            <div style="position: relative; border: 2px solid #000; background-color: #fff; padding: 20px; padding-top: 50px; margin-top: 40px; display: flex; flex-direction: column;">
+                <div style="position: absolute; top: -40px; left: 50%; transform: translateX(-50%); width: 80px; height: 80px; border: 2px dashed #999; border-radius: 50%; background-color: #eee; display: flex; align-items: center; justify-content: center;">
+                    [頭像]
+                    <div style="position: absolute; bottom: -5px; right: -5px; background: #fff; border: 1px solid #ccc; border-radius: 50%; padding: 2px; font-size: 0.8em;">🇬🇧</div>
+                </div>
+                <div style="text-align: center; margin-bottom: 15px;">
+                    <h2 style="margin: 0 0 5px 0;">Emma</h2>
+                    <span style="border: 1px solid #ccc; padding: 2px 10px; border-radius: 10px; font-size: 0.8em;">⭐ 4.9 (156 則評價)</span>
+                </div>
+                <h3 style="text-align: center; border-bottom: 1px solid #ccc; padding-bottom: 10px; margin-top: 0;">零基礎趣味啟蒙班</h3>
+                <p style="text-align: center; font-size: 0.9em; color: #666; flex-grow: 1;">
+                    以唱跳歌謠、繪本共讀為主，打造全美語的沉浸式無壓力環境，讓孩子在遊戲中愛上學英文。
+                </p>
+                <div style="border-top: 1px solid #ccc; padding-top: 15px; margin-top: 15px; display: flex; justify-content: space-between; align-items: flex-end;">
+                    <div>
+                        <div style="font-size: 0.8em; color: #d9534f; margin-bottom: 5px;">🎁 體驗課 NT$ 200</div>
+                        <div style="font-size: 0.7em; color: #666;">正式課單堂</div>
+                        <div style="font-weight: bold; font-size: 1.2em;">NT$ 350 <span style="font-size: 0.6em; font-weight: normal; color: #666;">起</span></div>
+                    </div>
+                    <button style="padding: 10px 15px; background-color: #000; color: #fff; border: none; font-weight: bold; cursor: pointer;">
+                        認識老師 👉
+                    </button>
+                </div>
+            </div>
+
+            <div style="position: relative; border: 2px solid #000; background-color: #fff; padding: 20px; padding-top: 50px; margin-top: 40px; display: flex; flex-direction: column;">
+                <div style="position: absolute; top: -40px; left: 50%; transform: translateX(-50%); width: 80px; height: 80px; border: 2px dashed #999; border-radius: 50%; background-color: #eee; display: flex; align-items: center; justify-content: center;">
+                    [頭像]
+                    <div style="position: absolute; bottom: -5px; right: -5px; background: #fff; border: 1px solid #ccc; border-radius: 50%; padding: 2px; font-size: 0.8em;">🇺🇸</div>
+                </div>
+                <div style="text-align: center; margin-bottom: 15px;">
+                    <h2 style="margin: 0 0 5px 0;">Sarah</h2>
+                    <span style="border: 1px solid #ccc; padding: 2px 10px; border-radius: 10px; font-size: 0.8em;">⭐ 5.0 (210 則評價)</span>
+                </div>
+                <h3 style="text-align: center; border-bottom: 1px solid #ccc; padding-bottom: 10px; margin-top: 0;">劍橋兒童英檢衝刺班</h3>
+                <p style="text-align: center; font-size: 0.9em; color: #666; flex-grow: 1;">
+                    系統化梳理國小必備單字與基礎文法，輔以長篇閱讀測驗，為未來的升學與檢定考試打下穩固基礎。
+                </p>
+                <div style="border-top: 1px solid #ccc; padding-top: 15px; margin-top: 15px; display: flex; justify-content: space-between; align-items: flex-end;">
+                    <div>
+                        <div style="font-size: 0.8em; color: #d9534f; margin-bottom: 5px;">🎁 體驗課 NT$ 250</div>
+                        <div style="font-size: 0.7em; color: #666;">正式課單堂</div>
+                        <div style="font-weight: bold; font-size: 1.2em;">NT$ 450 <span style="font-size: 0.6em; font-weight: normal; color: #666;">起</span></div>
+                    </div>
+                    <button style="padding: 10px 15px; background-color: #000; color: #fff; border: none; font-weight: bold; cursor: pointer;">
+                        認識老師 👉
+                    </button>
+                </div>
+            </div>
+
+        </section>
+
+    </div>
+
+</body>
+</html>
