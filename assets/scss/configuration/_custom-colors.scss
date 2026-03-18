@@ -8,7 +8,7 @@ $y2k-pink:      #ff00fb;
 $grid-line-color: #ff99cccd;
 
 // 成功色：酸性萊姆綠 (保留這個顏色，跟粉紅色與橘色都很搭)
-$acid-lime:     #C3E600;
+$acid-lime:     #e1ff3b;
 
 // 資訊色：電氣藍 (增加一點數位感)
 $digital-blue:  #33CCFF;
@@ -34,7 +34,7 @@ $light:         $sakura-white; // [背景] 讓整體透著淡淡粉紅
 $dark:          $ink-black;
 $gray:          $gray;
 $white:         $white;
-$pink:          $grid-line-color;
+$pink:          $y2k-pink;
 
 // scss-docs-start theme-colors-map
 $custom-colors: (

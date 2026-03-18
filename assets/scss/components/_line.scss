@@ -1,0 +1,13 @@
+.bg-line{
+    background-image: 
+    repeating-linear-gradient(
+        to right, 
+        transparent  0 50px, 
+        $acid-lime -2px 51px
+    ),
+    repeating-linear-gradient(
+        to top, 
+        transparent  0px 50px, 
+        $acid-lime 0px 51px
+    )
+}
