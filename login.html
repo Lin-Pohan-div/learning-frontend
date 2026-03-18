@@ -3,160 +3,151 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
+    <title>Merge - 登入</title>
     <link rel="stylesheet" href="./assets/scss/all.scss" />
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   </head>
   <body>
     <header class="border-bottom py-2">
       <div class="container">
         <div class="d-flex justify-content-between align-items-center">
-          <!-- logo -->
           <div class="d-flex">
             <a href="index.html" class="text-decoration-none">
               <h1 class="nunito fst-italic display-5 pt-2">Merge</h1>
             </a>
           </div>
-          <!-- nav -->
           <nav class="ms-auto pt-2">
             <ul class="list-unstyled d-flex">
-              <li>
-                <a href="#" class="text-decoration-none px-3 ms-auto"
-                  >我要找學生</a
-                >
-              </li>
-              <li>
-                <a href="#" class="text-decoration-none px-3">我要找老師</a>
-              </li>
-              <li>
-                <a href="#" class="text-decoration-none px-3">註冊送代幣</a>
-              </li>
-              <li>
-                <a href="#" class="text-decoration-none px-3 pe-0">LOGIN</a>
-              </li>
+              <li><a href="#" class="text-decoration-none px-3 ms-auto">我要找學生</a></li>
+              <li><a href="#" class="text-decoration-none px-3">我要找老師</a></li>
+              <li><a href="#" class="text-decoration-none px-3">註冊送代幣</a></li>
+              <li><a href="login.html" class="text-decoration-none px-3 pe-0 text-primary fw-bold">LOGIN</a></li>
             </ul>
           </nav>
         </div>
       </div>
     </header>
+
     <main class="pb-5">
       <div class="bg-line">
         <h2 class="sansTitle text-center pt-5 text-pink">LOGIN</h2>
         <hr />
       </div>
 
-      <!-- login start -->
       <section class="container">
-        <!-- card start -->
-
         <div class="row justify-content-center">
           <div class="col-11 col-md-3 card border-0 shadow-lg rounded-4 mb-3">
-            <div
-              class="card-body d-flex justify-content-center align-items-center flex-column position-relative"
-            >
-              <div
-                class="bg-dark rounded-circle border border-2 border-dark position-absolute top-0 start-50 translate-middle d-flex align-items-center justify-content-center shadow"
-                style="width: 130px; height: 130px; overflow: hidden"
-              >
-                <dotlottie-wc
-                  src="https://lottie.host/3ad56864-47bd-490b-92ab-25274f9773d5/R3RFdr3ZjP.lottie"
-                  style="width: 140px; height: 150px"
-                  autoplay
-                  loop
-                >
-                </dotlottie-wc>
+            <div class="card-body d-flex justify-content-center align-items-center flex-column position-relative">
+              <div class="bg-dark rounded-circle border border-2 border-dark position-absolute top-0 start-50 translate-middle d-flex align-items-center justify-content-center shadow" style="width: 130px; height: 130px; overflow: hidden">
+                <dotlottie-wc src="https://lottie.host/3ad56864-47bd-490b-92ab-25274f9773d5/R3RFdr3ZjP.lottie" style="width: 140px; height: 150px" autoplay loop></dotlottie-wc>
               </div>
 
-              <!-- form start -->
-              <form class="mt-5 pt-4 w-100">
+              <form class="mt-5 pt-4 w-100" id="loginForm">
                 <div class="mb-3">
-                  <label for="exampleInputEmail1" class="form-label"
-                    >請輸入你的信箱</label
-                  >
-                  <input
-                    type="email"
-                    class="form-control"
-                    id="exampleInputEmail1"
-                    aria-describedby="emailHelp"
-                  />
+                  <label for="emailInput" class="form-label">請輸入你的信箱</label>
+                  <input type="email" class="form-control" id="emailInput" required />
                 </div>
                 <div class="mb-3">
-                  <label for="exampleInputPassword1" class="form-label"
-                    >請輸入你的密碼</label
-                  >
-                  <input
-                    type="password"
-                    class="form-control"
-                    id="exampleInputPassword1"
-                  />
+                  <label for="passwordInput" class="form-label">請輸入你的密碼</label>
+                  <input type="password" class="form-control" id="passwordInput" required />
                 </div>
                 <div class="mb-3 form-check">
-                  <input
-                    type="checkbox"
-                    class="form-check-input"
-                    id="exampleCheck1"
-                  />
-                  <label class="form-check-label" for="exampleCheck1"
-                    >記得我</label
-                  >
+                  <input type="checkbox" class="form-check-input" id="rememberCheck" />
+                  <label class="form-check-label" for="rememberCheck">記得我</label>
                 </div>
-                <button type="submit" class="btn btn-primary w-100">
-                  上課去！
-                </button>
+                <button type="submit" class="btn btn-primary w-100" id="loginBtn">上課去！</button>
               </form>
+
             </div>
           </div>
         </div>
       </section>
     </main>
+
     <footer class="bg-white border-top py-5 mt-auto">
       <div class="container">
         <div class="row align-items-center">
           <div class="col-md-4 text-center text-md-start mb-3 mb-md-0">
-            <a
-              href="index.html"
-              class="text-decoration-none d-flex align-items-center justify-content-center justify-content-md-start"
-            >
+            <a href="index.html" class="text-decoration-none d-flex align-items-center justify-content-center justify-content-md-start">
               <h3 class="nunito fst-italic mb-0 me-2 text-primary">Merge</h3>
               <span class="text-muted small">&copy; 2026</span>
             </a>
           </div>
-
           <div class="col-md-4 mb-3 mb-md-0">
             <ul class="list-unstyled d-flex justify-content-center mb-0 small">
-              <li>
-                <a href="#" class="text-muted text-decoration-none px-2"
-                  >服務條款</a
-                >
-              </li>
-              <li>
-                <a href="#" class="text-muted text-decoration-none px-2"
-                  >隱私政策</a
-                >
-              </li>
-              <li>
-                <a href="#" class="text-muted text-decoration-none px-2"
-                  >聯絡我們</a
-                >
-              </li>
+              <li><a href="#" class="text-muted text-decoration-none px-2">服務條款</a></li>
+              <li><a href="#" class="text-muted text-decoration-none px-2">隱私政策</a></li>
+              <li><a href="#" class="text-muted text-decoration-none px-2">聯絡我們</a></li>
             </ul>
           </div>
-
           <div class="col-md-4 text-center text-md-end">
-            <a href="#" class="text-muted me-3"
-              ><i class="bi bi-facebook"></i
-            ></a>
-            <a href="#" class="text-muted me-3"
-              ><i class="bi bi-instagram"></i
-            ></a>
+            <a href="#" class="text-muted me-3"><i class="bi bi-facebook"></i></a>
+            <a href="#" class="text-muted me-3"><i class="bi bi-instagram"></i></a>
             <a href="#" class="text-muted"><i class="bi bi-github"></i></a>
           </div>
         </div>
       </div>
     </footer>
-    <script
-      src="https://unpkg.com/@lottiefiles/dotlottie-wc@0.9.3/dist/dotlottie-wc.js"
-      type="module"
-    ></script>
+
+    <script src="https://unpkg.com/@lottiefiles/dotlottie-wc@0.9.3/dist/dotlottie-wc.js" type="module"></script>
     <script type="module" src="./assets/js/main.js"></script>
+
+    <script>
+      // 🔗 【API 串接處 1】：後端伺服器網址
+      const API_BASE_URL = 'http://localhost:8080/api';
+
+      document.getElementById('loginForm').addEventListener('submit', async function(e) {
+        e.preventDefault(); // 阻止表單送出導致網頁重新整理
+
+        const email = document.getElementById('emailInput').value;
+        const password = document.getElementById('passwordInput').value;
+        const loginBtn = document.getElementById('loginBtn');
+
+        // 按鈕變成 loading 狀態防連點
+        loginBtn.disabled = true;
+        loginBtn.innerText = "登入中... ⏳";
+
+        try {
+          // 🔗 【API 串接處 2】：向 Spring Boot 發送登入請求 (對應 LoginReq)
+          // 如果你的後端 Controller 網址不同，請修改 `/auth/login`
+          const response = await axios.post(`${API_BASE_URL}/auth/login`, {
+            email: email,
+            password: password
+          });
+
+          // 🔗 【API 串接處 3】：取得後端回傳的 Token (對應 LoginResp)
+          const token = response.data.token;
+          
+          if (token) {
+            // 將 Token 存入瀏覽器的 localStorage，讓後續購課 API 都可以抓出來用
+            localStorage.setItem('jwt_token', token);
+            
+            // （選用）如果後端有回傳 userId，也可以存在這裡供結帳防呆使用
+            if(response.data.userId) {
+               localStorage.setItem('userId', response.data.userId);
+            }
+
+            alert("🎉 登入成功！準備開始學習！");
+            
+            // 🔗 跳轉回「課程大廳」或是「首頁」
+            window.location.href = 'student-courses.html'; 
+          } else {
+            throw new Error("伺服器未回傳 Token");
+          }
+
+        } catch (error) {
+          console.error("登入錯誤:", error);
+          if (error.response && error.response.status === 401) {
+            alert("❌ 登入失敗：帳號或密碼錯誤！");
+          } else {
+            alert("🚨 系統連線異常，請確認後端是否啟動。");
+          }
+        } finally {
+          // 恢復按鈕狀態
+          loginBtn.disabled = false;
+          loginBtn.innerText = "上課去！";
+        }
+      });
+    </script>
   </body>
 </html>
