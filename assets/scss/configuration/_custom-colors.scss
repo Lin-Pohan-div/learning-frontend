@@ -1,0 +1,58 @@
+// 1. 定義色票 (Color Palette)
+// -------------------------
+// 主色：日系朱紅 (維持第一版的好看質感，適合長時間瀏覽)
+$retro-orange:  #FF5533; 
+
+// 點綴色：Y2K 霓虹粉 (只用在 Secondary，做一點點點綴，例如小標籤或裝飾)
+$y2k-pink:      #ff00fb; 
+$grid-line-color: #ff99cccd;
+
+// 成功色：酸性萊姆綠 (保留這個顏色，跟粉紅色與橘色都很搭)
+$acid-lime:     #e1ff3b;
+
+// 資訊色：電氣藍 (增加一點數位感)
+$digital-blue:  #33CCFF;
+$digital-blue-20:  #9eecff;
+$sakura-white:  #fffafc; 
+
+// 深色：純黑 (框線專用)
+$ink-black:     #393939;
+$gray:          #7c7c7c31;
+$white:         #ffffff;
+
+
+// 2. 覆蓋 Bootstrap 變數
+// -------------------------
+$primary:       $retro-orange; // [主要按鈕] "馬上抽" 維持橘紅色，最刺激
+$secondary:     $y2k-pink;     // [次要元素] 這裡就是你要的 "一點點粉紅"
+$success:       $acid-lime;    // [標籤] 新品、中獎
+$info:          $digital-blue;
+$info-20:       $digital-blue-20;
+$warning:       #FFD500;
+$danger:        #FF0033;
+$light:         $sakura-white; // [背景] 讓整體透著淡淡粉紅
+$dark:          $ink-black;
+$gray:          $gray;
+$white:         $white;
+$pink:          $y2k-pink;
+
+// scss-docs-start theme-colors-map
+$custom-colors: (
+  "primary":    $primary,
+  "secondary":  $secondary,
+  "success":    $success,
+  "info":       $info,
+  "warning":    $warning,
+  "danger":     $danger,
+  "light":      $light,
+  "dark":       $dark,
+  "gray":       $gray,
+  "white":      $white,
+  "pink":       $pink,
+) !default;
+
+$body-bg:       $light; 
+$body-color:    $dark;
+$border-color:  $dark;
+
+$theme-colors: map-merge($theme-colors, $custom-colors);
