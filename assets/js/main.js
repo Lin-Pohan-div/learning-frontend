@@ -12,7 +12,6 @@ if (!loginForm) {
     let passwdInput = document.getElementById("passwdInput").value;
 
     emailInput = emailInput.trim();
-    passwdInput = passwdInput.trim();
 
     if (!emailInput || !passwdInput) {
       alert("請輸入帳號與密碼");
@@ -25,25 +24,24 @@ if (!loginForm) {
     };
 
     axios
-      .post("/api/auth/login", inputPost)
+      .post("http://localhost:8080/api/auth/login", inputPost)
       .then(function (resp) {
         console.log(resp.data);
-        alert("OK");
-        if (resp && resp.data && resp.data.success === false) {
-          alert("帳號或密碼錯誤");
-          return;
-        }
+        alert(resp?.data?.msg || "登入成功");
         window.location.href = "/index.html";
       })
       .catch(function (err) {
         const status = err?.response?.status;
-        if (status === 401) {
+        const msg = err?.response?.data?.msg;
+
+        if (status === 400) {
+          alert(msg || "登入失敗");
+        } else if (status === 401) {
           alert("帳號或密碼錯誤");
-        } else if (status === 400) {
-          alert("輸入格式有誤");
         } else {
           alert("登入失敗");
         }
+
         console.log(err);
       });
   });
