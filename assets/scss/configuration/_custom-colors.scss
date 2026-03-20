@@ -1,40 +1,30 @@
-// 1. 定義色票 (Color Palette)
-// -------------------------
-// 主色：日系朱紅 (維持第一版的好看質感，適合長時間瀏覽)
-$retro-orange:  #FF5533; 
+// ==========================================
+// 兒童美語 x 童趣野獸派 (Playful Brutalism)
+// ==========================================
 
-// 點綴色：Y2K 霓虹粉 (只用在 Secondary，做一點點點綴，例如小標籤或裝飾)
-$y2k-pink:      #ff00fb; 
-$grid-line-color: #ff99cccd;
+// 1. 骨架與背景色 (用深炭灰取代純黑，保留野獸感但不刺眼)
+$pb-ink:          #464646;    // 深炭灰：用於粗邊框、硬陰影、文字 (靈魂所在)
+$pb-white:        #FFFFFF;    // 純白：卡片底色
+$pb-paper:        #F4F6F8;    // 淺灰藍紙白：全域背景，突顯純白卡片
 
-// 成功色：酸性萊姆綠 (保留這個顏色，跟粉紅色與橘色都很搭)
-$acid-lime:     #e1ff3b;
+// 2. 核心童趣色票 (英雄藍主色 + 漫畫高飽和色)
+$pb-blue-hero:    #0055FF;    // 英雄藍 (Primary)
+$pb-pink:         #FF52D9;    // 魔法粉 (Secondary)
+$pb-lime:         #CCFF00;    // 萊姆綠 (Success)
+$pb-cyan:         #00E5FF;    // 電氣青 (Info)
+$pb-yellow:       #FFD500;    // 亮黃色 (Warning)
+$pb-red:          #FF4433;    // 亮橘紅 (Danger)
 
-// 資訊色：電氣藍 (增加一點數位感)
-$digital-blue:  #33CCFF;
-$digital-blue-20:  #9eecff;
-$sakura-white:  #fffafc; 
-
-// 深色：純黑 (框線專用)
-$ink-black:     #393939;
-$gray:          #7c7c7c31;
-$white:         #ffffff;
-
-
-// 2. 覆蓋 Bootstrap 變數
-// -------------------------
-$primary:       $retro-orange; // [主要按鈕] "馬上抽" 維持橘紅色，最刺激
-$secondary:     $y2k-pink;     // [次要元素] 這裡就是你要的 "一點點粉紅"
-$success:       $acid-lime;    // [標籤] 新品、中獎
-$info:          $digital-blue;
-$info-20:       $digital-blue-20;
-$warning:       #FFD500;
-$danger:        #FF0033;
-$light:         $sakura-white; // [背景] 讓整體透著淡淡粉紅
-$dark:          $ink-black;
-$gray:          $gray;
-$white:         $white;
-$pink:          $y2k-pink;
+// 3. 覆蓋 Bootstrap 變數
+$primary:         $pb-blue-hero;
+$secondary:       $pb-pink;
+$success:         $pb-lime;
+$info:            $pb-cyan;
+$warning:         $pb-yellow;
+$danger:          $pb-red;
+$light:           $pb-paper;
+$dark:            $pb-ink;
+$white:           $pb-white;
 
 // scss-docs-start theme-colors-map
 $custom-colors: (
@@ -46,13 +36,18 @@ $custom-colors: (
   "danger":     $danger,
   "light":      $light,
   "dark":       $dark,
-  "gray":       $gray,
   "white":      $white,
-  "pink":       $pink,
 ) !default;
+
+// 4. 童趣野獸派 風格變數 (UI Variables)
+// ------------------------------------------
+// 結合了大圓角 + 粗邊框 + 硬陰影
+$pb-radius-md:     16px;
+$pb-radius-lg:     32px;      // 極致大圓角
+$pb-border-width:  2px;       // 加回粗邊框
+$pb-shadow-hard:   6px 6px 0px 0px $pb-ink; // 加回硬陰影，產生立體積木感
 
 $body-bg:       $light; 
 $body-color:    $dark;
+$border-width:  $pb-border-width;
 $border-color:  $dark;
-
-$theme-colors: map-merge($theme-colors, $custom-colors);

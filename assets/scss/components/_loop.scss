@@ -1,0 +1,13 @@
+
+.track {
+  animation: scroll 22s linear infinite;
+}
+
+@keyframes scroll {
+  from { transform: translateX(100%); }
+  to { transform: translateX(-100%); }
+}
+
+.track:hover{
+    animation-play-state: paused;
+}
