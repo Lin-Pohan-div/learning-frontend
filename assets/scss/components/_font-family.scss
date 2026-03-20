@@ -14,6 +14,18 @@
   
   -webkit-font-smoothing: antialiased;
 }
+.sansTeg {
+  font-family: "Google Sans Flex", sans-serif;
+  font-size: 28px; /* 把字放超大，圓角才會現形 */
+  font-variation-settings:
+    "wght" 1000,   /* 粗度拉滿 */
+    "wdth" 70,    /* 寬度拉滿 */
+    "ROND" 100,    /* 圓角拉滿 */
+    "GRAD" 0,
+    "slnt" 0;
+  
+  -webkit-font-smoothing: antialiased;
+}
 
 .zen-maru-gothic-light {
   font-family: "Zen Maru Gothic", sans-serif;
