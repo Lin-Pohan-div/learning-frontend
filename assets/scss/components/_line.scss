@@ -3,11 +3,25 @@
     repeating-linear-gradient(
         to right, 
         transparent  0 50px, 
-        $acid-lime -2px 51px
+        $info -2px 51px
     ),
     repeating-linear-gradient(
         to top, 
         transparent  0px 50px, 
-        $acid-lime 0px 51px
+        $info 0px 51px
+    )
+}
+
+.bg-line-success{
+    background-image: 
+    repeating-linear-gradient(
+        to right, 
+        transparent  0 50px, 
+        $pb-ink -2px 51px
+    ),
+    repeating-linear-gradient(
+        to top, 
+        transparent  0px 50px, 
+        $pb-ink 0px 51px
     )
 }
