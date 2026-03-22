@@ -1,0 +1,390 @@
+// ==========================================
+// 預約頁面樣式 (_booking.scss)
+// ==========================================
+
+// 外層版型
+.booking-wrapper {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+// 左側主要內容
+.booking-main {
+    flex: 7;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+// 通用卡片
+.booking-card {
+    border: 1px solid #ccc;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 12px;
+}
+
+// 課程資訊區
+.booking-course-info {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+}
+
+.booking-avatar {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.booking-course-text {
+    flex-grow: 1;
+
+    h2 {
+        margin: 0 0 4px 0;
+        font-size: 1.3rem;
+    }
+
+    p {
+        margin: 0 0 4px 0;
+        color: #666;
+        font-size: 0.9em;
+    }
+}
+
+.booking-price-label {
+    font-size: 0.85em;
+    color: #999;
+    margin: 0 !important;
+
+    strong { color: #000; }
+}
+
+// section 標題
+.booking-section-title {
+    margin: 0 0 16px 0;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+    font-size: 1rem;
+}
+
+.booking-section-hint {
+    font-size: 0.75rem;
+    color: #999;
+    font-weight: normal;
+    margin-left: 8px;
+}
+
+// ==========================================
+// 週行事曆
+// ==========================================
+
+.calendar-wrapper { position: relative; }
+
+.calendar-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+
+    button {
+        border: 2px solid #000;
+        background: #fff;
+        padding: 6px 16px;
+        font-weight: bold;
+        font-size: 1rem;
+        cursor: pointer;
+        border-radius: 8px;
+        transition: background 0.15s;
+
+        &:hover { background: #f0f0f0; }
+
+        &:disabled {
+            border-color: #ccc;
+            color: #ccc;
+            cursor: not-allowed;
+            background: #fff;
+        }
+    }
+}
+
+.calendar-week-label {
+    font-weight: bold;
+    font-size: 0.95rem;
+    color: #333;
+}
+
+.calendar-track-wrapper { overflow: hidden; }
+
+.calendar-track {
+    display: flex;
+    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: transform;
+}
+
+.calendar-week { min-width: 100%; }
+
+.calendar-loading {
+    padding: 30px;
+    text-align: center;
+    color: #999;
+    width: 100%;
+}
+
+.calendar-header {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+    margin-bottom: 8px;
+}
+
+.calendar-day-header {
+    text-align: center;
+    font-size: 0.8rem;
+    padding: 6px 2px;
+    border-radius: 6px;
+    background: #f0f0f0;
+    color: #888;
+
+    .day-name {
+        font-weight: bold;
+        display: block;
+    }
+
+    .day-date { font-size: 0.75rem; }
+
+    &.has-slots {
+        background: #000;
+        color: #fff;
+    }
+}
+
+// 滾動式時段區
+.calendar-slots-wrapper {
+    max-height: 300px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    padding: 8px;
+
+    &::-webkit-scrollbar { width: 4px; }
+    &::-webkit-scrollbar-thumb {
+        background: #ccc;
+        border-radius: 4px;
+    }
+}
+
+.calendar-slots {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+}
+
+.calendar-day-col {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+// 時段按鈕
+.slot-btn {
+    width: 100%;
+    padding: 8px 2px;
+    border: 2px solid #000;
+    cursor: pointer;
+    background: #fff;
+    transition: all 0.15s;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    text-align: center;
+    line-height: 1.4;
+
+    &:hover {
+        background: #f0f0f0;
+        transform: translateY(-1px);
+    }
+
+    &.selected {
+        border-color: #0055FF;
+        background: #0055FF;
+        color: #fff;
+        transform: translateY(-1px);
+    }
+
+    &.booked {
+        border: 1px solid #ddd;
+        background: #f5f5f5;
+        color: #bbb;
+        cursor: not-allowed;
+        font-weight: normal;
+        text-decoration: line-through;
+    }
+}
+
+.day-empty {
+    text-align: center;
+    color: #ddd;
+    font-size: 0.75rem;
+    padding: 10px 0;
+}
+
+// 週次指示點
+.calendar-dots {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 14px;
+}
+
+.calendar-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #ccc;
+    transition: background 0.2s;
+    cursor: pointer;
+
+    &.active { background: #000; }
+}
+
+// ==========================================
+// 右側購物車
+// ==========================================
+
+.booking-aside {
+    flex: 3;
+    min-width: 280px;
+    border: 2px solid #000;
+    padding: 20px;
+    background-color: #fff;
+    position: sticky;
+    top: 90px;
+    border-radius: 12px;
+}
+
+.booking-aside-header {
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 15px;
+    margin-bottom: 15px;
+
+    h3 { margin: 0 0 4px 0; }
+
+    p {
+        margin: 0;
+        font-size: 0.8em;
+        color: #666;
+    }
+}
+
+.booking-cart-box {
+    min-height: 100px;
+    border: 1px dashed #999;
+    padding: 10px;
+    margin-bottom: 20px;
+    background-color: #fafafa;
+    border-radius: 8px;
+}
+
+.booking-cart-title {
+    margin: 0 0 8px 0;
+    font-size: 0.9em;
+    font-weight: bold;
+}
+
+.booking-cart-empty {
+    color: #999;
+    font-size: 0.85em;
+    text-align: center;
+    margin: 0;
+}
+
+.booking-cart-item {
+    display: flex;
+    justify-content: space-between;
+    border: 1px solid #eee;
+    padding: 6px 8px;
+    margin-bottom: 4px;
+    background: #fff;
+    border-radius: 6px;
+    font-size: 0.85em;
+}
+
+.booking-cart-del {
+    border: none;
+    background: none;
+    cursor: pointer;
+    color: #999;
+    font-size: 0.8em;
+}
+
+.booking-summary {
+    border-top: 1px solid #ccc;
+    padding-top: 15px;
+}
+
+.booking-summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 20px;
+
+    p {
+        margin: 0;
+        font-size: 0.8em;
+        color: #666;
+    }
+}
+
+.booking-count {
+    font-weight: bold;
+    color: #000;
+}
+
+.booking-total {
+    text-align: right;
+
+    p {
+        margin: 0;
+        font-size: 0.7em;
+        color: #666;
+    }
+
+    strong {
+        font-size: 1.5em;
+        color: orange;
+        display: block;
+    }
+}
+
+.booking-checkout-btn {
+    width: 100%;
+    padding: 15px;
+    color: #fff;
+    font-weight: bold;
+    font-size: 1.1em;
+    border: none;
+    margin-bottom: 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    background-color: #000;
+    transition: background 0.15s;
+
+    &--disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+    }
+}
+
+.booking-secure {
+    text-align: center;
+    font-size: 0.75em;
+    color: #999;
+}

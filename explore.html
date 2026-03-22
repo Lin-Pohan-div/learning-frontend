@@ -7,30 +7,30 @@
     <title>探索好老師 - Merge</title>
     <link rel="stylesheet" href="./assets/scss/all.scss" />
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
 </head>
 
-<body>
+<body style="padding-top: 70px;">
 
-    <header class="border-bottom py-2 bg-white sticky-top">
+    <header class="border-bottom py-2 fixed-top navbar-light bg-light">
         <div class="container">
             <div class="d-flex justify-content-between align-items-center">
                 <div class="d-flex">
                     <a href="index.html" class="text-decoration-none">
-                        <h1 class="nunito fst-italic display-5 pt-2 text-dark">Merge</h1>
+                        <h1 class="nunito fst-italic display-5 pt-2">Merge</h1>
                     </a>
                 </div>
                 <nav class="ms-auto pt-2">
                     <ul class="list-unstyled d-flex align-items-center mb-0">
                         <li>
-                            <a href="#" class="text-decoration-none px-3 ms-auto text-dark">我要找學生</a>
+                            <a href="#" class="text-decoration-none px-3 ms-auto">我要找學生</a>
                         </li>
                         <li>
-                            <a href="explore.html" class="text-decoration-none px-3 text-dark fw-bold">我要找老師</a>
+                            <a href="explore.html" class="text-decoration-none px-3">我要找老師</a>
                         </li>
                         <li>
-                            <a href="#" class="text-decoration-none px-3 text-dark">註冊送代幣</a>
+                            <a href="#" class="text-decoration-none px-3">註冊送代幣</a>
                         </li>
-
                         <li id="auth-nav-item">
                             <a href="login.html" class="text-decoration-none px-3 pe-0 text-primary fw-bold">LOGIN</a>
                         </li>
@@ -136,68 +136,101 @@
             }
         }
 
-        // --- Axios 撈取資料與搜尋邏輯 ---
         const API_BASE_URL = 'http://localhost:8080/api';
+        let allCoursesData = [];
 
-        let allCoursesData = []; // 🌟 用來存放從後端撈回來的「所有原始資料」
+        // Google Drive 連結轉換
+        function convertGoogleDriveUrl(url) {
+            if (!url) return 'https://via.placeholder.com/80';
+            const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+            if (match) return `https://lh3.googleusercontent.com/d/${match[1]}`;
+            return url;
+        }
 
-        // 網頁載入時呼叫的 API
-       // 🌟 修正後的 fetchCourses (移除了重複嵌套)
+        // 建立 hover 課表 HTML
+        function buildSchedulePopup(slots) {
+            const days = ['一', '二', '三', '四', '五', '六', '日'];
+            const periods = [
+                { key: 'morning',   label: '上午' },
+                { key: 'afternoon', label: '下午' },
+                { key: 'evening',   label: '晚上' },
+            ];
+
+            let html = '<div class="schedule-popup-title">📅 開課時段</div>';
+            html += '<div class="schedule-grid-popup">';
+
+            // 星期標題列
+            html += '<div class="row-label"></div>';
+            days.forEach(d => {
+                html += `<div class="col-header">週${d}</div>`;
+            });
+
+            // 三個時段列
+            periods.forEach(period => {
+                html += `<div class="row-label">${period.label}</div>`;
+                for (let day = 1; day <= 7; day++) {
+                    const hasSlot = slots.some(s => s === `${day}-${period.key}`);
+                    html += `<div class="schedule-cell${hasSlot ? ' available' : ''}"></div>`;
+                }
+            });
+
+            html += '</div>';
+            return html;
+        }
+
         async function fetchCourses() {
             const container = document.getElementById('course-list-container');
             container.innerHTML = '<h3 style="text-align: center; width: 100%; color: #666;">⏳ 課程資料載入中...</h3>';
 
             try {
-                // 1. 確認網址是對的 (對齊組員 Controller 的 /api/view/courses)
                 const response = await axios.get(`${API_BASE_URL}/view/courses`);
-
-                // 2. 組員用的是 Page 物件，資料在 content 裡
                 allCoursesData = response.data.content;
-
-                console.log("成功拿到資料：", allCoursesData); 
-
-                // 3. 渲染卡片
+                console.log("成功拿到資料：", allCoursesData);
                 renderCards(allCoursesData);
-
             } catch (error) {
                 console.error("撈取課程資料失敗:", error);
                 container.innerHTML = '<h3 style="text-align: center; width: 100%; color: #d9534f;">🚨 無法連線到伺服器</h3>';
             }
         }
-        // 🌟 獨立出來的「渲染卡片」功能
+
         function renderCards(coursesToRender) {
             const container = document.getElementById('course-list-container');
-            container.innerHTML = ''; // 先清空容器
+            container.innerHTML = '';
 
             if (coursesToRender.length === 0) {
                 container.innerHTML = '<h3 style="text-align: center; width: 100%; color: #999;">沒有找到符合條件的課程喔！換個關鍵字試試吧 🥺</h3>';
                 return;
             }
 
-            // 把傳進來的陣列變成 HTML
             coursesToRender.forEach(course => {
+                const scheduleHTML = buildSchedulePopup(course.availableSlots || []);
                 const cardHTML = `
                     <div class="course-card">
                         <div class="tutor-avatar">
-                            <img src="${course.avatarUrl || 'https://via.placeholder.com/80'}" alt="頭像">
+                            <img src="${convertGoogleDriveUrl(course.avatarUrl)}" alt="頭像">
                         </div>
-                        
+
                         <div class="tutor-info">
                             <h2>${course.teacherName || '老師名字'}</h2>
                             <span class="badge">⭐ ${course.title || '優質教師'}</span>
                         </div>
-                        
+
                         <h3 class="course-title">${course.courseName || '課程名稱'}</h3>
                         <p class="course-desc">${course.description || '這是一堂非常棒的課程！'}</p>
-                        
+
                         <div class="card-footer">
                             <div class="price-info">
                                 <div class="label">正式課單堂</div>
                                 <div class="price">NT$ ${course.price || 0}</div>
                             </div>
-                            <a href="student-booking.html?courseId=${course.id}" style="text-decoration:none;">
+                            <a href="teacher-profile.html?tutorId=${course.tutorId}&courseId=${course.id}" style="text-decoration:none;">
                                 <button class="btn-book">立即預約 👉</button>
                             </a>
+                        </div>
+
+                        <!-- Hover 課表彈出 -->
+                        <div class="schedule-popup">
+                            ${scheduleHTML}
                         </div>
                     </div>
                 `;
@@ -208,7 +241,6 @@
         function handleSearch() {
             const keyword = document.getElementById('searchInput').value.toLowerCase().trim();
             const subjectValue = document.getElementById('subjectSelect').value;
-            // 🌟 新增：抓取星期與時段
             const dayValue = document.getElementById('daySelect').value;
             const timeValue = document.getElementById('timeSelect').value;
 
@@ -219,13 +251,10 @@
 
                 const matchSubject = !subjectValue || course.subject == subjectValue;
 
-                // 🌟 核心：時段過濾邏輯
                 let matchSchedule = true;
                 if (dayValue || timeValue) {
-                    // 如果使用者選了星期或時段，就去 course.availableSlots 裡面找
-                    // 只要有一個時段符合「星期-時段」的組合即可
                     matchSchedule = course.availableSlots.some(slot => {
-                        const [sDay, sTime] = slot.split('-'); // 拆解出 "1" 和 "morning"
+                        const [sDay, sTime] = slot.split('-');
                         const dayCondition = !dayValue || sDay === dayValue;
                         const timeCondition = !timeValue || sTime === timeValue;
                         return dayCondition && timeCondition;

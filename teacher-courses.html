@@ -3,566 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KiwiTutor | 我的課程</title>
-    
-    <!-- 載入 Bootstrap 5 CSS -->
+    <title>Merge | 課程管理</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    
-    <!-- 載入字體與 Material Icons -->
-    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet"/>
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
-    
-    <!-- 本頁專屬 CSS -->
-    <style>
-        :root {
-            /* 顏色變數還原 Tailwind 的色系 */
-            --tw-slate-50: #f8fafc;
-            --tw-slate-100: #f1f5f9;
-            --tw-slate-200: #e2e8f0;
-            --tw-slate-400: #94a3b8;
-            --tw-slate-500: #64748b;
-            --tw-slate-600: #475569;
-            --tw-slate-700: #334155;
-            --tw-slate-800: #1e293b;
-            
-            --tw-yellow-400: #facc15;
-            --tw-yellow-500: #eab308;
-            
-            --tw-teal-50: #f0fdfa;
-            --tw-teal-500: #14b8a6;
-            --tw-teal-600: #0d9488;
-        }
-
-        body {
-            font-family: 'Noto Sans TC', sans-serif;
-            background-color: #fafaf9; /* 淺灰白底色 */
-            color: var(--tw-slate-700);
-        }
-
-        .font-display { font-family: 'Fredoka', 'Noto Sans TC', cursive; }
-        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 600; font-size: 20px; display: inline-flex; align-items: center;}
-        .icon-filled { font-variation-settings: 'FILL' 1 !important; }
-
-        /* 左側導覽列樣式 (新增) */
-        .sidebar { width: 260px; background-color: #fff; border-right: 1px solid var(--tw-slate-100); }
-        .nav-item-link {
-            display: flex; align-items: center; gap: 12px; padding: 14px 24px;
-            color: var(--tw-slate-400); font-weight: 600; text-decoration: none;
-            transition: all 0.2s; position: relative; border-radius: 0 16px 16px 0;
-            margin-right: 16px; margin-bottom: 4px;
-        }
-        .nav-item-link:hover { background-color: var(--tw-slate-50); color: var(--tw-slate-700); }
-        .nav-item-link.active {
-            background-color: #FFFbeb; color: var(--tw-slate-800);
-        }
-        .nav-item-link.active::before {
-            content: ''; position: absolute; left: 0; top: 0; bottom: 0;
-            width: 4px; background-color: var(--tw-yellow-400); border-radius: 0 4px 4px 0;
-        }
-
-        /* 圓角輔助工具 */
-        .rounded-xl { border-radius: 0.75rem !important; }
-        .rounded-2xl { border-radius: 1rem !important; }
-
-        /* Bootstrap 頁籤客製化 */
-        .nav-tabs { border-bottom: 1px solid var(--tw-slate-200); }
-        .nav-tabs .nav-link {
-            border: none; border-bottom: 3px solid transparent; color: var(--tw-slate-500);
-            font-weight: 700; padding: 1rem 0.5rem; margin-right: 2rem; transition: all 0.2s;
-        }
-        .nav-tabs .nav-link:hover { color: var(--tw-slate-700); border-color: var(--tw-slate-200); }
-        .nav-tabs .nav-link.active {
-            color: var(--tw-slate-800); border-color: var(--tw-yellow-400); background: transparent;
-        }
-        .nav-tabs .nav-link.active .material-symbols-outlined { color: var(--tw-yellow-500); }
-
-        /* 卡片與按鈕樣式 */
-        .course-card {
-            background: #fff; border-radius: 1rem; border: 1px solid var(--tw-slate-100);
-            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); transition: all 0.2s;
-        }
-        .course-card:hover { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); border-color: #fef08a; transform: translateY(-2px); }
-        
-        .request-card {
-            background: #fff; border-radius: 1rem; border: 1px solid var(--tw-slate-100);
-            border-left: 4px solid var(--tw-yellow-400); box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-        }
-
-        .btn-yellow {
-            background-color: var(--tw-yellow-400); color: var(--tw-slate-800); font-weight: 700;
-            border: none; transition: all 0.2s;
-        }
-        .btn-yellow:hover { background-color: var(--tw-yellow-500); transform: translateY(-1px); }
-        .btn-yellow:active { transform: scale(0.98); }
-
-        /* 標籤樣式 */
-        .badge-level { background-color: #eff6ff; color: #2563eb; font-weight: 700; border: 1px solid #dbeafe; }
-        .badge-counter { font-size: 0.75rem; padding: 2px 8px; border-radius: 99px; margin-left: 6px; font-weight: 700; }
-        
-        /* 表單元件客製化 */
-        .search-input {
-            padding-left: 2.5rem; border-radius: 0.75rem; border: 1px solid var(--tw-slate-200);
-            font-weight: 500;
-        }
-        .search-input:focus { border-color: var(--tw-yellow-400); box-shadow: 0 0 0 0.25rem rgba(250, 204, 21, 0.25); }
-        
-        /* 側邊欄 Offcanvas 客製化 (填寫報告) */
-        .offcanvas-end { width: 100%; max-width: 500px; border-left: none; box-shadow: -4px 0 24px rgba(0,0,0,0.1); }
-        .star-btn { cursor: pointer; color: #e2e8f0; transition: transform 0.2s; background: none; border: none; padding: 0;}
-        .star-btn.active { color: var(--tw-yellow-400); }
-        .star-btn:hover { transform: scale(1.1); }
-        
-        .form-range::-webkit-slider-thumb { background: var(--tw-teal-500); }
-        .form-range::-moz-range-thumb { background: var(--tw-teal-500); }
-
-        .tag-btn {
-            background-color: #fff; color: var(--tw-slate-500); border: 1px solid var(--tw-slate-200);
-            border-radius: 99px; padding: 6px 16px; font-size: 0.875rem; font-weight: 700; transition: all 0.2s;
-        }
-        .tag-btn.active { background-color: var(--tw-teal-50); color: var(--tw-teal-700); border-color: #bbf7d0; }
-
-        /* 自訂 8 欄網格 (給課表 Modal 用) */
-        .grid-8 { display: grid; grid-template-columns: repeat(8, 1fr); }
-    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/scss/all.scss">
 </head>
-<body class="d-flex vh-100 overflow-hidden">
+<body>
 
-    <!-- ================= 左側導覽列 (加入選單) ================= -->
-    <aside class="sidebar d-none d-lg-flex flex-column z-1 shadow-sm h-100">
+<!-- 手機版頂部 Header -->
+<header class="teacher-mobile-header">
+    <button class="btn btn-light border-0" id="sidebar-toggle">
+        <span class="material-symbols-outlined">menu</span>
+    </button>
+    <span class="logo-text">Merge</span>
+    <div style="width: 40px;"></div>
+</header>
+
+<!-- 手機版遮罩 -->
+<div class="teacher-overlay" id="sidebar-overlay"></div>
+
+<div class="teacher-layout">
+
+    <!-- ===== 左側導覽列 ===== -->
+    <aside class="teacher-sidebar" id="teacher-sidebar">
+
         <!-- Logo -->
-        <div class="p-4 d-flex align-items-center gap-2 mb-2">
-            <div class="bg-warning text-dark rounded-3 d-flex align-items-center justify-content-center fw-bold fs-5" style="width: 36px; height: 36px;">
-                K
-            </div>
-            <div>
-                <div class="fw-bold fs-5 text-dark lh-1 mb-1">KiwiTutor</div>
-                <div class="text-muted" style="font-size: 11px; font-weight: 600;">老師專用後台</div>
+        <div class="teacher-sidebar-logo">
+            <div class="logo-icon">M</div>
+            <div class="logo-text">
+                Merge
+                <span>老師專用後台</span>
             </div>
         </div>
 
-        <!-- 導覽選單 (透過 href 設定超連結) -->
-        <nav class="flex-grow-1 d-flex flex-column">
-            <a href="/teacher-dashboard.html" class="nav-item-link">
+        <!-- 選單 -->
+        <nav class="flex-grow-1 py-2">
+            <a href="teacher-dashboard.html" class="teacher-nav-link">
                 <span class="material-symbols-outlined">grid_view</span> 控制台
             </a>
-            <a href="/teacher-schedule.html" class="nav-item-link">
-                <span class="material-symbols-outlined">calendar_month</span> 我的課表
+            <a href="teacher-schedule.html" class="teacher-nav-link">
+                <span class="material-symbols-outlined">calendar_month</span> 行程與排課
             </a>
-            <a href="/teacher-courses.html" class="nav-item-link active">
-                <span class="material-symbols-outlined icon-filled text-warning">menu_book</span> 我的課程
+            <a href="teacher-courses.html" class="teacher-nav-link active">
+                <span class="material-symbols-outlined">menu_book</span> 課程管理
             </a>
-            <a href="/teacher-income.html" class="nav-item-link">
-                <span class="material-symbols-outlined">account_balance_wallet</span> 收入概覽
+            <a href="teacher-reviews.html" class="teacher-nav-link">
+                <span class="material-symbols-outlined">assignment</span> 報告與評價
             </a>
-            <a href="/teacher-messages.html" class="nav-item-link">
+            <a href="teacher-income.html" class="teacher-nav-link">
+                <span class="material-symbols-outlined">account_balance_wallet</span> 收益與績效
+            </a>
+            <a href="teacher-messages.html" class="teacher-nav-link">
                 <span class="material-symbols-outlined">chat_bubble</span> 訊息中心
             </a>
-            <a href="/teacher-settings.html" class="nav-item-link">
+            <a href="teacher-settings.html" class="teacher-nav-link">
                 <span class="material-symbols-outlined">settings</span> 設定
             </a>
         </nav>
 
         <!-- 底部個人資訊 -->
-        <div class="p-4 border-top d-flex align-items-center justify-content-between" style="cursor: pointer;">
-            <div class="d-flex align-items-center gap-3">
-                <img src="https://ui-avatars.com/api/?name=Sunny+Chen&background=facc15&color=fff" alt="Sunny" class="rounded-circle" width="40" height="40">
-                <div>
-                    <div class="fw-bold text-dark fs-6 lh-1 mb-1">Sunny Chen</div>
-                    <div class="text-muted" style="font-size: 12px; font-weight: 600;">金牌講師</div>
-                </div>
+        <div class="teacher-sidebar-footer" id="logout-btn">
+            <img id="sidebar-avatar" src="https://via.placeholder.com/38" alt="頭像" class="teacher-avatar">
+            <div class="teacher-info">
+                <div class="teacher-name" id="sidebar-name">載入中...</div>
+                <div class="teacher-role">老師</div>
             </div>
-            <span class="material-symbols-outlined text-muted">logout</span>
+            <span class="material-symbols-outlined logout-icon">logout</span>
         </div>
     </aside>
 
-    <!-- ================= 右側主內容區 ================= -->
-    <main class="flex-grow-1 overflow-auto p-4 p-md-5 bg-light">
-        <div class="container-fluid mx-auto" style="max-width: 1280px;">
-            
-            <!-- 頂部標題區 -->
-            <header class="d-flex flex-column flex-sm-row align-items-sm-end justify-content-between gap-3 mb-4">
-                <div>
-                    <h1 class="font-display fw-bold text-dark mb-1" style="font-size: 1.875rem; letter-spacing: -0.5px;">我的課程</h1>
-                    <p class="text-muted fw-medium mb-0">管理您的課程安排、審核學生請求以及查看歷史紀錄。</p>
-                </div>
-            </header>
+    <!-- ===== 右側主內容區 ===== -->
+    <main class="teacher-main">
 
-            <!-- ================= 頁籤區 (Bootstrap Nav Tabs) ================= -->
-            <ul class="nav nav-tabs mb-4" id="courseTabs" role="tablist">
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link active d-flex align-items-center gap-2" id="upcoming-tab" data-bs-toggle="tab" data-bs-target="#upcoming-pane" type="button" role="tab">
-                        <span class="material-symbols-outlined">calendar_month</span> 即將開始
-                        <span class="badge-counter bg-warning text-dark bg-opacity-25">3</span>
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link d-flex align-items-center gap-2" id="requests-tab" data-bs-toggle="tab" data-bs-target="#requests-pane" type="button" role="tab">
-                        <span class="material-symbols-outlined">schedule</span> 課程請求
-                        <span class="badge-counter bg-danger text-danger bg-opacity-10">2</span>
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link d-flex align-items-center gap-2" id="history-tab" data-bs-toggle="tab" data-bs-target="#history-pane" type="button" role="tab">
-                        <span class="material-symbols-outlined">check_circle</span> 歷史紀錄
-                    </button>
-                </li>
-            </ul>
+        <!-- 頁面標題 -->
+        <h1 class="teacher-page-title">課程管理</h1>
+        <p class="teacher-page-subtitle"></p>
 
-            <!-- ================= 頁籤內容區 ================= -->
-            <div class="tab-content" id="courseTabsContent">
-                
-                <!-- 🟢 Tab 1: 即將開始 -->
-                <div class="tab-pane fade show active" id="upcoming-pane" role="tabpanel" tabindex="0">
-                    <div class="d-flex flex-column gap-3">
-                        
-                        <!-- 課程卡片 1 -->
-                        <div class="course-card p-4 d-flex flex-column flex-md-row align-items-md-center gap-4">
-                            <div class="position-relative flex-shrink-0">
-                                <img src="https://ui-avatars.com/api/?name=Leo&background=e2e8f0&color=475569" alt="Leo" class="rounded-circle border border-3 border-white shadow-sm" width="64" height="64">
-                                <span class="position-absolute bottom-0 end-0 bg-success border border-2 border-white rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 24px; height: 24px; margin-bottom: -4px; margin-right: -4px;">
-                                    <span class="material-symbols-outlined text-white icon-filled" style="font-size: 14px;">videocam</span>
-                                </span>
-                            </div>
-                            <div class="flex-grow-1 text-center text-md-start">
-                                <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-center justify-content-md-start gap-2 mb-2">
-                                    <h3 class="fs-5 fw-bold text-dark mb-0">趣味發音課 - 基礎</h3>
-                                    <span class="badge badge-level rounded-2">Level 1</span>
-                                </div>
-                                <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-center justify-content-md-start gap-3 text-muted small fw-medium">
-                                    <span class="d-flex align-items-center gap-1"><span class="material-symbols-outlined" style="font-size: 16px;">schedule</span> 10月26日 14:00</span>
-                                    <span class="d-none d-md-inline text-light">|</span>
-                                    <span class="d-flex align-items-center gap-1">
-                                        <span class="bg-secondary rounded-circle" style="width: 6px; height: 6px;"></span>
-                                        學生: <span class="text-dark fw-bold">小明 (Leo)</span>
-                                    </span>
-                                </div>
-                            </div>
-                            <button class="btn btn-yellow rounded-xl py-2 px-4 d-flex align-items-center justify-content-center gap-2">
-                                <span class="material-symbols-outlined icon-filled">videocam</span> 進入教室
-                            </button>
-                        </div>
-
-                        <!-- 課程卡片 2 -->
-                        <div class="course-card p-4 d-flex flex-column flex-md-row align-items-md-center gap-4">
-                            <div class="position-relative flex-shrink-0">
-                                <img src="https://ui-avatars.com/api/?name=Sophie&background=fce7f3&color=be185d" alt="Sophie" class="rounded-circle border border-3 border-white shadow-sm" width="64" height="64">
-                                <span class="position-absolute bottom-0 end-0 bg-success border border-2 border-white rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 24px; height: 24px; margin-bottom: -4px; margin-right: -4px;">
-                                    <span class="material-symbols-outlined text-white icon-filled" style="font-size: 14px;">videocam</span>
-                                </span>
-                            </div>
-                            <div class="flex-grow-1 text-center text-md-start">
-                                <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-center justify-content-md-start gap-2 mb-2">
-                                    <h3 class="fs-5 fw-bold text-dark mb-0">生活英語會話 - 購物篇</h3>
-                                    <span class="badge rounded-2" style="background-color: #f3e8ff; color: #7e22ce; border: 1px solid #e9d5ff;">Level 3</span>
-                                </div>
-                                <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-center justify-content-md-start gap-3 text-muted small fw-medium">
-                                    <span class="d-flex align-items-center gap-1"><span class="material-symbols-outlined" style="font-size: 16px;">schedule</span> 10月26日 16:30</span>
-                                    <span class="d-none d-md-inline text-light">|</span>
-                                    <span class="d-flex align-items-center gap-1">
-                                        <span class="bg-secondary rounded-circle" style="width: 6px; height: 6px;"></span>
-                                        學生: <span class="text-dark fw-bold">小美 (Sophie)</span>
-                                    </span>
-                                </div>
-                            </div>
-                            <button class="btn btn-yellow rounded-xl py-2 px-4 d-flex align-items-center justify-content-center gap-2">
-                                <span class="material-symbols-outlined icon-filled">videocam</span> 進入教室
-                            </button>
-                        </div>
-
-                    </div>
-                </div>
-
-                <!-- 🔴 Tab 2: 課程請求 -->
-                <div class="tab-pane fade" id="requests-pane" role="tabpanel" tabindex="0">
-                    <div class="d-flex flex-column gap-3">
-                        
-                        <!-- 請求卡片 1 -->
-                        <div class="request-card p-4 d-flex flex-column flex-md-row gap-4">
-                            <div class="d-flex align-items-start gap-3 flex-grow-1">
-                                <img src="https://ui-avatars.com/api/?name=Mimi&background=e0f2fe&color=0369a1" alt="Mimi" class="rounded-circle border border-2 border-light shadow-sm flex-shrink-0" width="56" height="56">
-                                <div class="w-100">
-                                    <h3 class="fs-5 fw-bold text-dark mb-1">陳美美 (Mimi)</h3>
-                                    <p class="text-primary fw-bold small mb-1">劍橋兒童英語 (YLE)</p>
-                                    <div class="d-flex align-items-center gap-1 text-muted small fw-medium mb-2">
-                                        <span class="material-symbols-outlined" style="font-size: 16px;">calendar_month</span> 2024/11/22 16:30 - 17:30
-                                    </div>
-                                    <div class="bg-light p-3 rounded-3 border small text-muted mb-3">
-                                        "希望能加強口說練習"
-                                    </div>
-                                    <!-- 觸發課表 Modal -->
-                                    <button class="btn w-100 rounded-xl d-flex align-items-center justify-content-center gap-2 small fw-bold" style="background-color: #eff6ff; color: #2563eb; border: 1px solid #dbeafe;" data-bs-toggle="modal" data-bs-target="#scheduleModal">
-                                        <span class="material-symbols-outlined" style="font-size: 16px;">calendar_month</span> 查看週課表與時間
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="d-flex flex-column justify-content-center gap-2 flex-shrink-0" style="min-width: 140px;">
-                                <button class="btn btn-yellow rounded-xl py-2 fw-bold d-flex align-items-center justify-content-center gap-2 shadow-sm">
-                                    <span class="material-symbols-outlined icon-filled" style="font-size: 18px;">check_circle</span> 接受預約
-                                </button>
-                                <button class="btn btn-white border rounded-xl py-2 fw-bold text-muted d-flex align-items-center justify-content-center gap-2 shadow-sm hover-bg-light">
-                                    <span class="material-symbols-outlined" style="font-size: 18px;">cancel</span> 婉拒
-                                </button>
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
-
-                <!-- 🔵 Tab 3: 歷史紀錄 -->
-                <div class="tab-pane fade" id="history-pane" role="tabpanel" tabindex="0">
-                    <div class="d-flex flex-column gap-4">
-                        
-                        <!-- 搜尋列 -->
-                        <div class="d-flex gap-3">
-                            <div class="position-relative flex-grow-1">
-                                <span class="material-symbols-outlined position-absolute top-50 translate-middle-y text-muted" style="left: 12px;">search</span>
-                                <input type="text" class="form-control search-input py-2" placeholder="搜尋課程或學生...">
-                            </div>
-                            <button class="btn bg-white border rounded-xl d-flex align-items-center gap-2 fw-bold text-muted shadow-sm px-3">
-                                <span class="material-symbols-outlined" style="font-size: 18px;">filter_alt</span> <span class="d-none d-sm-inline">篩選</span>
-                            </button>
-                        </div>
-
-                        <!-- 歷史清單 -->
-                        <div class="d-flex flex-column gap-3">
-                            
-                            <!-- 歷史卡片 1 -->
-                            <div class="bg-white rounded-xl p-3 border d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-3 shadow-sm hover-bg-light transition-all">
-                                <div class="d-flex align-items-center gap-3">
-                                    <img src="https://ui-avatars.com/api/?name=Jason&background=fef08a&color=854d0e" class="rounded-circle border" width="48" height="48" style="filter: grayscale(0.2);">
-                                    <div>
-                                        <h4 class="fw-bold text-dark fs-6 mb-0">Space Exploration</h4>
-                                        <p class="text-muted small fw-medium mb-0 mt-1">2023/10/25 • 阿強 (Jason)</p>
-                                    </div>
-                                </div>
-                                <div class="d-flex align-items-center justify-content-between justify-content-sm-end gap-4 w-100 w-sm-auto">
-                                    <div class="d-none d-md-flex align-items-center text-warning">
-                                        <span class="material-symbols-outlined icon-filled" style="font-size: 18px;">star</span>
-                                        <span class="material-symbols-outlined icon-filled" style="font-size: 18px;">star</span>
-                                        <span class="material-symbols-outlined icon-filled" style="font-size: 18px;">star</span>
-                                        <span class="material-symbols-outlined icon-filled" style="font-size: 18px;">star</span>
-                                        <span class="material-symbols-outlined icon-filled" style="font-size: 18px;">star</span>
-                                    </div>
-                                    <!-- 觸發 Offcanvas (填寫報告) -->
-                                    <button class="btn btn-yellow rounded-xl py-2 px-3 fw-bold text-dark text-sm d-flex align-items-center gap-2 shadow-sm" data-bs-toggle="offcanvas" data-bs-target="#reportOffcanvas">
-                                        <span class="material-symbols-outlined icon-filled" style="font-size: 16px;">description</span> 填寫報告
-                                    </button>
-                                </div>
-                            </div>
-
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-
-        <!-- ================= Bootstrap Offcanvas: 填寫課後報告面板 ================= -->
-        <div class="offcanvas offcanvas-end" tabindex="-1" id="reportOffcanvas" aria-labelledby="reportOffcanvasLabel">
-            <!-- 面板標題 -->
-            <div class="offcanvas-header border-bottom p-4">
-                <div class="d-flex align-items-center gap-3">
-                    <button type="button" class="btn-close m-0" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-                    <h5 class="offcanvas-title fw-black text-dark fs-5" id="reportOffcanvasLabel">填寫課後學習報告</h5>
-                </div>
-            </div>
-            
-            <!-- 學生資訊列 -->
-            <div class="p-4 bg-light border-bottom d-flex align-items-center gap-3">
-                <img src="https://ui-avatars.com/api/?name=Jason&background=fef08a&color=854d0e" class="rounded-circle border border-2 border-white shadow-sm" width="56" height="56">
-                <div>
-                    <h3 class="fs-6 fw-bold text-dark mb-1">阿強 (Jason)</h3>
-                    <p class="small fw-bold text-success mb-0 d-flex align-items-center gap-1">
-                        <span class="bg-success rounded-circle" style="width: 8px; height: 8px;"></span> Space Exploration
-                    </p>
-                </div>
-            </div>
-
-            <!-- 面板內容 -->
-            <div class="offcanvas-body p-4 d-flex flex-column gap-4">
-                
-                <!-- Section A: 整體評價 (星星) -->
-                <div>
-                    <label class="small fw-bold text-muted text-uppercase tracking-wider mb-2">整體評價</label>
-                    <div class="d-flex gap-2" id="starContainer">
-                        <!-- 使用 JS 控制 active 狀態 -->
-                        <button class="star-btn active" data-value="1"><span class="material-symbols-outlined icon-filled" style="font-size: 36px;">star</span></button>
-                        <button class="star-btn active" data-value="2"><span class="material-symbols-outlined icon-filled" style="font-size: 36px;">star</span></button>
-                        <button class="star-btn active" data-value="3"><span class="material-symbols-outlined icon-filled" style="font-size: 36px;">star</span></button>
-                        <button class="star-btn active" data-value="4"><span class="material-symbols-outlined icon-filled" style="font-size: 36px;">star</span></button>
-                        <button class="star-btn" data-value="5"><span class="material-symbols-outlined" style="font-size: 36px;">star</span></button>
-                    </div>
-                </div>
-
-                <!-- Section B: 能力雷達 (Slider) -->
-                <div>
-                    <label class="small fw-bold text-muted text-uppercase tracking-wider mb-3">能力雷達</label>
-                    <div class="d-flex flex-column gap-3">
-                        <div>
-                            <div class="d-flex justify-content-between small fw-bold text-dark mb-1">
-                                <span>參與專注度</span><span class="text-success">4/5</span>
-                            </div>
-                            <input type="range" class="form-range" min="1" max="5" value="4">
-                        </div>
-                        <div>
-                            <div class="d-flex justify-content-between small fw-bold text-dark mb-1">
-                                <span>發音清晰度</span><span class="text-success">3/5</span>
-                            </div>
-                            <input type="range" class="form-range" min="1" max="5" value="3">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Section C: 標籤 -->
-                <div>
-                    <label class="small fw-bold text-muted text-uppercase tracking-wider mb-2">今日重點</label>
-                    <div class="d-flex flex-wrap gap-2">
-                        <button class="tag-btn active" onclick="this.classList.toggle('active')">自然發音</button>
-                        <button class="tag-btn active" onclick="this.classList.toggle('active')">認識動物</button>
-                        <button class="tag-btn" onclick="this.classList.toggle('active')">句型問答</button>
-                        <button class="tag-btn" onclick="this.classList.toggle('active')">聽力練習</button>
-                    </div>
-                </div>
-
-                <!-- Section D: 文字評語 -->
-                <div>
-                    <div class="d-flex justify-content-between align-items-end mb-2">
-                        <label class="small fw-bold text-muted text-uppercase tracking-wider">溫暖評語</label>
-                        <div class="d-flex gap-2">
-                            <button class="btn btn-sm text-warning fw-bold border-warning bg-warning bg-opacity-10 py-0" style="font-size: 11px;">✨ 表現優異</button>
-                        </div>
-                    </div>
-                    <textarea class="form-control bg-light border-0 rounded-3 p-3 text-dark fw-medium" rows="4" placeholder="寫下您對學生今天表現的鼓勵與建議..."></textarea>
-                </div>
-
-            </div>
-
-            <!-- 面板底部按鈕 -->
-            <div class="p-4 border-top bg-white d-flex gap-3">
-                <button class="btn bg-white border text-muted fw-bold rounded-xl px-4 d-flex align-items-center gap-2">
-                    <span class="material-symbols-outlined" style="font-size: 18px;">save</span> 儲存
-                </button>
-                <button class="btn btn-yellow fw-black rounded-xl flex-grow-1 shadow-sm d-flex align-items-center justify-content-center gap-2" onclick="submitReport()">
-                    <span class="material-symbols-outlined" style="font-size: 18px;">send</span> 送出報告給家長
-                </button>
-            </div>
-        </div>
-
-        <!-- ================= Bootstrap Modal: 預約課表詳情 ================= -->
-        <div class="modal fade" id="scheduleModal" tabindex="-1" aria-labelledby="scheduleModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered modal-lg">
-                <div class="modal-content rounded-4 border-0 shadow-lg overflow-hidden">
-                    <!-- Modal Header -->
-                    <div class="modal-header bg-light border-bottom p-4">
-                        <div>
-                            <h5 class="modal-title fw-black text-dark d-flex align-items-center gap-2 fs-4" id="scheduleModalLabel">
-                                <span class="material-symbols-outlined text-warning">calendar_month</span> 預約課表詳情
-                            </h5>
-                            <p class="text-muted small fw-medium mb-0 mt-1">學生：<span class="text-primary fw-bold">陳美美 (Mimi)</span></p>
-                        </div>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    
-                    <!-- Modal Body -->
-                    <div class="modal-body p-4">
-                        
-                        <!-- 圖例 -->
-                        <div class="d-flex flex-wrap gap-3 small fw-bold mb-4">
-                            <div class="d-flex align-items-center gap-2"><span class="bg-primary rounded-circle" style="width:12px; height:12px;"></span><span class="text-muted">預約時段 (REQ)</span></div>
-                            <div class="d-flex align-items-center gap-2"><span class="bg-success rounded-circle" style="width:12px; height:12px;"></span><span class="text-muted">已進行課程</span></div>
-                            <div class="d-flex align-items-center gap-2"><span class="bg-warning rounded-circle" style="width:12px; height:12px;"></span><span class="text-muted">已有行程</span></div>
-                            <div class="d-flex align-items-center gap-2"><span class="bg-light border rounded-circle" style="width:12px; height:12px;"></span><span class="text-muted">未開放</span></div>
-                        </div>
-
-                        <!-- 行事曆網格 (使用 CSS Grid 實作) -->
-                        <div class="border rounded-3 overflow-hidden">
-                            <!-- 表頭 -->
-                            <div class="grid-8 bg-light border-bottom">
-                                <div class="p-2 text-center small fw-bold text-muted border-end">時段</div>
-                                <div class="p-2 text-center small fw-bold text-dark border-end">Mon</div>
-                                <div class="p-2 text-center small fw-bold text-dark border-end">Tue</div>
-                                <div class="p-2 text-center small fw-bold text-dark border-end">Wed</div>
-                                <div class="p-2 text-center small fw-bold text-dark border-end">Thu</div>
-                                <div class="p-2 text-center small fw-bold text-dark border-end">Fri</div>
-                                <div class="p-2 text-center small fw-bold text-dark border-end">Sat</div>
-                                <div class="p-2 text-center small fw-bold text-dark">Sun</div>
-                            </div>
-                            
-                            <!-- 時間列 14:00 -->
-                            <div class="grid-8 border-bottom">
-                                <div class="p-2 text-center bg-light text-muted fw-bold border-end d-flex align-items-center justify-content-center" style="font-size: 11px;">14:00</div>
-                                <div class="border-end"></div>
-                                <div class="border-end"></div>
-                                <div class="border-end p-1">
-                                    <!-- 預約標記 -->
-                                    <div class="bg-primary bg-opacity-10 text-primary fw-bold rounded-2 border-start border-primary border-3 h-100 d-flex align-items-center justify-content-center" style="font-size: 10px; min-height: 40px;">REQ</div>
-                                </div>
-                                <div class="border-end"></div>
-                                <div class="border-end"></div>
-                                <div class="border-end bg-light"></div>
-                                <div class="bg-light"></div>
-                            </div>
-
-                            <!-- 時間列 15:00 -->
-                            <div class="grid-8 border-bottom">
-                                <div class="p-2 text-center bg-light text-muted fw-bold border-end d-flex align-items-center justify-content-center" style="font-size: 11px;">15:00</div>
-                                <div class="border-end"></div>
-                                <div class="border-end p-1">
-                                    <div class="bg-warning bg-opacity-10 text-warning fw-bold rounded-2 border-start border-warning border-3 h-100 d-flex align-items-center justify-content-center" style="font-size: 10px; min-height: 40px; color: #b45309 !important;">行程</div>
-                                </div>
-                                <div class="border-end"></div>
-                                <div class="border-end"></div>
-                                <div class="border-end"></div>
-                                <div class="border-end bg-light"></div>
-                                <div class="bg-light"></div>
-                            </div>
-                        </div>
-
-                    </div>
-                    
-                    <!-- Modal Footer -->
-                    <div class="modal-footer border-top-0 p-4 pt-0">
-                        <button type="button" class="btn bg-light text-muted fw-bold w-100 rounded-xl py-2" data-bs-dismiss="modal">關閉</button>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <!-- ★ 這裡放頁面內容 ★ -->
 
     </main>
+</div>
 
-    <!-- Bootstrap 5 JS Bundle (包含 Popper) -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-
-    <!-- 頁面互動邏輯 (Vanilla JS) -->
-    <script>
-        // 處理星星評分的點擊事件
-        const stars = document.querySelectorAll('.star-btn');
-        stars.forEach(star => {
-            star.addEventListener('click', (e) => {
-                const clickedValue = parseInt(e.currentTarget.getAttribute('data-value'));
-                stars.forEach(s => {
-                    const val = parseInt(s.getAttribute('data-value'));
-                    if (val <= clickedValue) {
-                        s.classList.add('active');
-                        s.querySelector('span').classList.add('icon-filled');
-                    } else {
-                        s.classList.remove('active');
-                        s.querySelector('span').classList.remove('icon-filled');
-                    }
-                });
-            });
-        });
-
-        // 模擬送出報告
-        function submitReport() {
-            alert('學習報告已成功送出！');
-            // 關閉 Offcanvas
-            const offcanvasElement = document.getElementById('reportOffcanvas');
-            const offcanvasInstance = bootstrap.Offcanvas.getInstance(offcanvasElement);
-            if (offcanvasInstance) {
-                offcanvasInstance.hide();
-            }
-        }
-    </script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="./assets/js/teacher-layout.js"></script>
 </body>
 </html>
