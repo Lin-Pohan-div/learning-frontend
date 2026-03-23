@@ -108,10 +108,18 @@
         <button class="btn-search" onclick="handleSearch()">🔍 開始尋找</button>
       </section>
 
-      <section id="course-list-container" class="course-grid">
-        <h3 style="text-align: center; width: 100%; color: #666">
-          ⏳ 課程資料載入中...
-        </h3>
+      <!-- 課程卡片區 -->
+      <section class="bg-gray">
+        <div class="container">
+          <div
+            id="course-list-container"
+            class="row row-cols-lg-4 row-cols-md-2 row-cols-1 g-4"
+          >
+            <h3 style="text-align: center; width: 100%; color: #666">
+              ⏳ 課程資料載入中...
+            </h3>
+          </div>
+        </div>
       </section>
     </div>
 
@@ -121,7 +129,7 @@
 
       // Google Drive 連結轉換
       function convertGoogleDriveUrl(url) {
-        if (!url) return "https://via.placeholder.com/80";
+        if (!url) return "https://via.placeholder.com/400x300";
         const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
         if (match) return `https://lh3.googleusercontent.com/d/${match[1]}`;
         return url;
@@ -139,13 +147,11 @@
         let html = '<div class="schedule-popup-title">📅 開課時段</div>';
         html += '<div class="schedule-grid-popup">';
 
-        // 星期標題列
         html += '<div class="row-label"></div>';
         days.forEach((d) => {
           html += `<div class="col-header">週${d}</div>`;
         });
 
-        // 三個時段列
         periods.forEach((period) => {
           html += `<div class="row-label">${period.label}</div>`;
           for (let day = 1; day <= 7; day++) {
@@ -156,6 +162,20 @@
 
         html += "</div>";
         return html;
+      }
+
+      // 取得課程科目標籤文字
+      function getSubjectLabel(subject) {
+        const map = {
+          11: "低年級",
+          12: "中年級",
+          13: "高年級",
+          21: "GEPT",
+          22: "YLE",
+          23: "國中先修",
+          31: "其他",
+        };
+        return map[subject] || "";
       }
 
       async function fetchCourses() {
@@ -187,36 +207,75 @@
 
         coursesToRender.forEach((course) => {
           const scheduleHTML = buildSchedulePopup(course.availableSlots || []);
+          const subjectLabel = getSubjectLabel(course.subject);
+
           const cardHTML = `
-                    <div class="course-card">
-                        <div class="tutor-avatar">
-                            <img src="${convertGoogleDriveUrl(course.avatarUrl)}" alt="頭像">
-                        </div>
+            <div class="col">
+              <div class="card bg-success border position-relative h-100 explore-card">
+                <!-- Teacher From TW Badge -->
+                <span class="badge border border-dark text-dark bg-secondary position-absolute translate-middle-y top-0" style="left: -2px; z-index: 2;">
+                  Teacher From TW.
+                </span>
 
-                        <div class="tutor-info">
-                            <h2>${course.teacherName || "老師名字"}</h2>
-                            <span class="badge">⭐ ${course.title || "優質教師"}</span>
-                        </div>
+                <!-- 老師頭像 -->
+                <img src="${convertGoogleDriveUrl(course.avatarUrl)}" class="border-bottom bg-line object-fit-cover" style="height: 220px;" alt="${course.teacherName}">
 
-                        <h3 class="course-title">${course.courseName || "課程名稱"}</h3>
-                        <p class="course-desc">${course.description || "這是一堂非常棒的課程！"}</p>
+                <!-- 老師資訊 -->
+                <div class="card-body position-relative">
+                  <div class="d-flex align-items-center">
+                    <h5 class="mb-0 sansTeg border border-2 d-inline-block border-secondary rounded-circle">
+                      ${course.teacherName || "老師"}
+                    </h5>
+                    <span class="ms-auto badge text-dark border rounded-pill bg-light">★ 4.9</span>
+                  </div>
+                  <span class="position-absolute translate-middle-y display-5 text-secondary end-0" style="top: -2px">✦</span>
 
-                        <div class="card-footer">
-                            <div class="price-info">
-                                <div class="label">正式課單堂</div>
-                                <div class="price">NT$ ${course.price || 0}</div>
-                            </div>
-                            <a href="teacher-profile.html?tutorId=${course.tutorId}&courseId=${course.id}" style="text-decoration:none;">
-                                <button class="btn-book">立即預約 👉</button>
-                            </a>
-                        </div>
+                  <div class="card-text mt-2">
+                    <p class="nunito ps-1 mb-0 d-inline-block px-1">${course.courseName || "課程名稱"}</p>
+                    <br>
+                    ${subjectLabel ? `<small class="fw-light bg-light ps-1">${subjectLabel}</small>` : ""}
+                    ${course.title ? `<small class="fw-light bg-light ps-1">${course.title}</small>` : ""}
+                  </div>
+                </div>
 
-                        <!-- Hover 課表彈出 -->
-                        <div class="schedule-popup">
-                            ${scheduleHTML}
-                        </div>
-                    </div>
-                `;
+                <div class="d-flex gap-3 ps-1 pt-2">
+                  <!-- 體驗課 -->
+                  <div class="flex-fill">
+                      <span class="mb-0 d-block" style="font-size: 14px">
+                          體驗課 <span class="fw-light bg-secondary text-light ms-1 px-1" style="font-size: 12px">首堂優惠</span>
+                      </span>
+                      <p class="mb-1 d-flex align-items-baseline">
+                          <span class="sansTeg text-secondary" style="font-size: 1.75rem; font-weight: 900;">200</span>
+                          <span class="fw-light text-dark" style="font-size: 13px; margin-left: 2px;">/ 60 mins</span>
+                      </p>
+                  </div>
+
+                  <!-- 正式課 -->
+                  <div class="flex-fill">
+                      <span class="mb-0 d-block" style="font-size: 14px">
+                          單堂 <span class="fw-light bg-primary text-light ms-1 px-1" style="font-size: 12px">一般方案</span>
+                      </span>
+                      <p class="mb-1 d-flex align-items-baseline">
+                          <span class="sansTeg text-primary" style="font-size: 1.75rem; font-weight: 900;">${course.price || 0}</span>
+                          <span class="fw-light text-dark" style="font-size: 13px; margin-left: 2px;">/ 60 mins</span>
+                      </p>
+                  </div>
+                </div>
+
+                  <a href="teacher-profile.html?tutorId=${course.tutorId}&courseId=${course.id}" class="text-decoration-none">
+                    <button type="button" class="btn btn-primary ms-auto my-2 border border-light shadow-sm w-100">
+                      <p class="fs-5 mb-0 fw-bold">LET'S TALK +</p>
+                    </button>
+                  </a>
+                </div>
+
+                <!-- Hover 課表彈出 -->
+                <div class="schedule-popup">
+                  ${scheduleHTML}
+                </div>
+              </div>
+            </div>
+          `;
           container.innerHTML += cardHTML;
         });
       }
