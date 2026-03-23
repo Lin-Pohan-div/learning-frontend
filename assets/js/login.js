@@ -45,11 +45,10 @@ document
         alert("🎉 登入成功！");
 
         // 依角色跳轉
-        if (payload.role === "TUTOR") {
-          window.location.href = "teacher-dashboard.html";
-        } else if (payload.role === "ADMIN") {
+        if (payload.role === 'ADMIN') {
           window.location.href = "index.html";
         } else {
+          // TUTOR 和 STUDENT 都跳首頁
           window.location.href = "index.html";
         }
       } else {

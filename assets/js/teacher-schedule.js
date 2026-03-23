@@ -4,14 +4,14 @@
 
 const tutorId = localStorage.getItem('userId');
 
-const DAY_NAMES   = ['一', '二', '三', '四', '五', '六', '日'];
-const MONTH_NAMES = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
-const HOURS       = [9,10,11,12,13,14,15,16,17,18,19,20,21];
+const DAY_NAMES = ['一', '二', '三', '四', '五', '六', '日'];
+const MONTH_NAMES = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
+const HOURS = [9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21];
 
-let bookings      = [];
-let scheduleMap   = {};
-let pendingMap    = {};
-let isEditMode    = false;
+let bookings = [];
+let scheduleMap = {};
+let pendingMap = {};
+let isEditMode = false;
 let currentWeekOffset = 0;
 const MAX_WEEK = 4;
 
@@ -46,22 +46,22 @@ function getWeekDates(weekOffset) {
 
 // ── 格式化日期 ──
 function formatDate(date) {
-    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 }
 
 // ── 解析 booking 的 date 欄位 ──
 function parseDateStr(b) {
     return Array.isArray(b.date)
-        ? `${b.date[0]}-${String(b.date[1]).padStart(2,'0')}-${String(b.date[2]).padStart(2,'0')}`
+        ? `${b.date[0]}-${String(b.date[1]).padStart(2, '0')}-${String(b.date[2]).padStart(2, '0')}`
         : b.date;
 }
 
 // ── 渲染週行事曆 ──
 function renderWeekGrid() {
     const weekDates = getWeekDates(currentWeekOffset);
-    const todayStr  = formatDate(new Date());
-    const grid      = document.getElementById('week-grid');
-    grid.innerHTML  = '';
+    const todayStr = formatDate(new Date());
+    const grid = document.getElementById('week-grid');
+    grid.innerHTML = '';
 
     weekDates.forEach((date, i) => {
         const dateStr = formatDate(date);
@@ -92,7 +92,7 @@ function renderWeekGrid() {
                 const slot = document.createElement('div');
                 slot.className = 'booking-slot';
                 slot.innerHTML = `
-                    ${String(b.hour).padStart(2,'0')}:00<br>
+                    ${String(b.hour).padStart(2, '0')}:00<br>
                     <span style="font-size:0.65rem; opacity:0.8;">${b.studentName || '學生 #' + b.studentId}</span>
                 `;
                 col.appendChild(slot);
@@ -103,10 +103,10 @@ function renderWeekGrid() {
 
     // 週標籤
     const start = weekDates[0];
-    const end   = weekDates[6];
-    const label = `${start.getMonth()+1}/${start.getDate()} － ${end.getMonth()+1}/${end.getDate()}`;
+    const end = weekDates[6];
+    const label = `${start.getMonth() + 1}/${start.getDate()} － ${end.getMonth() + 1}/${end.getDate()}`;
     document.getElementById('week-label').textContent =
-        currentWeekOffset === 0 ? `本週 ${label}` : `第 ${currentWeekOffset + 1} 週 ${label}`;
+        currentWeekOffset === 0 ? `本週 ${label}` : label;
 
     document.getElementById('prev-week').disabled = currentWeekOffset <= -(MAX_WEEK);
     document.getElementById('next-week').disabled = currentWeekOffset >= MAX_WEEK;
@@ -120,14 +120,14 @@ function renderUpcomingList() {
     upcomingList = bookings
         .filter(b => {
             if (!b.slotLocked) return false;
-            const dateStr  = parseDateStr(b);
-            const slotTime = new Date(`${dateStr}T${String(b.hour).padStart(2,'0')}:00:00`);
+            const dateStr = parseDateStr(b);
+            const slotTime = new Date(`${dateStr}T${String(b.hour).padStart(2, '0')}:00:00`);
             return slotTime >= now;
         })
         .map(b => ({ ...b, dateStr: parseDateStr(b) }))
         .sort((a, b) => {
-            const ta = new Date(`${a.dateStr}T${String(a.hour).padStart(2,'0')}:00:00`);
-            const tb = new Date(`${b.dateStr}T${String(b.hour).padStart(2,'00')}:00:00`);
+            const ta = new Date(`${a.dateStr}T${String(a.hour).padStart(2, '0')}:00:00`);
+            const tb = new Date(`${b.dateStr}T${String(b.hour).padStart(2, '00')}:00:00`);
             return ta - tb;
         });
 
@@ -142,7 +142,7 @@ function renderUpcomingPage(page) {
     const container = document.getElementById('upcoming-list');
     const totalPages = Math.ceil(upcomingList.length / PAGE_SIZE);
     const start = (page - 1) * PAGE_SIZE;
-    const end   = start + PAGE_SIZE;
+    const end = start + PAGE_SIZE;
     const pageData = upcomingList.slice(start, end);
 
     if (upcomingList.length === 0) {
@@ -159,11 +159,11 @@ function renderUpcomingPage(page) {
     let html = '<div class="upcoming-grid">';
 
     pageData.forEach(b => {
-        const slotTime = new Date(`${b.dateStr}T${String(b.hour).padStart(2,'0')}:00:00`);
-        const diffMin  = (slotTime - new Date()) / 60000;
-        const isSoon   = diffMin > 0 && diffMin <= 60;
-        const month    = parseInt(b.dateStr.split('-')[1]);
-        const day      = parseInt(b.dateStr.split('-')[2]);
+        const slotTime = new Date(`${b.dateStr}T${String(b.hour).padStart(2, '0')}:00:00`);
+        const diffMin = (slotTime - new Date()) / 60000;
+        const isSoon = diffMin > 0 && diffMin <= 60;
+        const month = parseInt(b.dateStr.split('-')[1]);
+        const day = parseInt(b.dateStr.split('-')[2]);
 
         const statusBadge = isSoon
             ? `<span class="booking-status-badge status-soon">⚡ 即將開始</span>`
@@ -172,7 +172,7 @@ function renderUpcomingPage(page) {
         html += `
             <div class="upcoming-grid-item">
                 <div class="upcoming-grid-date">
-                    <span class="badge-month">${MONTH_NAMES[month-1]}</span>
+                    <span class="badge-month">${MONTH_NAMES[month - 1]}</span>
                     <span class="badge-day">${day}</span>
                 </div>
                 <div class="upcoming-grid-info">
@@ -184,7 +184,7 @@ function renderUpcomingPage(page) {
                     <div class="upcoming-grid-meta">
                         <span>
                             <span class="material-symbols-outlined" style="font-size:13px;">schedule</span>
-                            ${String(b.hour).padStart(2,'0')}:00 - ${String(b.hour+1).padStart(2,'0')}:00
+                            ${String(b.hour).padStart(2, '0')}:00 - ${String(b.hour + 1).padStart(2, '0')}:00
                         </span>
                         ${statusBadge}
                     </div>
@@ -230,19 +230,19 @@ function renderScheduleGrid() {
     HOURS.forEach(hour => {
         const timeLabel = document.createElement('div');
         timeLabel.className = 'sg-time-label';
-        timeLabel.textContent = `${String(hour).padStart(2,'0')}:00`;
+        timeLabel.textContent = `${String(hour).padStart(2, '0')}:00`;
         container.appendChild(timeLabel);
 
         for (let weekday = 1; weekday <= 7; weekday++) {
-            const key          = `${weekday}-${hour}`;
-            const isAvailable  = !!scheduleMap[key];
-            const isPending    = key in pendingMap;
+            const key = `${weekday}-${hour}`;
+            const isAvailable = !!scheduleMap[key];
+            const isPending = key in pendingMap;
             const displayState = isPending ? pendingMap[key] : isAvailable;
 
             const cell = document.createElement('div');
             cell.dataset.weekday = weekday;
-            cell.dataset.hour    = hour;
-            cell.dataset.key     = key;
+            cell.dataset.hour = hour;
+            cell.dataset.key = key;
 
             updateCellClass(cell, displayState, isPending);
 
@@ -267,9 +267,9 @@ function updateCellClass(cell, isOn, isPending) {
 
 // ── 點擊格子（編輯模式）──
 function onCellClick(cell, weekday, hour, key) {
-    const originalState  = !!scheduleMap[key];
+    const originalState = !!scheduleMap[key];
     const currentPending = key in pendingMap ? pendingMap[key] : originalState;
-    const newState       = !currentPending;
+    const newState = !currentPending;
 
     if (newState === originalState) {
         delete pendingMap[key];
@@ -339,9 +339,9 @@ async function saveSchedule() {
         await Promise.all(changes.map(([key, isAvailable]) => {
             const [weekday, hour] = key.split('-').map(Number);
             return axios.post(`${API_BASE_URL}/teacher/schedules/toggle`, {
-                tutorId:     parseInt(tutorId),
-                weekday:     weekday,
-                hour:        hour,
+                tutorId: parseInt(tutorId),
+                weekday: weekday,
+                hour: hour,
                 isAvailable: isAvailable
             });
         }));
