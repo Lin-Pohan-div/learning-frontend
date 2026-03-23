@@ -1,180 +1,142 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>【框線稿】老師個人專頁 - 完整區塊版</title>
+    <link rel="stylesheet" href="./assets/scss/all.scss" />
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <title>老師個人專頁 - Merge</title>
 </head>
-<body style="font-family: sans-serif; color: #333; line-height: 1.5; padding: 20px;">
 
-    <nav style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eaeaea; padding: 12px 40px; background-color: #fff; position: sticky; top: 0; z-index: 100;">
-        <div style="display: flex; align-items: center; gap: 40px;">
-            <div style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                <div style="width: 32px; height: 32px; border: 1px dashed #999; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.6em; background-color: #fafafa;">
-                    Icon
+<body style="padding-top: 70px;">
+
+    <!-- 導覽列（與 index.html 一致） -->
+    <header class="border-bottom py-2 fixed-top navbar-light bg-light">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex">
+                    <a href="index.html" class="text-decoration-none">
+                        <h1 class="nunito fst-italic display-5 pt-2">Merge</h1>
+                    </a>
                 </div>
-                <span style="font-weight: 900; font-size: 1.4em; letter-spacing: -0.5px;">CuteABC</span>
-            </div>
-            <div style="display: flex; gap: 25px;">
-                <a href="#" style="text-decoration: none; color: #4a4a4a; font-weight: bold; display: flex; align-items: center; gap: 5px;">
-                    依課程媒合 <span style="font-size: 0.8em; color: #999;">∨</span>
-                </a>
-                <a href="#" style="text-decoration: none; color: #4a4a4a; font-weight: bold;">價格方案</a>
+                <nav class="ms-auto pt-2">
+                    <ul class="list-unstyled d-flex align-items-center mb-0">
+                        <li>
+                            <a href="#" class="text-decoration-none px-3 ms-auto">我要找學生</a>
+                        </li>
+                        <li>
+                            <a href="explore.html" class="text-decoration-none px-3">我要找老師</a>
+                        </li>
+                        <li>
+                            <a href="#" class="text-decoration-none px-3">註冊送代幣</a>
+                        </li>
+                        <li id="auth-nav-item">
+                            <a href="login.html" class="text-decoration-none px-3 pe-0 text-primary fw-bold">LOGIN</a>
+                        </li>
+                    </ul>
+                </nav>
             </div>
         </div>
-
-        <div style="display: flex; gap: 20px; align-items: center;">
-            <button style="padding: 10px 16px; background-color: #FFF9E6; color: #333; border: none; font-weight: bold; cursor: pointer; border-radius: 8px;">
-                成為老師
-            </button>
-            
-            <a href="#" style="text-decoration: none; color: #333; font-weight: bold;">登入</a>
-            
-            <button style="padding: 10px 24px; background-color: #2563EB; color: #fff; border: none; font-weight: bold; cursor: pointer; border-radius: 999px;">
-                註冊
-            </button>
-        </div>
-    </nav>
-
-    <header style="border: 2px solid #000; padding: 15px; margin-bottom: 20px; text-align: center; background-color: #f9f9f9;">
-        <h1>老師個人專頁 (Wireframe)</h1>
     </header>
 
-    <div style="display: flex; gap: 20px; align-items: flex-start;">
+    <!-- 主體 -->
+    <div class="teacher-profile-wrapper">
 
-        <main style="flex: 7; display: flex; flex-direction: column; gap: 20px;">
+        <main class="teacher-main">
 
-            <section style="border: 1px solid #666; padding: 20px;">
-                <div style="display: flex; gap: 20px; align-items: center;">
-                    <div style="width: 120px; height: 120px; border: 1px dashed #999; background: #eee; display: flex; align-items: center; justify-content: center;">
-                        [大頭貼照]
+            <!-- 老師基本資料 -->
+            <section class="profile-card">
+                <div class="tutor-header">
+                    <div class="tutor-avatar-wrap">
+                        <img id="tutor-avatar" src="https://via.placeholder.com/120" alt="老師頭像">
                     </div>
-                    <div>
-                        <h2 style="margin: 0;">Sunny Chen</h2>
-                        <p style="margin: 5px 0;">[標籤] ⭐ 4.9 (1200+ 堂課)</p>
-                        <p style="margin: 5px 0; font-weight: bold;">用最溫柔的耐心，帶孩子勇敢開口說世界！🌟</p>
-                        <p style="margin: 0; font-size: 0.9em; color: #555;">專精於兒童美語啟蒙與自然發音，擁有 5 年以上線上教學經驗...</p>
-                    </div>
-                </div>
-            </section>
-
-            <section style="border: 1px solid #666; padding: 20px;">
-                <h3 style="margin-top: 0;">選擇你想上的課程</h3>
-                
-                <div style="margin-bottom: 15px; border-bottom: 1px solid #ccc; padding-bottom: 10px;">
-                    <button style="border: 2px solid #000; padding: 5px 10px; font-weight: bold;">📖 👶 低年級趣味英文 (目前選取)</button>
-                    <button style="border: 1px solid #999; padding: 5px 10px;">👦 高年級文法進階</button>
-                </div>
-
-                <div style="border: 1px dashed #999; padding: 15px; background-color: #fafafa;">
-                    <h4 style="margin-top: 0;">關於這堂課 (25 分鐘)</h4>
-                    <p style="margin-bottom: 0;">適合 6-9 歲零基礎的孩子。透過英文歌謠、繪本故事與互動小遊戲，讓孩子在無壓力的環境下熟悉英文語感，自然學會自然發音！</p>
-                </div>
-            </section>
-
-            <section style="border: 1px solid #666; padding: 20px;">
-                <h3 style="margin-top: 0;">影音大廳</h3>
-                <div style="display: flex; gap: 15px; flex-wrap: wrap;">
-                    <div style="flex: 1 1 240px; border: 1px dashed #999; height: 150px; background: #eee; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-                        <span>[影片縮圖 1]</span>
-                        <button>▶️ 播放</button>
-                    </div>
-                    <div style="flex: 1 1 240px; border: 1px dashed #999; height: 150px; background: #eee; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-                        <span>[影片縮圖 2]</span>
-                        <button>▶️ 播放</button>
+                    <div class="tutor-meta">
+                        <h2 id="tutor-name">載入中...</h2>
+                        <p id="tutor-headline" class="tutor-headline"></p>
+                        <span id="tutor-rating" class="tutor-rating"></span>
+                        <p id="tutor-intro" class="tutor-intro"></p>
                     </div>
                 </div>
             </section>
 
-            <section style="border: 1px solid #666; padding: 20px;">
-                <h3 style="margin-top: 0;">關於老師</h3>
-                <ul style="padding-left: 20px;">
-                    <li style="margin-bottom: 10px;"><strong>教學風格：</strong>活潑有趣，善於鼓勵。使用 TPR 全身反應教學法...</li>
-                    <li style="margin-bottom: 10px;"><strong>來自哪裡：</strong>來自美國加州，擁有純正北美口音。目前定居台灣...</li>
-                    <li style="margin-bottom: 10px;"><strong>專業認證：</strong>TESOL 國際英語教學證照、劍橋兒童英語教學認證...</li>
-                </ul>
-            </section>
-
-            <section style="border: 1px solid #666; padding: 20px;">
-                <h3 style="margin-top: 0;">近期可預約時段</h3>
-                <div style="display: flex; gap: 10px; align-items: center;">
-                    <span style="border: 1px solid #000; padding: 5px 10px;">🕒 今日 19:00</span>
-                    <span style="border: 1px solid #000; padding: 5px 10px;">🕒 今日 20:00</span>
-                    <span style="border: 1px dashed #999; padding: 5px 10px;">明日 14:00</span>
-                    <span style="border: 1px dashed #999; padding: 5px 10px;">明日 16:00</span>
-                    <a href="#" style="margin-left: auto;">查看完整行事曆 📅</a>
+            <!-- 課程選擇 -->
+            <section class="profile-card">
+                <h3 class="profile-section-title">選擇你想上的課程</h3>
+                <div id="course-buttons" class="course-btn-group"></div>
+                <div class="course-desc-box">
+                    <h4 id="course-name">載入中...</h4>
+                    <p id="course-desc"></p>
                 </div>
             </section>
 
-            <section style="border: 1px solid #666; padding: 20px;">
-                <h3 style="margin-top: 0;">上過這堂課的家長評價</h3>
-                <div style="border-bottom: 1px solid #ccc; padding-bottom: 15px; margin-bottom: 15px;">
-                    <div style="display: flex; justify-content: space-between;">
-                        <strong>[頭像 L] Leo 媽媽</strong>
-                        <span>⭐⭐⭐⭐⭐ (2023/10/25)</span>
-                    </div>
-                    <p style="margin: 5px 0 0 0;">"Sunny 老師超有耐心！Leo 原本很怕說英文，現在每天都期待上課唱歌！"</p>
-                </div>
-                <div>
-                    <div style="display: flex; justify-content: space-between;">
-                        <strong>[頭像 M] Momo 爸爸</strong>
-                        <span>⭐⭐⭐⭐⭐ (2023/10/20)</span>
-                    </div>
-                    <p style="margin: 5px 0 0 0;">"遊戲設計得很好，25 分鐘完全不會坐不住，推薦給低年級的家長。"</p>
-                </div>
+            <!-- 影音大廳 -->
+            <section class="profile-card">
+                <h3 class="profile-section-title">影音大廳</h3>
+                <div id="videos-container" class="videos-grid"></div>
+            </section>
+
+            <!-- 關於老師 -->
+            <section class="profile-card">
+                <h3 class="profile-section-title">關於老師</h3>
+                <ul id="certificates-container" class="certificates-list"></ul>
+            </section>
+
+            <!-- 課表 -->
+            <section class="profile-card">
+                <h3 class="profile-section-title">近期可預約時段</h3>
+                <div id="schedule-container" class="schedule-grid"></div>
+            </section>
+
+            <!-- 評價 -->
+            <section class="profile-card">
+                <h3 class="profile-section-title">上過這堂課的家長評價</h3>
+                <div id="reviews-container"></div>
             </section>
 
         </main>
 
-        <aside style="flex: 3; display: flex; flex-direction: column; gap: 20px;">
-            
-            <section style="border: 2px solid #000; padding: 20px; background-color: #f9f9f9;">
-                <h3 style="text-align: center; margin-top: 0;">預約上課</h3>
-                
-                <div style="border: 2px solid #000; padding: 10px; margin-bottom: 10px; display: flex; justify-content: space-between;">
+        <!-- 右側價格欄 -->
+        <aside class="teacher-aside">
+            <div class="price-card">
+                <h3>預約上課</h3>
+
+                <div class="price-row">
                     <div>
-                        <strong style="font-size: 1.2em;">NT$ 200</strong><br>
-                        <small>1 小時體驗課</small>
+                        <strong id="price-single">NT$ -</strong><br>
+                        <small>1 堂正式課</small>
                     </div>
-                    <span>[熱門 🔥]</span>
-                </div>
-                
-                <div style="border: 1px solid #999; padding: 10px; margin-bottom: 10px;">
-                    <strong style="font-size: 1.1em;">NT$ 350</strong><br>
-                    <small>1 堂正式課</small>
                 </div>
 
-                <div style="border: 1px solid #999; padding: 10px; margin-bottom: 10px; display: flex; justify-content: space-between;">
+                <div class="price-row">
                     <div>
-                        <strong style="font-size: 1.1em;">NT$ 1,575</strong><br>
+                        <strong id="price-5">NT$ -</strong><br>
                         <small>5 堂正式課</small>
                     </div>
-                    <span>[9折優惠]</span>
+                    <span class="discount-badge">95折</span>
                 </div>
 
-                <div style="border: 1px solid #999; padding: 10px; margin-bottom: 20px; display: flex; justify-content: space-between;">
+                <div class="price-row">
                     <div>
-                        <strong style="font-size: 1.1em;">NT$ 2,975</strong><br>
+                        <strong id="price-10">NT$ -</strong><br>
                         <small>10 堂正式課</small>
                     </div>
-                    <span>[85折超划算]</span>
+                    <span class="discount-badge">9折</span>
                 </div>
 
-                <div style="text-align: center; border-top: 1px solid #ccc; padding-top: 10px; font-size: 0.8em; color: #666;">
-                    🔒 256-bit 加密安全結帳<br>
-                    ECPay
+                <button id="btn-booking" class="btn-booking-main mt-3">
+                    立即預約 👉
+                </button>
+
+                <div class="secure-badge">
+                    🔒 256-bit 加密安全結帳<br>ECPay
                 </div>
-            </section>
-
-            <section style="display: flex; gap: 10px;">
-                <button style="flex: 1; padding: 15px; border: 1px solid #999;">💬<br>聯絡</button>
-                <button style="flex: 1; padding: 15px; border: 1px solid #999;">🔗<br>分享</button>
-                <button style="flex: 1; padding: 15px; border: 1px solid #999;">✉️<br>Email</button>
-            </section>
-
+            </div>
         </aside>
 
     </div>
 
+    <script src="assets/js/teacher-profile.js"></script>
 </body>
+
 </html>
