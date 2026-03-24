@@ -13,6 +13,7 @@
             display: flex;
             height: calc(100vh - 62px);
             overflow: hidden;
+
         }
 
         /* ── Video Panel (left 70%) ──────────────────────────── */
@@ -1001,6 +1002,7 @@
             if (!confirm('確定要離開教室嗎？')) return;
             publishEvent('left');
             cleanup();
+            /* 離開教室回歸html */
             window.location.href = 'index.html';
         }
 
