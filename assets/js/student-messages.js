@@ -345,6 +345,18 @@ async function uploadFile(file) {
 // ── 初始化 ────────────────────────────────
 
 document.addEventListener('DOMContentLoaded', () => {
+    // JWT 過期或無權限 → 自動導回登入頁
+    axios.interceptors.response.use(
+        res => res,
+        err => {
+            if (err.response && (err.response.status === 401 || err.response.status === 403)) {
+                ['jwt_token', 'userId', 'userRole', 'userName'].forEach(k => localStorage.removeItem(k));
+                window.location.href = 'login.html';
+            }
+            return Promise.reject(err);
+        }
+    );
+
     loadConversations();
 
     // 搜尋
