@@ -77,7 +77,7 @@ async function loadConversations() {
             }
             const tutor = tutorCache[b.tutorId];
             return {
-                bookingId: b.id,
+                bookingId: b.orderId,
                 tutorId: b.tutorId,
                 tutorName: tutor.name || '老師',
                 subject: b.courseName || '',
@@ -180,7 +180,12 @@ function buildMsgHtml(m, conv) {
         } else if (m.messageType === 3) {
             content = `<audio src="${m.mediaUrl}" controls></audio>`;
         } else {
-            content = `<a href="${m.mediaUrl}" target="_blank" class="msg-file-link">📎 ${m.mediaUrl.split('/').pop()}</a>`;
+            const storedName   = m.mediaUrl ? m.mediaUrl.split('/').pop() : '';
+            const originalName = m.message || storedName || '下載檔案';
+            const downloadUrl  = m.mediaUrl && !m.mediaUrl.startsWith('blob:')
+                ? `${BASE_URL}/api/chatMessage/download/${encodeURIComponent(storedName)}?name=${encodeURIComponent(originalName)}`
+                : m.mediaUrl;
+            content = `<a href="${downloadUrl}" download="${escapeHtml(originalName)}" class="msg-file-link">📎 ${escapeHtml(originalName)}</a>`;
         }
     } else {
         content = escapeHtml(m.message || '');
@@ -323,8 +328,37 @@ async function sendMessage() {
 
 // ── 上傳檔案 ──────────────────────────────
 
+function detectLocalType(file) {
+    const t = file.type || '';
+    if (t.startsWith('image/')) return 4;
+    if (t.startsWith('video/')) return 5;
+    if (t.startsWith('audio/')) return 3;
+    return 6;
+}
+
 async function uploadFile(file) {
     if (!file || !currentBookingId) return;
+
+    const fileInput = document.getElementById('file-input');
+    fileInput.disabled = true;
+
+    // ① 本地 Blob 即時預覽
+    const localType = detectLocalType(file);
+    const blobUrl   = URL.createObjectURL(file);
+    const tempId    = 'upload-preview-' + Date.now();
+    const conv      = conversations.find(c => c.bookingId === currentBookingId);
+    const msgArea   = document.getElementById('chat-messages');
+
+    const previewMsg = { role: 'student', messageType: localType,
+                         mediaUrl: blobUrl, message: file.name,
+                         createdAt: new Date().toISOString() };
+    const wrapper = document.createElement('div');
+    wrapper.id = tempId;
+    wrapper.innerHTML = buildMsgHtml(previewMsg, conv);
+    msgArea.appendChild(wrapper);
+    msgArea.scrollTop = msgArea.scrollHeight;
+
+    // ② FormData 上傳
     const formData = new FormData();
     formData.append('file', file);
     formData.append('bookingId', currentBookingId);
@@ -335,10 +369,22 @@ async function uploadFile(file) {
         const res = await axios.post(`${BASE_URL}/api/chatMessage/upload`, formData, {
             headers: { 'Authorization': 'Bearer ' + getJwt() }
         });
+        // ③ 以伺服器真實訊息取代預覽
+        const el = document.getElementById(tempId);
+        if (el) el.remove();
         appendMessage(res.data);
     } catch (err) {
-        console.error('上傳失敗', err);
-        alert('檔案上傳失敗，請重試。');
+        const status = err.response?.status;
+        const msg    = err.response?.data?.message ?? err.message;
+        console.error(`上傳失敗 [${status ?? 'no response'}]`, msg, err);
+        const el = document.getElementById(tempId);
+        if (el) el.remove();
+        msgArea.insertAdjacentHTML('beforeend',
+            '<div class="msg-upload-error">⚠️ 檔案上傳失敗，請重試。</div>');
+        msgArea.scrollTop = msgArea.scrollHeight;
+    } finally {
+        URL.revokeObjectURL(blobUrl);
+        fileInput.disabled = false;
     }
 }
 
