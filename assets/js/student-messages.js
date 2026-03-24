@@ -1,88 +1,115 @@
 // ==========================================
 // 學生訊息中心邏輯 (student-messages.js)
+// 串接後端 REST API + WebSocket (STOMP)
 // ==========================================
 
-const mockConversations = [
-    {
-        id: 1,
-        teacherName: 'Sarah Chen',
-        subject: '英文會話',
-        avatar: 'https://i.pravatar.cc/48?img=47',
-        lastMessage: '好的！那我們下次課繼續練習發音。',
-        time: '10:32',
-        unread: 2,
-        messages: [
-            { from: 'teacher', text: '同學你好，今天的功課有寫完嗎？', time: '09:15' },
-            { from: 'me', text: '有！我把第三章的單字都背完了 😊', time: '09:20' },
-            { from: 'teacher', text: '太棒了！那我們等一下來做個小測驗確認一下吧。', time: '09:22' },
-            { from: 'me', text: '沒問題！我準備好了。', time: '09:25' },
-            { from: 'teacher', text: '好的！那我們下次課繼續練習發音。', time: '10:32' },
-        ]
-    },
-    {
-        id: 2,
-        teacherName: 'David Wang',
-        subject: '商用英文',
-        avatar: 'https://i.pravatar.cc/48?img=12',
-        lastMessage: '請記得預習第五課的商務郵件範例。',
-        time: '昨天',
-        unread: 0,
-        messages: [
-            { from: 'teacher', text: '本週課程進度到商務郵件的寫法，你覺得有什麼困難嗎？', time: '14:00' },
-            { from: 'me', text: '開頭語和結尾語我還不太確定怎麼選擇。', time: '14:05' },
-            { from: 'teacher', text: '這很正常！我下次課會整理一個範本給你。', time: '14:07' },
-            { from: 'teacher', text: '請記得預習第五課的商務郵件範例。', time: '17:30' },
-        ]
-    },
-    {
-        id: 3,
-        teacherName: 'Amy Liu',
-        subject: '英文文法',
-        avatar: 'https://i.pravatar.cc/48?img=32',
-        lastMessage: '你的進步非常大，繼續加油！',
-        time: '週一',
-        unread: 0,
-        messages: [
-            { from: 'teacher', text: '這週的時態作業做得很好！', time: '11:00' },
-            { from: 'me', text: '謝謝老師，我花了很多時間複習 😅', time: '11:10' },
-            { from: 'teacher', text: '你的進步非常大，繼續加油！', time: '11:12' },
-        ]
-    },
-    {
-        id: 4,
-        teacherName: 'Kevin Ho',
-        subject: '英文口說',
-        avatar: 'https://i.pravatar.cc/48?img=60',
-        lastMessage: '下週的課我改到週四下午三點，可以嗎？',
-        time: '3/18',
-        unread: 1,
-        messages: [
-            { from: 'me', text: '老師你好，我想預約下週的口說練習課。', time: '15:00' },
-            { from: 'teacher', text: '好的，請問你方便哪個時段？', time: '15:30' },
-            { from: 'me', text: '週四或週五下午都可以。', time: '15:35' },
-            { from: 'teacher', text: '下週的課我改到週四下午三點，可以嗎？', time: '16:00' },
-        ]
-    }
-];
+const BASE_URL = 'http://localhost:8080';
 
-let currentConvId = 1;
+let conversations = [];      // { bookingId, tutorId, tutorName, subject, avatar, lastMessage, time, unread }
+let currentBookingId = null;
+let stompClient = null;
+let stompSubscription = null;
+
+// ── Helpers ──────────────────────────────
+
+function getJwt() {
+    return localStorage.getItem('jwt');
+}
+
+function authHeaders() {
+    return {
+        'Authorization': 'Bearer ' + getJwt(),
+        'Content-Type': 'application/json'
+    };
+}
+
+function formatTime(createdAt) {
+    if (!createdAt) return '';
+    const d = new Date(createdAt);
+    const now = new Date();
+    const diffDays = Math.floor((now - d) / 86400000);
+    if (diffDays === 0) {
+        return d.getHours().toString().padStart(2, '0') + ':' + d.getMinutes().toString().padStart(2, '0');
+    } else if (diffDays === 1) {
+        return '昨天';
+    } else if (diffDays < 7) {
+        return ['週日', '週一', '週二', '週三', '週四', '週五', '週六'][d.getDay()];
+    } else {
+        return `${d.getMonth() + 1}/${d.getDate()}`;
+    }
+}
+
+// ── 載入對話列表 ──────────────────────────
+
+async function loadConversations() {
+    try {
+        const res = await axios.get(`${BASE_URL}/api/student/bookings`, {
+            headers: authHeaders()
+        });
+        const bookings = res.data;
+
+        // 只顯示 status=1（已排課）的預約，並行取老師資訊
+        const active = bookings.filter(b => b.status === 1);
+        const tutorCache = {};
+
+        const convList = await Promise.all(active.map(async b => {
+            if (!tutorCache[b.tutorId]) {
+                try {
+                    const tr = await axios.get(`${BASE_URL}/api/tutor/${b.tutorId}`, {
+                        headers: authHeaders()
+                    });
+                    tutorCache[b.tutorId] = tr.data;
+                } catch {
+                    tutorCache[b.tutorId] = { name: '老師', avatar: '' };
+                }
+            }
+            const tutor = tutorCache[b.tutorId];
+            return {
+                bookingId: b.id,
+                tutorId: b.tutorId,
+                tutorName: tutor.name || '老師',
+                subject: b.courseName || '',
+                avatar: tutor.avatar || 'https://i.pravatar.cc/48?img=1',
+                lastMessage: '',
+                time: b.date || '',
+                unread: 0
+            };
+        }));
+
+        conversations = convList;
+        renderContactList();
+
+        // 若 URL 帶有 bookingId 參數，自動選取
+        const params = new URLSearchParams(window.location.search);
+        const bid = parseInt(params.get('bookingId'));
+        if (bid && conversations.find(c => c.bookingId === bid)) {
+            selectConversation(bid);
+        } else if (conversations.length > 0) {
+            selectConversation(conversations[0].bookingId);
+        }
+    } catch (err) {
+        console.error('載入對話列表失敗', err);
+    }
+}
+
+// ── 渲染聯絡人列表 ────────────────────────
 
 function renderContactList(filter = '') {
     const list = document.getElementById('contact-list');
-    const filtered = mockConversations.filter(c =>
-        c.teacherName.toLowerCase().includes(filter.toLowerCase()) ||
+    const filtered = conversations.filter(c =>
+        c.tutorName.toLowerCase().includes(filter.toLowerCase()) ||
         c.subject.includes(filter)
     );
 
     list.innerHTML = filtered.map(c => `
-        <div class="contact-item ${c.id === currentConvId ? 'active' : ''}" data-id="${c.id}" onclick="selectConversation(${c.id})">
+        <div class="contact-item ${c.bookingId === currentBookingId ? 'active' : ''}" data-id="${c.bookingId}" onclick="selectConversation(${c.bookingId})">
             <div class="contact-avatar-wrap">
-                <img src="${c.avatar}" alt="${c.teacherName}" class="contact-avatar">
+                <img src="${c.avatar}" alt="${c.tutorName}" class="contact-avatar">
                 <span class="contact-status-dot"></span>
             </div>
             <div class="contact-info">
                 <div class="contact-top">
-                    <span class="contact-name">${c.teacherName}</span>
+                    <span class="contact-name">${c.tutorName}</span>
                     <span class="contact-time">${c.time}</span>
                 </div>
                 <div class="contact-bottom">
@@ -95,74 +122,208 @@ function renderContactList(filter = '') {
     `).join('');
 }
 
-function renderChatWindow(convId) {
-    const conv = mockConversations.find(c => c.id === convId);
-    if (!conv) return;
+// ── 渲染聊天視窗 ──────────────────────────
 
-    // Header
+function renderChatWindow(conv, messages) {
     document.getElementById('chat-teacher-avatar').src = conv.avatar;
-    document.getElementById('chat-teacher-name').textContent = conv.teacherName;
+    document.getElementById('chat-teacher-name').textContent = conv.tutorName;
     document.getElementById('chat-subject-tag').textContent = conv.subject;
 
-    // Messages
     const msgArea = document.getElementById('chat-messages');
-    msgArea.innerHTML = conv.messages.map(m => `
-        <div class="msg-row ${m.from === 'me' ? 'msg-row--me' : 'msg-row--teacher'}">
-            ${m.from === 'teacher' ? `<img src="${conv.avatar}" class="msg-avatar" alt="">` : ''}
-            <div class="msg-bubble ${m.from === 'me' ? 'msg-bubble--me' : 'msg-bubble--teacher'}">
-                ${m.text}
-                <div class="msg-time">${m.time}</div>
+    msgArea.innerHTML = messages.map(m => buildMsgHtml(m, conv)).join('');
+    msgArea.scrollTop = msgArea.scrollHeight;
+
+    conv.unread = 0;
+    renderContactList(document.getElementById('search-input').value);
+}
+
+function buildMsgHtml(m, conv) {
+    const isMe = m.role === 'student';
+    const timeStr = formatTime(m.createdAt);
+    let content = '';
+
+    if (m.messageType === 4 || m.messageType === 3 || m.messageType === 5 || m.messageType === 6) {
+        // 媒體訊息
+        if (m.messageType === 4) {
+            content = `<img src="${m.mediaUrl}" style="max-width:200px;border-radius:8px;" alt="圖片">`;
+        } else if (m.messageType === 5) {
+            content = `<video src="${m.mediaUrl}" controls style="max-width:240px;border-radius:8px;"></video>`;
+        } else if (m.messageType === 3) {
+            content = `<audio src="${m.mediaUrl}" controls></audio>`;
+        } else {
+            content = `<a href="${m.mediaUrl}" target="_blank" class="msg-file-link">📎 ${m.mediaUrl.split('/').pop()}</a>`;
+        }
+    } else {
+        content = escapeHtml(m.message || '');
+    }
+
+    return `
+        <div class="msg-row ${isMe ? 'msg-row--me' : 'msg-row--teacher'}">
+            ${!isMe ? `<img src="${conv.avatar}" class="msg-avatar" alt="">` : ''}
+            <div class="msg-bubble ${isMe ? 'msg-bubble--me' : 'msg-bubble--teacher'}">
+                ${content}
+                <div class="msg-time">${timeStr}</div>
             </div>
         </div>
-    `).join('');
+    `;
+}
 
-    // Clear unread
-    conv.unread = 0;
+function escapeHtml(str) {
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
 
-    // Scroll to bottom
+function appendMessage(m) {
+    const conv = conversations.find(c => c.bookingId === currentBookingId);
+    if (!conv) return;
+    const msgArea = document.getElementById('chat-messages');
+    msgArea.insertAdjacentHTML('beforeend', buildMsgHtml(m, conv));
     msgArea.scrollTop = msgArea.scrollHeight;
-}
 
-function selectConversation(id) {
-    currentConvId = id;
+    // 更新聯絡人最後一則
+    conv.lastMessage = m.message || '';
+    conv.time = formatTime(m.createdAt);
     renderContactList(document.getElementById('search-input').value);
-    renderChatWindow(id);
-
-    // On mobile, show chat panel
-    document.getElementById('chat-panel').classList.add('chat-panel--visible');
-    document.getElementById('contacts-panel').classList.add('contacts-panel--hidden');
 }
 
-function sendMessage() {
-    const input = document.getElementById('msg-input');
-    const text = input.value.trim();
-    if (!text) return;
+// ── 選取對話 ──────────────────────────────
 
-    const conv = mockConversations.find(c => c.id === currentConvId);
+async function selectConversation(bookingId) {
+    currentBookingId = bookingId;
+    const conv = conversations.find(c => c.bookingId === bookingId);
     if (!conv) return;
 
-    const now = new Date();
-    const time = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+    // 手機版切換
+    document.getElementById('chat-panel').classList.add('chat-panel--visible');
+    document.getElementById('contacts-panel').classList.add('contacts-panel--hidden');
 
-    conv.messages.push({ from: 'me', text, time });
-    conv.lastMessage = text;
-    conv.time = time;
+    try {
+        const res = await axios.get(`${BASE_URL}/api/chatMessage/booking/${bookingId}`, {
+            headers: authHeaders()
+        });
+        const messages = res.data;
+        renderChatWindow(conv, messages);
 
-    input.value = '';
-    renderContactList(document.getElementById('search-input').value);
-    renderChatWindow(currentConvId);
+        // 更新聯絡人最後一則
+        if (messages.length > 0) {
+            const last = messages[messages.length - 1];
+            conv.lastMessage = last.message || '';
+            conv.time = formatTime(last.createdAt);
+        }
+    } catch (err) {
+        console.error('載入訊息失敗', err);
+    }
+
+    connectWebSocket(bookingId);
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    renderContactList();
-    renderChatWindow(currentConvId);
+// ── WebSocket / STOMP ─────────────────────
 
-    // Search
+function connectWebSocket(bookingId) {
+    // 斷開舊的訂閱
+    if (stompSubscription) {
+        stompSubscription.unsubscribe();
+        stompSubscription = null;
+    }
+
+    if (stompClient && stompClient.connected) {
+        subscribeBooking(bookingId);
+        return;
+    }
+
+    // 建立新連線
+    if (stompClient) {
+        try { stompClient.disconnect(); } catch {}
+    }
+
+    const socket = new SockJS(`${BASE_URL}/ws`);
+    stompClient = Stomp.over(socket);
+    stompClient.debug = null; // 關閉 debug log
+
+    const jwt = getJwt();
+    stompClient.connect(
+        { Authorization: 'Bearer ' + jwt },
+        () => subscribeBooking(bookingId),
+        err => console.error('WebSocket 連線失敗', err)
+    );
+}
+
+function subscribeBooking(bookingId) {
+    stompSubscription = stompClient.subscribe(
+        `/topic/room/${bookingId}/chat`,
+        frame => {
+            const msg = JSON.parse(frame.body);
+            // 避免重複顯示自己送出的訊息（透過 STOMP 送的）
+            if (msg.role !== 'student') {
+                appendMessage(msg);
+            }
+        }
+    );
+}
+
+// ── 傳送訊息 ──────────────────────────────
+
+async function sendMessage() {
+    const input = document.getElementById('msg-input');
+    const text = input.value.trim();
+    if (!text || !currentBookingId) return;
+
+    const payload = {
+        bookingId: currentBookingId,
+        role: 'student',
+        messageType: 1,
+        message: text,
+        mediaUrl: null
+    };
+
+    // 立即在 UI 顯示
+    const now = new Date().toISOString();
+    appendMessage({ ...payload, createdAt: now });
+    input.value = '';
+
+    if (stompClient && stompClient.connected) {
+        stompClient.send(`/app/chat/${currentBookingId}`, {}, JSON.stringify(payload));
+    } else {
+        // fallback REST
+        try {
+            await axios.post(`${BASE_URL}/api/chatMessage`, payload, { headers: authHeaders() });
+        } catch (err) {
+            console.error('傳送訊息失敗', err);
+        }
+    }
+}
+
+// ── 上傳檔案 ──────────────────────────────
+
+async function uploadFile(file) {
+    if (!file || !currentBookingId) return;
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('bookingId', currentBookingId);
+    formData.append('role', 'student');
+    formData.append('message', '');
+
+    try {
+        const res = await axios.post(`${BASE_URL}/api/chatMessage/upload`, formData, {
+            headers: { 'Authorization': 'Bearer ' + getJwt() }
+        });
+        appendMessage(res.data);
+    } catch (err) {
+        console.error('上傳失敗', err);
+        alert('檔案上傳失敗，請重試。');
+    }
+}
+
+// ── 初始化 ────────────────────────────────
+
+document.addEventListener('DOMContentLoaded', () => {
+    loadConversations();
+
+    // 搜尋
     document.getElementById('search-input').addEventListener('input', e => {
         renderContactList(e.target.value);
     });
 
-    // Send on Enter (Shift+Enter = newline)
+    // Enter 送出（Shift+Enter 換行）
     document.getElementById('msg-input').addEventListener('keydown', e => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
@@ -170,7 +331,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Back button (mobile)
+    // 附件上傳
+    document.getElementById('file-input').addEventListener('change', e => {
+        const file = e.target.files[0];
+        if (file) {
+            uploadFile(file);
+            e.target.value = '';
+        }
+    });
+
+    // 手機版返回
     const backBtn = document.getElementById('chat-back-btn');
     if (backBtn) {
         backBtn.addEventListener('click', () => {
