@@ -3,241 +3,300 @@
 // ==========================================
 
 body {
-  background-color: #f5f5f5;
+    background-color: #f5f5f5;
 }
 
+// ── 主體容器 ──
+.explore-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+// ── 頁首標題 ──
+.explore-header {
+    border: 2px solid #000;
+    padding: 30px 15px;
+    margin: 20px 0;
+    text-align: center;
+    background-color: #fff;
+
+    h1 { margin: 0 0 10px 0; }
+    p  { margin: 0; color: #666; }
+}
+
+// ── 搜尋列 ──
+.explore-search-bar {
+    border: 2px solid #000;
+    padding: 15px;
+    background-color: #fff;
+    margin-bottom: 30px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+
+    .search-item {
+        flex: 1;
+        min-width: 150px;
+        border: 1px solid #ccc;
+        padding: 10px;
+
+        input, select {
+            border: none;
+            outline: none;
+            background: transparent;
+            width: 80%;
+            cursor: pointer;
+        }
+    }
+
+    .divider {
+        width: 1px;
+        height: 30px;
+        background-color: #ccc;
+    }
+
+    .btn-search {
+        padding: 10px 20px;
+        background-color: #000;
+        color: #fff;
+        font-weight: bold;
+        border: none;
+        cursor: pointer;
+        min-width: 120px;
+    }
+}
+
+// ==========================================
+// Hover 課表彈出（組員原有，保留）
+// ==========================================
 
 .schedule-popup {
-  display: none;
-  position: absolute;
-  top: 0;
-  left: calc(100% + 12px);
-  z-index: 999;
-  background: #fff;
-  border: 2px solid #000;
-  border-radius: 12px;
-  padding: 14px;
-  width: 220px;
-  box-shadow: 4px 4px 0px #000;
-  pointer-events: none;
-}
-
-.course-card {
-  position: relative;
+    display: none;
+    position: absolute;
+    top: 0;
+    left: calc(100% + 12px);
+    z-index: 999;
+    background: #fff;
+    border: 2px solid #000;
+    border-radius: 12px;
+    padding: 14px;
+    width: 220px;
+    box-shadow: 4px 4px 0px #000;
+    pointer-events: none;
 }
 
 .explore-card:hover .schedule-popup {
-  display: block ;
+    display: block;
 }
 
 .schedule-popup-title {
-  font-size: 0.78rem;
-  font-weight: bold;
-  margin-bottom: 8px;
-  color: #333;
-  border-bottom: 1px solid #eee;
-  padding-bottom: 6px;
+    font-size: 0.78rem;
+    font-weight: bold;
+    margin-bottom: 8px;
+    color: #333;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 6px;
 }
 
 .schedule-grid-popup {
-  display: grid;
-  grid-template-columns: 32px repeat(7, 1fr);
-  gap: 3px;
-  font-size: 0.65rem;
-}
+    display: grid;
+    grid-template-columns: 32px repeat(7, 1fr);
+    gap: 3px;
+    font-size: 0.65rem;
 
-.schedule-grid-popup .col-header {
-  text-align: center;
-  font-weight: bold;
-  color: #888;
-  padding: 2px 0;
-}
+    .col-header {
+        text-align: center;
+        font-weight: bold;
+        color: #888;
+        padding: 2px 0;
+    }
 
-.schedule-grid-popup .row-label {
-  font-size: 0.6rem;
-  color: #888;
-  display: flex;
-  align-items: center;
-  white-space: nowrap;
+    .row-label {
+        font-size: 0.6rem;
+        color: #888;
+        display: flex;
+        align-items: center;
+        white-space: nowrap;
+    }
 }
 
 .schedule-cell {
-  height: 18px;
-  border-radius: 3px;
-  background: #f0f0f0;
+    height: 18px;
+    border-radius: 3px;
+    background: #f0f0f0;
+
+    &.available { background: #20e3b2; }
 }
 
-.schedule-cell.available {
-  background: #20e3b2;
-}
+// ==========================================
+// 課程卡片（亮黃綠活潑風格）
+// ==========================================
 
+.explore-card {
+    background: #CCFF00;
+    border: 3px solid #1A1A1A;
+    border-radius: 16px;
+    overflow: visible; // 讓 hover 課表可以超出卡片
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    height: 100%;
+    transition: transform 0.2s, box-shadow 0.2s;
 
-// 主體容器
-.explore-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px;
-}
-
-// 頁首標題
-.explore-header {
-  border: 2px solid #000;
-  padding: 30px 15px;
-  margin: 20px 0;
-  text-align: center;
-  background-color: #fff;
-
-  h1 {
-    margin: 0 0 10px 0;
-  }
-
-  p {
-    margin: 0;
-    color: #666;
-  }
-}
-
-// 搜尋列
-.explore-search-bar {
-  border: 2px solid #000;
-  padding: 15px;
-  background-color: #fff;
-  margin-bottom: 30px;
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  flex-wrap: wrap;
-
-  .search-item {
-    flex: 1;
-    min-width: 150px;
-    border: 1px solid #ccc;
-    padding: 10px;
-
-    input,
-    select {
-      border: none;
-      outline: none;
-      background: transparent;
-      width: 80%;
-      cursor: pointer;
+    &:hover {
+        transform: translateY(-4px);
+        box-shadow: 6px 6px 0px #1A1A1A;
     }
-  }
-
-  .divider {
-    width: 1px;
-    height: 30px;
-    background-color: #ccc;
-  }
-
-  .btn-search {
-    padding: 10px 20px;
-    background-color: #000;
-    color: #fff;
-    font-weight: bold;
-    border: none;
-    cursor: pointer;
-    min-width: 120px;
-  }
 }
 
-// 課程卡片網格
-.course-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 30px;
-}
-
-// 單張卡片
-.course-card {
-  position: relative;
-  border: 2px solid #000;
-  background-color: #fff;
-  padding: 20px;
-  padding-top: 50px;
-  margin-top: 40px;
-  display: flex;
-  flex-direction: column;
-
-  .tutor-avatar {
+// Teacher From TW 標籤
+.explore-tw-badge {
     position: absolute;
-    top: -40px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 80px;
-    height: 80px;
-    border: 2px dashed #999;
-    border-radius: 50%;
-    background-color: #eee;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    top: 10px;
+    left: -2px;
+    background: #FF3399;
+    color: #fff;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 0 4px 4px 0;
+    z-index: 2;
+    letter-spacing: 0.5px;
+}
+
+// 頭像區（格線背景）
+.explore-card-img-wrap {
+    width: 100%;
+    height: 220px;
+    background-color: #CCFF00;
+    background-image:
+        linear-gradient(rgba(0,0,0,0.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,0,0,0.08) 1px, transparent 1px);
+    background-size: 28px 28px;
     overflow: hidden;
+    border-bottom: 2px solid #1A1A1A;
+    border-radius: 13px 13px 0 0;
+    position: relative;
+}
 
-    img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-  }
+.explore-card-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
 
-  .tutor-info {
-    text-align: center;
-    margin-bottom: 15px;
+// 粉色菱形裝飾
+.explore-diamond {
+    position: absolute;
+    top: 205px;
+    right: 12px;
+    font-size: 1.8rem;
+    color: #FF3399;
+    z-index: 3;
+    line-height: 1;
+    text-shadow: 1px 1px 0 #1A1A1A;
+}
 
-    h2 {
-      margin: 0 0 5px 0;
-    }
-
-    .badge {
-      border: 1px solid #ccc;
-      padding: 2px 10px;
-      border-radius: 10px;
-      font-size: 0.8em;
-    }
-  }
-
-  .course-title {
-    text-align: center;
-    border-bottom: 1px solid #ccc;
-    padding-bottom: 10px;
-    margin-top: 0;
-  }
-
-  .course-desc {
-    text-align: center;
-    font-size: 0.9em;
-    color: #666;
+// 卡片內容區
+.explore-card-body {
+    padding: 14px 14px 8px;
     flex-grow: 1;
-  }
+}
 
-  .card-footer {
-    border-top: 1px solid #ccc;
-    padding-top: 15px;
-    margin-top: 15px;
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
+.explore-teacher-name {
+    font-size: 1.3rem;
+    font-weight: 900;
+    color: #1A1A1A;
+    letter-spacing: -0.5px;
+}
 
-    .price-info {
-      .label {
-        font-size: 0.7em;
-        color: #666;
-      }
+.explore-rating {
+    font-size: 0.8rem;
+    font-weight: 700;
+    background: #fff;
+    border: 1.5px solid #1A1A1A;
+    border-radius: 20px;
+    padding: 2px 10px;
+    color: #1A1A1A;
+    white-space: nowrap;
+}
 
-      .price {
-        font-weight: bold;
-        font-size: 1.2em;
-      }
+.explore-course-name {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #1A1A1A;
+}
+
+.explore-tag {
+    font-size: 0.7rem;
+    font-weight: 600;
+    background: rgba(0,0,0,0.08);
+    border-radius: 4px;
+    padding: 2px 6px;
+    color: #1A1A1A;
+}
+
+// 價格區
+.explore-card-footer {
+    padding: 10px 20px 20px;
+    border-top: 2px solid rgba(0,0,0,0.1);
+}
+
+.explore-price-label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #1A1A1A;
+    display: block;
+    margin-bottom: 3px;
+}
+
+.explore-price-badge {
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 1px 5px;
+    border-radius: 3px;
+    margin-left: 3px;
+
+    &.explore-badge-grey { background: #555; color: #fff; }
+    &.explore-badge-blue { background: #0d6efd; color: #fff; }
+}
+
+.explore-price {
+    font-size: 1.8rem;
+    font-weight: 900;
+    line-height: 1.1;
+
+    &.explore-price-pink { color: #FF3399; }
+    &.explore-price-blue { color: #0d6efd; }
+}
+
+.explore-price-unit {
+    font-size: 0.72rem;
+    font-weight: 400;
+    color: #555;
+    margin-left: 2px;
+}
+
+// LET'S TALK 按鈕
+.explore-btn-talk {
+    display: block;
+    width: 100%;
+    margin-top: 10px;
+    padding: 10px;
+    background: #0d6efd;
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 900;
+    border: 2px solid #1A1A1A;
+    border-radius: 8px;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    transition: all 0.15s;
+
+    &:hover {
+        background: #0a58ca;
+        transform: scale(0.98);
     }
-
-    .btn-book {
-      padding: 10px 15px;
-      background-color: #000;
-      color: #fff;
-      border: none;
-      font-weight: bold;
-      cursor: pointer;
-    }
-  }
 }
