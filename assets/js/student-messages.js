@@ -13,6 +13,18 @@ let stompSubscription = null;
 
 // ── Helpers ──────────────────────────────
 
+function resolveMediaUrl(mediaUrl) {
+    if (!mediaUrl) return '';
+    if (mediaUrl.startsWith('http') || mediaUrl.startsWith('blob:')) return mediaUrl;
+    return (mediaUrl.startsWith('/') ? '' : '/') + mediaUrl;
+}
+
+function convertGoogleDriveUrl(url) {
+    if (!url) return 'https://via.placeholder.com/40';
+    const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+    return match ? `https://lh3.googleusercontent.com/d/${match[1]}` : url;
+}
+
 function getJwt() {
     return localStorage.getItem('jwt_token');
 }
@@ -81,7 +93,7 @@ async function loadConversations() {
                 tutorId: b.tutorId,
                 tutorName: tutor.name || '老師',
                 subject: b.courseName || '',
-                avatar: tutor.avatar || '',
+                avatar: resolveMediaUrl(convertGoogleDriveUrl(tutor.avatar)),
                 lastMessage: '',
                 time: b.date || '',
                 unread: 0
@@ -174,11 +186,11 @@ function buildMsgHtml(m, conv) {
     if (m.messageType === 4 || m.messageType === 3 || m.messageType === 5 || m.messageType === 6) {
         // 媒體訊息
         if (m.messageType === 4) {
-            content = `<img src="${m.mediaUrl}" style="max-width:200px;border-radius:8px;" alt="圖片">`;
+            content = `<img src="${resolveMediaUrl(m.mediaUrl)}" style="max-width:200px;border-radius:8px;" alt="圖片">`;
         } else if (m.messageType === 5) {
-            content = `<video src="${m.mediaUrl}" controls style="max-width:240px;border-radius:8px;"></video>`;
+            content = `<video src="${resolveMediaUrl(m.mediaUrl)}" controls style="max-width:240px;border-radius:8px;"></video>`;
         } else if (m.messageType === 3) {
-            content = `<audio src="${m.mediaUrl}" controls></audio>`;
+            content = `<audio src="${resolveMediaUrl(m.mediaUrl)}" controls></audio>`;
         } else {
             const storedName   = m.mediaUrl ? m.mediaUrl.split('/').pop() : '';
             const originalName = m.message || storedName || '下載檔案';
