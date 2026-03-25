@@ -11,33 +11,23 @@
 </head>
 <body>
 
-<!-- 手機版頂部 Header -->
 <header class="teacher-mobile-header">
-    <button class="btn btn-light border-0" id="sidebar-toggle">
+    <button class="btn btn-sm" id="sidebar-toggle" style="color:#fff;">
         <span class="material-symbols-outlined">menu</span>
     </button>
     <span class="logo-text">Merge</span>
-    <div style="width: 40px;"></div>
+    <div style="width: 36px;"></div>
 </header>
 
-<!-- 手機版遮罩 -->
 <div class="teacher-overlay" id="sidebar-overlay"></div>
 
 <div class="teacher-layout">
 
-    <!-- ===== 左側導覽列 ===== -->
     <aside class="teacher-sidebar" id="teacher-sidebar">
-
-        <!-- Logo -->
         <div class="teacher-sidebar-logo">
             <div class="logo-icon">M</div>
-            <div class="logo-text">
-                Merge
-                <span>老師專用後台</span>
-            </div>
+            <div class="logo-text">Merge<span>老師專用後台</span></div>
         </div>
-
-        <!-- 選單 -->
         <nav class="flex-grow-1 py-2">
             <a href="teacher-dashboard.html" class="teacher-nav-link">
                 <span class="material-symbols-outlined">grid_view</span> 控制台
@@ -61,10 +51,8 @@
                 <span class="material-symbols-outlined">settings</span> 設定
             </a>
         </nav>
-
-        <!-- 底部個人資訊 -->
         <div class="teacher-sidebar-footer" id="logout-btn">
-            <img id="sidebar-avatar" src="https://via.placeholder.com/38" alt="頭像" class="teacher-avatar">
+            <img id="sidebar-avatar" src="https://placehold.co/38" alt="頭像" class="teacher-avatar">
             <div class="teacher-info">
                 <div class="teacher-name" id="sidebar-name">載入中...</div>
                 <div class="teacher-role">老師</div>
@@ -73,19 +61,116 @@
         </div>
     </aside>
 
-    <!-- ===== 右側主內容區 ===== -->
     <main class="teacher-main">
 
-        <!-- 頁面標題 -->
         <h1 class="teacher-page-title">收益與績效</h1>
-        <p class="teacher-page-subtitle"></p>
+        <p class="teacher-page-subtitle">查看你的授課收入與錢包餘額</p>
 
-        <!-- ★ 這裡放頁面內容 ★ -->
+        <!-- 統計卡片 -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-4">
+                <div class="teacher-stat-card">
+                    <div class="stat-label">
+                        錢包餘額
+                        <div class="stat-icon" style="color:#10B981; background:#ECFDF5;">
+                            <span class="material-symbols-outlined">account_balance_wallet</span>
+                        </div>
+                    </div>
+                    <div class="stat-value">
+                        NT$ <span id="stat-wallet">—</span>
+                    </div>
+                    <div class="stat-trend up mt-2">
+                        <span class="material-symbols-outlined" style="font-size:13px;">savings</span>
+                        目前可提領金額
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="teacher-stat-card">
+                    <div class="stat-label">
+                        本月收入
+                        <div class="stat-icon" style="color:#F59E0B; background:#FEF9C3;">
+                            <span class="material-symbols-outlined">payments</span>
+                        </div>
+                    </div>
+                    <div class="stat-value">
+                        NT$ <span id="stat-month-income">—</span>
+                    </div>
+                    <div class="stat-trend up mt-2">
+                        <span class="material-symbols-outlined" style="font-size:13px;">calendar_month</span>
+                        本月授課收入累計
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="teacher-stat-card">
+                    <div class="stat-label">
+                        累計總收入
+                        <div class="stat-icon" style="color:#3B82F6; background:#EFF6FF;">
+                            <span class="material-symbols-outlined">bar_chart</span>
+                        </div>
+                    </div>
+                    <div class="stat-value">
+                        NT$ <span id="stat-total-income">—</span>
+                    </div>
+                    <div class="stat-trend up mt-2">
+                        <span class="material-symbols-outlined" style="font-size:13px;">trending_up</span>
+                        所有授課收入加總
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 圖表區：柱狀圖 + 圓餅圖 並排 -->
+        <div class="row g-3 mb-4">
+            <!-- 每月收入趨勢 -->
+            <div class="col-md-8">
+                <div class="teacher-card h-100">
+                    <div class="teacher-card-header">
+                        <h3>每月收入趨勢</h3>
+                    </div>
+                    <div class="teacher-card-body">
+                        <div style="position:relative; height:220px;">
+                            <canvas id="income-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 各課程收入佔比 -->
+            <div class="col-md-4">
+                <div class="teacher-card h-100">
+                    <div class="teacher-card-header">
+                        <h3>課程收入佔比</h3>
+                    </div>
+                    <div class="teacher-card-body">
+                        <div style="position:relative; height:180px;">
+                            <canvas id="pie-chart"></canvas>
+                        </div>
+                        <div id="pie-legend" class="mt-3"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 收入明細列表 -->
+        <div class="teacher-card">
+            <div class="teacher-card-header">
+                <h3>收入明細</h3>
+                <span id="income-count" style="font-size:0.8rem; color:#94a3b8; font-weight:700;">0 筆</span>
+            </div>
+            <div id="income-list">
+                <div class="text-center text-muted py-4">⏳ 載入中...</div>
+            </div>
+        </div>
 
     </main>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 <script src="./assets/js/teacher-layout.js"></script>
+<script src="./assets/js/teacher-income.js"></script>
 </body>
 </html>

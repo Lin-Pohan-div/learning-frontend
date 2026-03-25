@@ -1,0 +1,130 @@
+// ==========================================
+// 課程管理頁面樣式 (_teacher-courses.scss)
+// ==========================================
+
+// 課程卡片 2 欄格線
+.course-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+
+    @media (max-width: 768px) {
+        grid-template-columns: 1fr;
+    }
+}
+
+// 活潑風格課程卡片
+.course-fun-card {
+    border-radius: 20px;
+    border: 3px solid;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    transition: all 0.15s;
+
+    &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+    }
+}
+
+.course-fun-tag {
+    display: inline-block;
+    padding: 5px 14px;
+    border-radius: 20px;
+    font-size: 0.82rem;
+    font-weight: 900;
+    align-self: flex-start;
+}
+
+.course-fun-student {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.course-fun-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.course-fun-name {
+    font-weight: 900;
+    font-size: 1.05rem;
+    color: #1A2238;
+}
+
+// 統計區
+.course-fun-stats {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(255,255,255,0.6);
+    border-radius: 12px;
+    padding: 10px 14px;
+}
+
+.course-fun-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+}
+
+.course-fun-stat-num {
+    font-size: 1.5rem;
+    font-weight: 900;
+    line-height: 1;
+}
+
+.course-fun-stat-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: #64748b;
+    margin-top: 2px;
+}
+
+.course-fun-stat-divider {
+    width: 1px;
+    height: 30px;
+    background: rgba(0,0,0,0.1);
+    flex-shrink: 0;
+}
+
+// 查看按鈕
+.course-fun-btn {
+    padding: 10px 20px;
+    border-radius: 12px;
+    border: none;
+    color: #fff;
+    font-weight: 900;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.15s;
+    align-self: stretch;
+    text-align: center;
+
+    &:hover {
+        opacity: 0.85;
+        transform: scale(0.98);
+    }
+}
+
+// Modal 統計標籤
+.modal-stat-chip {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
