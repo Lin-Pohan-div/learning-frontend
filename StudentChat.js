@@ -6,10 +6,11 @@
 const BASE_URL = '';                        // 相對路徑，走 Vite proxy
 const WS_BASE_URL = 'http://localhost:8080'; // WebSocket 需要絕對路徑
 
-let conversations = [];      // { bookingId (=orderId), tutorId, tutorName, subject, avatar, lastMessage, time, unread }
+let conversations = [];      // { bookingId (=orderId), bookingRecordId, bookingIds[], bookingRecordIds[], participantId, participantName, avatar, subject, lastMessage, time, unread }
 let currentBookingId = null;
 let stompClient = null;
 let stompSubscription = null;
+let stompErrorSubscription = null;
 
 // ── Helpers ──────────────────────────────
 
@@ -90,7 +91,12 @@ async function loadConversations() {
         const active = bookings.filter(b => b.status !== 3);
         const tutorCache = {};
 
-        const convList = await Promise.all(active.map(async b => {
+        const convList = (await Promise.all(active.map(async b => {
+            if (!b.orderId) {
+                console.warn('預約缺少 orderId，無法建立聊天對話', b);
+                return null;
+            }
+
             const tutorId = b.tutorId;
             if (tutorId && !tutorCache[tutorId]) {
                 try {
@@ -105,27 +111,34 @@ async function loadConversations() {
             const tutor = tutorId ? (tutorCache[tutorId] || { name: '老師', avatar: '' }) : { name: '老師', avatar: '' };
             return {
                 bookingId: b.orderId,
-                tutorId: tutorId,
-                tutorName: tutor.name || tutor.tutorName || '老師',
+                bookingRecordId: b.id,
+                participantId: tutorId,
+                participantName: tutor.name || tutor.tutorName || '老師',
                 subject: b.courseName || '',
                 avatar: resolveMediaUrl(convertGoogleDriveUrl(tutor.avatar)),
                 lastMessage: '',
                 time: b.date || '',
                 unread: 0
             };
-        }));
+        }))).filter(Boolean);
 
-        // 依 tutorId + courseName 分組，同一課程只顯示一個聯絡人
+        // 依 participantId + courseName 分組，同一課程只顯示一個聯絡人
         const groupMap = new Map();
         for (const c of convList) {
-            const key = `${c.tutorId}::${c.subject}`;
+            const key = `${c.participantId}::${c.subject}`;
             if (!groupMap.has(key)) {
-                groupMap.set(key, { ...c, bookingIds: [c.bookingId] });
+                groupMap.set(key, {
+                    ...c,
+                    bookingIds: [c.bookingId],
+                    bookingRecordIds: [c.bookingRecordId]
+                });
             } else {
                 const g = groupMap.get(key);
                 g.bookingIds.push(c.bookingId);
+                g.bookingRecordIds.push(c.bookingRecordId);
                 if (c.time > g.time) {
                     g.bookingId = c.bookingId;
+                    g.bookingRecordId = c.bookingRecordId;
                     g.time = c.time;
                 }
             }
@@ -135,7 +148,9 @@ async function loadConversations() {
 
         const bid = getBookingIdFromQuery();
         if (bid) {
-            const conv = conversations.find(c => c.bookingIds.includes(bid));
+            const conv = conversations.find(c =>
+                c.bookingIds.includes(bid) || c.bookingRecordIds.includes(bid)
+            );
             if (conv) selectConversation(conv.bookingId);
             else if (conversations.length > 0) selectConversation(conversations[0].bookingId);
         } else if (conversations.length > 0) {
@@ -151,18 +166,18 @@ async function loadConversations() {
 function renderChatList(filter = '') {
     const list = document.getElementById('chatList');
     const filtered = conversations.filter(c =>
-        c.tutorName.toLowerCase().includes(filter.toLowerCase()) ||
+        c.participantName.toLowerCase().includes(filter.toLowerCase()) ||
         c.subject.includes(filter)
     );
 
     list.innerHTML = filtered.map(c => `
         <li class="chat-item ${c.bookingId === currentBookingId ? 'active' : ''}" data-id="${c.bookingId}">
             <div class="contact-avatar-wrap">
-                <img src="${c.avatar}" alt="${escapeHtml(c.tutorName)}" class="contact-avatar">
+                <img src="${c.avatar}" alt="${escapeHtml(c.participantName)}" class="contact-avatar">
             </div>
             <div class="chat-item-body">
                 <div class="chat-item-top">
-                    <span class="contact-name">${escapeHtml(c.tutorName)}</span>
+                    <span class="contact-name">${escapeHtml(c.participantName)}</span>
                     <span class="contact-time">${escapeHtml(c.time)}</span>
                 </div>
                 <div class="chat-item-bottom">
@@ -216,7 +231,7 @@ function buildMsgHtml(m, conv) {
     } else {
         return `
             <div class="msg-row teacher">
-                <img src="${conv.avatar}" alt="${escapeHtml(conv.tutorName)}" class="msg-row-avatar">
+                <img src="${conv.avatar}" alt="${escapeHtml(conv.participantName)}" class="msg-row-avatar">
                 <div class="msg-content">
                     <div class="msg-bubble">${content}</div>
                     <span class="msg-time">${timeStr}</span>
@@ -254,8 +269,8 @@ async function selectConversation(bookingId) {
     const headerAvatar = document.getElementById('headerAvatar');
     const headerName = document.getElementById('headerName');
     const headerTag = document.getElementById('headerTag');
-    if (headerAvatar) { headerAvatar.src = conv.avatar; headerAvatar.alt = conv.tutorName; }
-    if (headerName) headerName.textContent = conv.tutorName;
+    if (headerAvatar) { headerAvatar.src = conv.avatar; headerAvatar.alt = conv.participantName; }
+    if (headerName) headerName.textContent = conv.participantName;
     if (headerTag) headerTag.textContent = conv.subject;
 
     renderChatList(document.getElementById('searchInput').value);
@@ -288,6 +303,11 @@ function connectWebSocket(bookingId) {
         stompSubscription = null;
     }
 
+    if (stompErrorSubscription) {
+        stompErrorSubscription.unsubscribe();
+        stompErrorSubscription = null;
+    }
+
     if (stompClient && stompClient.connected) {
         subscribeBooking(bookingId);
         return;
@@ -317,6 +337,18 @@ function subscribeBooking(bookingId) {
             // 避免重複顯示自己送出的訊息
             if (msg.role !== 'student') {
                 appendMessage(msg);
+            }
+        }
+    );
+
+    stompErrorSubscription = stompClient.subscribe(
+        `/topic/room/${bookingId}/errors`,
+        frame => {
+            try {
+                const error = JSON.parse(frame.body);
+                console.error('聊天室訊息儲存失敗', error);
+            } catch {
+                console.error('聊天室訊息儲存失敗', frame.body);
             }
         }
     );

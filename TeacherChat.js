@@ -10,7 +10,7 @@ const DEFAULT_AVATAR = '/assets/img/teacher.png';
 
 let tutorId = null;
 
-let conversations = [];      // { bookingId (=b.orderId), bookingRecordIds[], bookingIds[], studentId, studentName, subject, avatar, lastMessage, time, unread }
+let conversations = [];      // { bookingId (=orderId), bookingRecordId, bookingIds[], bookingRecordIds[], participantId, participantName, avatar, subject, lastMessage, time, unread }
 let currentBookingId = null;
 let stompClient = null;
 let stompSubscription = null;
@@ -117,8 +117,8 @@ async function loadConversations() {
             return {
                 bookingId: b.orderId,
                 bookingRecordId: b.id,
-                studentId: studentId,
-                studentName: studentData.name || studentData.studentName || '學生 #' + studentId,
+                participantId: studentId,
+                participantName: studentData.name || studentData.studentName || '學生 #' + studentId,
                 subject: b.courseName || '',
                 avatar: resolveMediaUrl(convertGoogleDriveUrl(studentData.avatar)),
                 lastMessage: '',
@@ -127,10 +127,10 @@ async function loadConversations() {
             };
         }))).filter(Boolean);
 
-        // 依 studentId + courseName 分組，同一課程只顯示一個聯絡人
+        // 依 participantId + courseName 分組，同一課程只顯示一個聯絡人
         const groupMap = new Map();
         for (const c of convList) {
-            const key = `${c.studentId}::${c.subject}`;
+            const key = `${c.participantId}::${c.subject}`;
             if (!groupMap.has(key)) {
                 groupMap.set(key, {
                     ...c,
@@ -171,18 +171,18 @@ async function loadConversations() {
 function renderChatList(filter = '') {
     const list = document.getElementById('chatList');
     const filtered = conversations.filter(c =>
-        c.studentName.toLowerCase().includes(filter.toLowerCase()) ||
+        c.participantName.toLowerCase().includes(filter.toLowerCase()) ||
         c.subject.includes(filter)
     );
 
     list.innerHTML = filtered.map(c => `
         <li class="chat-item ${c.bookingId === currentBookingId ? 'active' : ''}" data-id="${c.bookingId}">
             <div class="contact-avatar-wrap">
-                <img src="${c.avatar || DEFAULT_AVATAR}" alt="${escapeHtml(c.studentName)}" class="contact-avatar" onerror="this.onerror=null;this.src='${DEFAULT_AVATAR}';">
+                <img src="${c.avatar || DEFAULT_AVATAR}" alt="${escapeHtml(c.participantName)}" class="contact-avatar" onerror="this.onerror=null;this.src='${DEFAULT_AVATAR}';">
             </div>
             <div class="chat-item-body">
                 <div class="chat-item-top">
-                    <span class="contact-name">${escapeHtml(c.studentName)}</span>
+                    <span class="contact-name">${escapeHtml(c.participantName)}</span>
                     <span class="contact-time">${escapeHtml(c.time)}</span>
                 </div>
                 <div class="chat-item-bottom">
@@ -236,7 +236,7 @@ function buildMsgHtml(m, conv) {
     } else {
         return `
             <div class="msg-row teacher">
-                <img src="${conv.avatar}" alt="${escapeHtml(conv.studentName)}" class="msg-row-avatar">
+                <img src="${conv.avatar}" alt="${escapeHtml(conv.participantName)}" class="msg-row-avatar">
                 <div class="msg-content">
                     <div class="msg-bubble">${content}</div>
                     <span class="msg-time">${timeStr}</span>
@@ -274,8 +274,8 @@ async function selectConversation(bookingId) {
     const headerAvatar = document.getElementById('headerAvatar');
     const headerName = document.getElementById('headerName');
     const headerTag = document.getElementById('headerTag');
-    if (headerAvatar) { headerAvatar.src = conv.avatar; headerAvatar.alt = conv.studentName; }
-    if (headerName) headerName.textContent = conv.studentName;
+    if (headerAvatar) { headerAvatar.src = conv.avatar; headerAvatar.alt = conv.participantName; }
+    if (headerName) headerName.textContent = conv.participantName;
     if (headerTag) headerTag.textContent = conv.subject;
 
     renderChatList(document.getElementById('searchInput').value);
