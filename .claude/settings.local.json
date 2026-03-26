@@ -12,7 +12,8 @@
       "Bash(grep -rn \"sockjs\\\\|stomp\\\\|SockJS\\\\|Stomp\" /d/learning-frontend01/learning-frontend/*.html)",
       "Bash(find assets/js -type f -name *.js)",
       "Bash(ls -la /d/learning-frontend01/learning-frontend/*.js)",
-      "Bash(grep -E \"\\(assets/js|\\\\.html$\\)\")"
+      "Bash(grep -E \"\\(assets/js|\\\\.html$\\)\")",
+      "Bash(npm audit:*)"
     ]
   }
 }
