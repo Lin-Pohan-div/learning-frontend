@@ -9,7 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@900&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./assets/css/all.css">
+    <link rel="stylesheet" href="./assets/scss/all.scss">
 </head>
 
 <body class="student-chat-page">
@@ -43,9 +43,9 @@
             </a>
         </nav>
         <div class="student-sidebar-footer" id="logout-btn">
-            <img src="https://i.pravatar.cc/38?img=5" alt="頭像" class="student-avatar">
+            <img src="https://i.pravatar.cc/38?img=5" alt="頭像" class="student-avatar" id="sidebarAvatar">
             <div class="student-info">
-                <div class="student-name">林小明</div>
+                <div class="student-name" id="sidebarName">林小明</div>
                 <div class="student-role">學生</div>
             </div>
             <span class="material-symbols-outlined logout-icon">logout</span>
@@ -71,70 +71,7 @@
             </div>
 
             <!-- 對話列表 -->
-            <ul class="chat-list" id="chatList">
-                <li class="chat-item active" data-id="0">
-                    <div class="contact-avatar-wrap">
-                        <img src="https://i.pravatar.cc/44?img=47" alt="Sarah Chen" class="contact-avatar">
-                    </div>
-                    <div class="chat-item-body">
-                        <div class="chat-item-top">
-                            <span class="contact-name">Sarah Chen</span>
-                            <span class="contact-time">10:32</span>
-                        </div>
-                        <div class="chat-item-bottom">
-                            <span class="contact-preview">好的！那我們下次課繼續練習發…</span>
-                            <span class="unread-badge">2</span>
-                        </div>
-                        <span class="subject-tag">英文會話</span>
-                    </div>
-                </li>
-                <li class="chat-item" data-id="1">
-                    <div class="contact-avatar-wrap">
-                        <img src="https://i.pravatar.cc/44?img=12" alt="David Wang" class="contact-avatar">
-                    </div>
-                    <div class="chat-item-body">
-                        <div class="chat-item-top">
-                            <span class="contact-name">David Wang</span>
-                            <span class="contact-time">昨天</span>
-                        </div>
-                        <div class="chat-item-bottom">
-                            <span class="contact-preview">請記得預習第五課的商務郵件範例。</span>
-                        </div>
-                        <span class="subject-tag">商用英文</span>
-                    </div>
-                </li>
-                <li class="chat-item" data-id="2">
-                    <div class="contact-avatar-wrap">
-                        <img src="https://i.pravatar.cc/44?img=32" alt="Amy Liu" class="contact-avatar">
-                    </div>
-                    <div class="chat-item-body">
-                        <div class="chat-item-top">
-                            <span class="contact-name">Amy Liu</span>
-                            <span class="contact-time">週一</span>
-                        </div>
-                        <div class="chat-item-bottom">
-                            <span class="contact-preview">你的進步非常大，繼續加油！</span>
-                        </div>
-                        <span class="subject-tag">英文文法</span>
-                    </div>
-                </li>
-                <li class="chat-item" data-id="3">
-                    <div class="contact-avatar-wrap">
-                        <img src="https://i.pravatar.cc/44?img=8" alt="Kevin Ho" class="contact-avatar">
-                    </div>
-                    <div class="chat-item-body">
-                        <div class="chat-item-top">
-                            <span class="contact-name">Kevin Ho</span>
-                            <span class="contact-time">3/18</span>
-                        </div>
-                        <div class="chat-item-bottom">
-                            <span class="contact-preview">下週的課我改到週四下午三點…</span>
-                            <span class="unread-badge">1</span>
-                        </div>
-                        <span class="subject-tag">英文口說</span>
-                    </div>
-                </li>
-            </ul>
+            <ul class="chat-list" id="chatList"></ul>
         </section>
 
         <!-- 右欄：聊天視窗 -->
@@ -163,6 +100,7 @@
                 <button class="attach-btn" title="附件">
                     <span class="material-symbols-outlined">attach_file</span>
                 </button>
+                <input type="file" id="fileInput" style="display:none" accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.zip">
                 <input type="text" class="chat-input" id="msgInput"
                     placeholder="輸入訊息… (Enter 送出、Shift+Enter 換行)">
                 <button class="send-btn" id="sendBtn">
@@ -173,6 +111,9 @@
 
     </main>
 
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7/bundles/stomp.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="./StudentChat.js"></script>
     <script>
         // RWD interactions
