@@ -105,10 +105,14 @@ nav.flex-grow-1 {
 }
 
 .student-nav-link.active {
-    background: rgba(255, 255, 255, 0.12);
-    color: #fff;
+    background: #CCFF00;
+    color: #000;
     font-weight: 700;
-    border-left-color: #CCFF00;
+    border-left-color: transparent;
+}
+
+.student-nav-link.active .material-symbols-outlined {
+    color: #000;
 }
 
 .student-sidebar-footer {
@@ -166,26 +170,38 @@ nav.flex-grow-1 {
    ============================================= */
 
 .chat-list-panel {
-    width: 240px;
+    max-width: 300px;
     min-width: 240px;
     flex-shrink: 0;
     background: #fff;
-    border-right: 2px solid #000;
+    border: 2px solid #000;
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    margin: 20px;
+    border-radius: 10px;
 }
 
 .chat-list-header {
-    padding: 18px 18px 10px;
+    padding: 16px 16px 14px;
     border-bottom: 2px solid #000;
 }
 
 .chat-list-title {
-    font-size: 1rem;
+    font-size: 0.95rem;
     font-weight: 900;
     color: #111;
     letter-spacing: -0.2px;
+}
+
+.chat-list-title span {
+    display: inline-block;
+    padding: 4px 14px 4px 10px;
+    background: #fff;
+    border: 2px solid #000;
+    border-radius: 8px 8px 8px 0px;
+    box-shadow: 3px 3px 0 #000;
+    position: relative;
 }
 
 /* Search */
@@ -233,13 +249,15 @@ nav.flex-grow-1 {
     list-style: none;
     overflow-y: auto;
     flex: 1;
+    padding: 0;
+    margin: 0;
 }
 
 .chat-item {
     display: flex;
     align-items: flex-start;
-    gap: 10px;
-    padding: 12px 14px;
+    gap: 14px;
+    padding: 14px 14px 10px 14px;
     cursor: pointer;
     border-bottom: 1px solid #f0f0f0;
     transition: background 0.12s;
@@ -353,6 +371,9 @@ nav.flex-grow-1 {
     flex-direction: column;
     background: #F5F7FF;
     overflow: hidden;
+    margin: 20px;
+    border: 2px solid #000;
+    border-radius: 10px;
 }
 
 /* Header */
@@ -388,6 +409,11 @@ nav.flex-grow-1 {
     display: flex;
     flex-direction: column;
     gap: 14px;
+    background-color: #F5F7FF;
+    background-image:
+        linear-gradient(rgba(0, 0, 0, 0.045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 0, 0, 0.045) 1px, transparent 1px);
+    background-size: 28px 28px;
 }
 
 .msg-row {
@@ -526,4 +552,202 @@ nav.flex-grow-1 {
 .send-btn:active {
     transform: translateY(1px);
     box-shadow: 1px 1px 0 #000;
+}
+
+/* =============================================
+   RWD — Mobile-only elements (hidden by default)
+   ============================================= */
+
+.hamburger-btn {
+    display: none;
+    position: fixed;
+    top: 12px;
+    left: 12px;
+    z-index: 1001;
+    width: 40px;
+    height: 40px;
+    background: #0055FF;
+    color: #fff;
+    border: 2px solid #000;
+    border-radius: 10px;
+    box-shadow: 3px 3px 0 #000;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.12s, box-shadow 0.12s;
+}
+
+.hamburger-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 4px 5px 0 #000;
+}
+
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 999;
+}
+
+.chat-back-btn {
+    display: none;
+    width: 36px;
+    height: 36px;
+    background: transparent;
+    border: 2px solid #000;
+    border-radius: 8px;
+    box-shadow: 2px 2px 0 #000;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    color: #111;
+    transition: transform 0.12s, box-shadow 0.12s;
+}
+
+.chat-back-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 3px 4px 0 #000;
+}
+
+/* =============================================
+   RWD — Tablet (576px – 991px)
+   ============================================= */
+
+@media (max-width: 991px) {
+    .student-sidebar {
+        width: 64px;
+        min-width: 64px;
+    }
+
+    .student-sidebar-logo {
+        padding: 20px 12px;
+        justify-content: center;
+        gap: 0;
+    }
+
+    .logo-text,
+    .student-info,
+    .nav-label,
+    .logout-icon {
+        display: none;
+    }
+
+    .student-nav-link {
+        justify-content: center;
+        padding: 14px 0;
+        gap: 0;
+    }
+
+    .student-sidebar-footer {
+        justify-content: center;
+        padding: 14px 0;
+        gap: 0;
+    }
+
+    .chat-list-panel {
+        max-width: none;
+        min-width: 200px;
+        flex: 0 0 220px;
+    }
+}
+
+/* =============================================
+   RWD — Mobile (< 576px)
+   ============================================= */
+
+@media (max-width: 575px) {
+    .hamburger-btn {
+        display: flex;
+    }
+
+    /* Sidebar slides off-screen by default */
+    .student-sidebar {
+        position: fixed;
+        left: -280px;
+        top: 0;
+        bottom: 0;
+        width: 260px;
+        min-width: 260px;
+        z-index: 1000;
+        transition: left 0.25s ease;
+    }
+
+    /* Restore full sidebar on mobile (undo tablet overrides) */
+    .logo-text,
+    .student-info,
+    .nav-label,
+    .logout-icon {
+        display: revert;
+    }
+
+    .student-sidebar-logo {
+        padding: 24px 24px 20px;
+        justify-content: flex-start;
+        gap: 12px;
+    }
+
+    .student-nav-link {
+        justify-content: flex-start;
+        padding: 11px 24px;
+        gap: 12px;
+    }
+
+    .student-sidebar-footer {
+        justify-content: flex-start;
+        padding: 16px 20px;
+        gap: 10px;
+    }
+
+    /* Open state */
+    body.sidebar-open .student-sidebar {
+        left: 0;
+    }
+
+    body.sidebar-open .sidebar-overlay {
+        display: block;
+    }
+
+    /* Chat layout fills full width */
+    .chat-layout {
+        width: 100%;
+    }
+
+    .chat-list-panel {
+        flex: 1;
+        max-width: none;
+        min-width: 0;
+        margin: 8px;
+    }
+
+    .chat-window {
+        display: none;
+        margin: 8px;
+    }
+
+    /* When a chat is selected: hide list, show window */
+    body.mobile-show-chat .chat-list-panel {
+        display: none;
+    }
+
+    body.mobile-show-chat .chat-window {
+        display: flex;
+        flex: 1;
+    }
+
+    /* Show back button */
+    .chat-back-btn {
+        display: flex;
+    }
+
+    /* Wider bubbles on small screens */
+    .msg-content {
+        max-width: 80%;
+    }
+
+    /* Tighter message padding */
+    .chat-messages {
+        padding: 16px 14px;
+    }
 }

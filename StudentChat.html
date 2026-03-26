@@ -9,10 +9,15 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@900&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./StudentChat.css">
+    <link rel="stylesheet" href="./assets/css/all.css">
 </head>
 
-<body>
+<body class="student-chat-page">
+
+    <!-- ===== Hamburger (mobile only) ===== -->
+    <button class="hamburger-btn" id="hamburgerBtn" aria-label="開啟選單">
+        <span class="material-symbols-outlined">menu</span>
+    </button>
 
     <!-- ===== 左側導覽列 ===== -->
     <aside class="student-sidebar" id="student-sidebar">
@@ -24,26 +29,17 @@
             </div>
         </div>
         <nav class="flex-grow-1 py-2">
-            <a href="student-dashboard.html" class="student-nav-link">
-                <span class="material-symbols-outlined">grid_view</span> 控制台
-            </a>
             <a href="StudentChat.html" class="student-nav-link active">
-                <span class="material-symbols-outlined">chat_bubble</span> 訊息中心
+                <span class="material-symbols-outlined">chat_bubble</span>
+                <span class="nav-label">訊息中心</span>
             </a>
             <a href="explore.html" class="student-nav-link">
-                <span class="material-symbols-outlined">search</span> 找老師
+                <span class="material-symbols-outlined">search</span>
+                <span class="nav-label">找老師</span>
             </a>
             <a href="booking.html" class="student-nav-link">
-                <span class="material-symbols-outlined">calendar_month</span> 我的課程
-            </a>
-            <a href="student-learning-records.html" class="student-nav-link">
-                <span class="material-symbols-outlined">history</span> 學習紀錄
-            </a>
-            <a href="student-credits.html" class="student-nav-link">
-                <span class="material-symbols-outlined">account_balance_wallet</span> 儲值明細
-            </a>
-            <a href="student-settings.html" class="student-nav-link">
-                <span class="material-symbols-outlined">settings</span> 設定
+                <span class="material-symbols-outlined">calendar_month</span>
+                <span class="nav-label">我的課程</span>
             </a>
         </nav>
         <div class="student-sidebar-footer" id="logout-btn">
@@ -56,13 +52,16 @@
         </div>
     </aside>
 
+    <!-- ===== Sidebar overlay (mobile) ===== -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
     <!-- ===== 主內容區（對話列表 + 聊天視窗）===== -->
     <main class="chat-layout">
 
         <!-- 中欄：對話列表 -->
         <section class="chat-list-panel">
             <div class="chat-list-header">
-                <h2 class="chat-list-title">訊息中心</h2>
+                <h2 class="chat-list-title"><span>訊息中心</span></h2>
             </div>
 
             <!-- 搜尋框 -->
@@ -142,6 +141,9 @@
         <section class="chat-window">
             <!-- 頂部 header -->
             <div class="chat-header" id="chatHeader">
+                <button class="chat-back-btn" id="chatBackBtn" aria-label="返回">
+                    <span class="material-symbols-outlined">arrow_back</span>
+                </button>
                 <div class="contact-avatar-wrap">
                     <img src="https://i.pravatar.cc/44?img=47" alt="Sarah Chen" class="contact-avatar" id="headerAvatar">
                 </div>
@@ -172,6 +174,30 @@
     </main>
 
     <script src="./StudentChat.js"></script>
+    <script>
+        // RWD interactions
+        const hamburgerBtn = document.getElementById('hamburgerBtn');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+        const chatBackBtn = document.getElementById('chatBackBtn');
+
+        hamburgerBtn.addEventListener('click', () => {
+            document.body.classList.toggle('sidebar-open');
+        });
+
+        sidebarOverlay.addEventListener('click', () => {
+            document.body.classList.remove('sidebar-open');
+        });
+
+        chatBackBtn.addEventListener('click', () => {
+            document.body.classList.remove('mobile-show-chat');
+        });
+
+        document.getElementById('chatList').addEventListener('click', (e) => {
+            if (window.innerWidth < 576) {
+                document.body.classList.add('mobile-show-chat');
+            }
+        });
+    </script>
 </body>
 
 </html>
