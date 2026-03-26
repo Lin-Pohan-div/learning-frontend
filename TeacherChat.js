@@ -10,10 +10,11 @@ const DEFAULT_AVATAR = '/assets/img/teacher.png';
 
 let tutorId = null;
 
-let conversations = [];      // { bookingId (=b.id), studentId, studentName, subject, avatar, lastMessage, time, unread }
+let conversations = [];      // { bookingId (=b.orderId), bookingRecordIds[], bookingIds[], studentId, studentName, subject, avatar, lastMessage, time, unread }
 let currentBookingId = null;
 let stompClient = null;
 let stompSubscription = null;
+let stompErrorSubscription = null;
 
 // ── Helpers ──────────────────────────────
 
@@ -99,7 +100,12 @@ async function loadConversations() {
         // 只顯示非已取消狀態的預約，優先使用 booking 回傳的學生資料
         const active = bookings.filter(b => b.status !== 3);
 
-        const convList = await Promise.all(active.map(async b => {
+        const convList = (await Promise.all(active.map(async b => {
+            if (!b.orderId) {
+                console.warn('預約缺少 orderId，無法建立聊天對話', b);
+                return null;
+            }
+
             const studentId = b.studentId;
             const studentData = {
                 name: b.studentName || b.student?.name || b.student?.studentName || '',
@@ -109,7 +115,8 @@ async function loadConversations() {
                 ? `${b.date[0]}-${String(b.date[1]).padStart(2, '0')}-${String(b.date[2]).padStart(2, '0')}`
                 : (b.date || '');
             return {
-                bookingId: b.id,
+                bookingId: b.orderId,
+                bookingRecordId: b.id,
                 studentId: studentId,
                 studentName: studentData.name || studentData.studentName || '學生 #' + studentId,
                 subject: b.courseName || '',
@@ -118,19 +125,25 @@ async function loadConversations() {
                 time: dateVal,
                 unread: 0
             };
-        }));
+        }))).filter(Boolean);
 
         // 依 studentId + courseName 分組，同一課程只顯示一個聯絡人
         const groupMap = new Map();
         for (const c of convList) {
             const key = `${c.studentId}::${c.subject}`;
             if (!groupMap.has(key)) {
-                groupMap.set(key, { ...c, bookingIds: [c.bookingId] });
+                groupMap.set(key, {
+                    ...c,
+                    bookingIds: [c.bookingId],
+                    bookingRecordIds: [c.bookingRecordId]
+                });
             } else {
                 const g = groupMap.get(key);
                 g.bookingIds.push(c.bookingId);
+                g.bookingRecordIds.push(c.bookingRecordId);
                 if (c.time > g.time) {
                     g.bookingId = c.bookingId;
+                    g.bookingRecordId = c.bookingRecordId;
                     g.time = c.time;
                 }
             }
@@ -140,7 +153,9 @@ async function loadConversations() {
 
         const bid = getBookingIdFromQuery();
         if (bid) {
-            const conv = conversations.find(c => c.bookingIds.includes(bid));
+            const conv = conversations.find(c =>
+                c.bookingIds.includes(bid) || c.bookingRecordIds.includes(bid)
+            );
             if (conv) selectConversation(conv.bookingId);
             else if (conversations.length > 0) selectConversation(conversations[0].bookingId);
         } else if (conversations.length > 0) {
@@ -293,6 +308,11 @@ function connectWebSocket(bookingId) {
         stompSubscription = null;
     }
 
+    if (stompErrorSubscription) {
+        stompErrorSubscription.unsubscribe();
+        stompErrorSubscription = null;
+    }
+
     if (isStompConnected()) {
         subscribeBooking(bookingId);
         return;
@@ -354,6 +374,18 @@ function subscribeBooking(bookingId) {
             }
         }
     );
+
+    stompErrorSubscription = stompClient.subscribe(
+        `/topic/room/${bookingId}/errors`,
+        frame => {
+            try {
+                const error = JSON.parse(frame.body);
+                console.error('聊天室訊息儲存失敗', error);
+            } catch {
+                console.error('聊天室訊息儲存失敗', frame.body);
+            }
+        }
+    );
 }
 
 // ── 傳送訊息 ──────────────────────────────
@@ -375,21 +407,22 @@ async function sendMessage() {
     appendMessage({ ...payload, createdAt: now });
     input.value = '';
 
-    if (isStompConnected()) {
-        if (typeof stompClient.publish === 'function') {
-            stompClient.publish({
-                destination: `/app/chat/${currentBookingId}`,
-                body: JSON.stringify(payload)
-            });
+    try {
+        if (stompClient && stompClient.connected) {
+            if (typeof stompClient.publish === 'function') {
+                stompClient.publish({
+                    destination: `/app/chat/${currentBookingId}`,
+                    body: JSON.stringify(payload)
+                });
+            } else {
+                stompClient.send(`/app/chat/${currentBookingId}`, {}, JSON.stringify(payload));
+            }
         } else {
-            stompClient.send(`/app/chat/${currentBookingId}`, {}, JSON.stringify(payload));
-        }
-    } else {
-        try {
             await axios.post(`${API_BASE_URL}/chatMessage`, payload, { headers: authHeaders() });
-        } catch (err) {
-            console.error('傳送訊息失敗', err);
         }
+    } catch (err) {
+        input.value = text;
+        console.error('傳送訊息失敗', err);
     }
 }
 
