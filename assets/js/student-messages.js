@@ -49,7 +49,7 @@ function formatTime(createdAt) {
     } else {
         return `${d.getMonth() + 1}/${d.getDate()}`;
     }
-];
+};
 
 function getBookingIdFromQuery() {
     const params = new URLSearchParams(window.location.search);
@@ -213,7 +213,7 @@ function buildMsgHtml(m, conv) {
                 <div class="msg-time">${timeStr}</div>
             </div>
         </div>
-    `).join('');
+    `.join('');
 
     // Clear unread
     conv.unread = 0;
