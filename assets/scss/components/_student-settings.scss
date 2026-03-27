@@ -1,5 +1,4 @@
 // ==========================================
-<<<<<<< HEAD
 // 學生設定頁面樣式
 // ==========================================
 
@@ -75,7 +74,6 @@
     border: 2px solid #000;
     border-radius: 50%;
     box-shadow: 1px 1px 0 #000;
-=======
 // 設定頁面樣式 (_student-settings.scss)
 // ==========================================
 
@@ -103,14 +101,12 @@
     border-radius: 50%;
     background: #1A2238;
     color: #fff;
->>>>>>> ce816c482dd7ebb297a4677b0e0702625111796c
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     transition: background 0.15s;
 
-<<<<<<< HEAD
     &:hover { background: #b8e600; }
 }
 
@@ -241,7 +237,6 @@
     gap: 20px;
     padding: 14px 0;
     border-bottom: 1px solid #f0f0f0;
-=======
     &:hover { background: #334155; }
 }
 
@@ -344,12 +339,10 @@ textarea.settings-input {
     align-items: center;
     padding: 12px 0;
     border-bottom: 1px solid #f1f5f9;
->>>>>>> ce816c482dd7ebb297a4677b0e0702625111796c
 
     &:last-child { border-bottom: none; }
 }
 
-<<<<<<< HEAD
 .s-toggle-info {
     h4 {
         font-size: 0.88rem;
@@ -436,7 +429,6 @@ textarea.settings-input {
     font-weight: 600;
     margin-top: 4px;
 }
-=======
 .settings-info-label {
     font-size: 0.8rem;
     font-weight: 700;
@@ -450,4 +442,3 @@ textarea.settings-input {
     font-weight: 600;
     color: #1A2238;
 }
->>>>>>> ce816c482dd7ebb297a4677b0e0702625111796c
