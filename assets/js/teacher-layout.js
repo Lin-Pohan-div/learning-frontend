@@ -50,16 +50,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const tutorId = localStorage.getItem('userId');
 
     // 未登入 → 跳回登入頁
-    if (!token) {
-        window.location.href = 'login.html';
-        return;
-    }
+    // if (!token) {
+    //     window.location.href = 'login.html';
+    //     return;
+    // }
 
     // 不是老師 → 跳回首頁
-    if (userRole !== 'TUTOR') {
-        window.location.href = 'index.html';
-        return;
-    }
+    // if (userRole !== 'TUTOR') {
+    //     window.location.href = 'index.html';
+    //     return;
+    // }
 
     // 從 localStorage 填入側邊欄姓名
     const userName = localStorage.getItem('userName');
