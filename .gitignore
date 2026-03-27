@@ -7,6 +7,7 @@ dist/
 
 # Editor
 .idea/
+.claude
 
 # Logs
 *.log
