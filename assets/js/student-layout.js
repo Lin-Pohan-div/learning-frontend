@@ -1,5 +1,5 @@
 // ==========================================
-// 教師後台共用邏輯 (student-layout.js)
+// 學生後台共用邏輯 (student-layout.js)
 // ==========================================
 
 // ── 自動帶入 JWT Token ──
@@ -45,54 +45,21 @@ if (logoutBtn) {
 document.addEventListener('DOMContentLoaded', () => {
     const token = localStorage.getItem('jwt_token');
     const userRole = localStorage.getItem('userRole');
-    const tutorId = localStorage.getItem('userId');
 
     // 未登入 → 跳回登入頁
-    // if (!token) {
-    //     window.location.href = 'login.html';
-    //     return;
-    // }
+    if (!token) {
+        window.location.href = 'login.html';
+        return;
+    }
 
-    // 不是學生 → 跳回首頁
-    // if (userRole !== 'TUTOR') {
-    //     window.location.href = 'index.html';
-    //     return;
-    // }
+    // 老師角色 → 跳到老師後台
+    if (userRole === 'TUTOR') {
+        window.location.href = 'teacher-dashboard.html';
+        return;
+    }
 
     // 從 localStorage 填入側邊欄姓名
     const userName = localStorage.getItem('userName');
     const nameEl = document.getElementById('sidebar-name');
     if (nameEl && userName) nameEl.textContent = userName;
-
-    // 載入頭貼
-    if (tutorId) loadSidebarAvatar(tutorId);
 });
-
-// ── 載入側邊欄頭貼 ──
-async function loadSidebarAvatar(tutorId) {
-    try {
-        const res = await axios.get(`${API_BASE_URL}/tutor/${tutorId}`);
-        const avatarUrl = res.data.avatar;
-        const avatarEl = document.getElementById('sidebar-avatar');
-
-        if (avatarEl && avatarUrl) {
-            const match = avatarUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
-            avatarEl.src = match
-                ? `https://lh3.googleusercontent.com/d/${match[1]}`
-                : avatarUrl;
-        }
-    } catch (e) {
-        console.error('載入頭貼失敗：', e);
-    }
-
-    // ── 動態插入返回首頁按鈕 ──
-    const nav = document.querySelector('.student-sidebar nav');
-    if (nav) {
-        const homeLink = document.createElement('a');
-        homeLink.href = 'index.html';
-        homeLink.className = 'student-nav-link';
-        homeLink.innerHTML = '<span class="material-symbols-outlined">home</span> 返回首頁';
-        homeLink.style.marginTop = 'auto';
-        nav.appendChild(homeLink);
-    }
-}
