@@ -1,0 +1,236 @@
+// ==========================================
+// 學生「我的課程」頁面樣式
+// ==========================================
+
+$s-primary:  #0055FF;
+$s-accent:   #CCFF00;
+$s-border:   #000;
+$s-bg:       #F5F7FF;
+
+// ── 統計卡片列 ──
+.mc-stat-card {
+    background: #fff;
+    border: 2px solid $s-border;
+    border-radius: 14px;
+    box-shadow: 4px 4px 0 $s-border;
+    padding: 18px 16px;
+    text-align: center;
+}
+
+.mc-stat-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 10px;
+
+    .material-symbols-outlined { font-size: 22px; }
+}
+
+.mc-stat-value {
+    font-size: 1.7rem;
+    font-weight: 900;
+    line-height: 1;
+    margin-bottom: 4px;
+}
+
+.mc-stat-label {
+    font-size: 0.75rem;
+    color: #888;
+    font-weight: 600;
+}
+
+// ── 篩選 Tabs ──
+.mc-tabs {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.mc-tab-btn {
+    padding: 7px 16px;
+    border: 2px solid $s-border;
+    border-radius: 10px;
+    background: #fff;
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 2px 2px 0 $s-border;
+    transition: background 0.12s, color 0.12s;
+
+    &:hover {
+        background: $s-bg;
+    }
+
+    &.active {
+        background: $s-primary;
+        color: #fff;
+        box-shadow: 2px 2px 0 $s-border;
+    }
+}
+
+// ── 課程清單項目 ──
+.mc-course-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 22px;
+    border-bottom: 1px solid #eee;
+    transition: background 0.12s;
+
+    &:last-child { border-bottom: none; }
+    &:hover { background: $s-bg; }
+}
+
+.mc-teacher-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 2px solid $s-border;
+    box-shadow: 2px 2px 0 $s-border;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.mc-course-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.mc-course-teacher {
+    font-size: 0.9rem;
+    font-weight: 700;
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mc-course-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.mc-subject-badge {
+    font-size: 0.72rem;
+    font-weight: 700;
+    background: $s-accent;
+    color: #000;
+    border: 1px solid $s-border;
+    border-radius: 6px;
+    padding: 2px 8px;
+}
+
+.mc-course-time,
+.mc-course-duration {
+    font-size: 0.75rem;
+    color: #888;
+    font-weight: 500;
+}
+
+// ── 右側狀態與操作 ──
+.mc-course-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.mc-status-badge {
+    font-size: 0.72rem;
+    font-weight: 700;
+    border-radius: 6px;
+    padding: 3px 10px;
+    border: 1px solid transparent;
+}
+
+.mc-status-upcoming  { background: $s-accent;  color: #000;    border-color: darken($s-accent, 10%); }
+.mc-status-ongoing   { background: #EBF0FF;     color: $s-primary; border-color: $s-primary; }
+.mc-status-completed { background: #d1fae5;     color: #065f46; border-color: #6ee7b7; }
+.mc-status-cancelled { background: #fee2e2;     color: #dc2626; border-color: #fca5a5; }
+
+// ── 操作按鈕 ──
+.mc-action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    border-radius: 8px;
+    padding: 5px 12px;
+    border: 2px solid $s-border;
+    cursor: pointer;
+    text-decoration: none;
+    transition: opacity 0.12s;
+
+    &:hover { opacity: 0.85; }
+}
+
+.mc-action-primary {
+    background: $s-primary;
+    color: #fff;
+    box-shadow: 2px 2px 0 $s-border;
+}
+
+.mc-action-secondary {
+    background: #fff;
+    color: #333;
+    box-shadow: 2px 2px 0 $s-border;
+}
+
+// ── 空狀態 ──
+.mc-empty-state {
+    text-align: center;
+    padding: 48px 20px;
+
+    .material-symbols-outlined {
+        font-size: 48px;
+        color: #ccc;
+        display: block;
+        margin-bottom: 12px;
+    }
+
+    p {
+        font-size: 0.88rem;
+        color: #aaa;
+        margin-bottom: 16px;
+    }
+}
+
+.mc-find-btn {
+    display: inline-block;
+    padding: 8px 20px;
+    background: $s-primary;
+    color: #fff;
+    font-size: 0.85rem;
+    font-weight: 700;
+    border: 2px solid $s-border;
+    border-radius: 10px;
+    box-shadow: 3px 3px 0 $s-border;
+    text-decoration: none;
+    transition: opacity 0.12s;
+
+    &:hover { opacity: 0.85; color: #fff; }
+}
+
+// 星星評分按鈕
+.mc-star-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    color: #E2E8F0;
+    font-size: 32px;
+    line-height: 1;
+    transition: color 0.1s, transform 0.1s;
+
+    .material-symbols-outlined { font-size: 32px; }
+
+    &.active { color: #F59E0B; }
+    &:hover { color: #F59E0B; transform: scale(1.15); }
+}

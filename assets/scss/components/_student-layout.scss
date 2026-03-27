@@ -11,6 +11,13 @@ $s-bg:        #F5F7FF;
 $s-border:    #000;
 $s-sidebar-text: rgba(255, 255, 255, 0.75);
 
+// ── Material Symbols 全域設定 ──
+.material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400;
+    font-size: 20px;
+    vertical-align: middle;
+}
+
 // ==========================================
 // 手機版頂部 Header
 // ==========================================
