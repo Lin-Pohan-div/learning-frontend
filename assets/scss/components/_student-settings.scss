@@ -74,371 +74,400 @@
     border: 2px solid #000;
     border-radius: 50%;
     box-shadow: 1px 1px 0 #000;
-// 設定頁面樣式 (_student-settings.scss)
-// ==========================================
+    // 設定頁面樣式 (_student-settings.scss)
+    // ==========================================
 
-// ── 頭貼區塊 ──
-.settings-avatar-section {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-    margin-bottom: 8px;
-}
-
-.settings-avatar-wrap {
-    position: relative;
-    flex-shrink: 0;
-    width: 80px;
-    height: 80px;
-}
-
-.settings-avatar-edit {
-    position: absolute;
-    bottom: 0;
-    right: 0;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    background: #1A2238;
-    color: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: background 0.15s;
-
-    &:hover { background: #b8e600; }
-}
-
-.s-avatar-info {
-    font-size: 0.78rem;
-    color: #888;
-    font-weight: 500;
-    line-height: 1.6;
-
-    strong { color: #333; }
-}
-
-// ── 表單 ──
-.s-form-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-    margin-bottom: 16px;
-
-    @media (max-width: 640px) {
-        grid-template-columns: 1fr;
-    }
-}
-
-.s-form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-
-    &.full { grid-column: 1 / -1; }
-}
-
-.s-label {
-    font-size: 0.78rem;
-    font-weight: 700;
-    color: #333;
-
-    .req {
-        color: #FF4433;
-        margin-left: 2px;
-    }
-}
-
-.s-input {
-    border: 2px solid #000;
-    border-radius: 10px;
-    padding: 10px 14px;
-    font-size: 0.88rem;
-    font-family: 'Noto Sans TC', sans-serif;
-    background: #F5F7FF;
-    box-shadow: 2px 2px 0 #000;
-    outline: none;
-    transition: border-color 0.15s, box-shadow 0.15s;
-    width: 100%;
-
-    &:focus {
-        border-color: #0055FF;
-        box-shadow: 2px 2px 0 #0055FF;
+    // ── 頭貼區塊 ──
+    .settings-avatar-section {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        margin-bottom: 8px;
     }
 
-    &:disabled {
-        background: #f0f0f0;
-        color: #888;
-        cursor: not-allowed;
-        box-shadow: 2px 2px 0 #ccc;
-        border-color: #ccc;
+    .settings-avatar-wrap {
+        position: relative;
+        flex-shrink: 0;
+        width: 80px;
+        height: 80px;
     }
-}
 
-.s-textarea {
-    resize: vertical;
-    min-height: 90px;
-}
-
-.s-input-hint {
-    font-size: 0.72rem;
-    color: #aaa;
-    font-weight: 500;
-}
-
-// ── 儲存按鈕 ──
-.s-save-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 10px 24px;
-    background: #0055FF;
-    color: #fff;
-    font-weight: 900;
-    font-size: 0.88rem;
-    border: 2px solid #000;
-    border-radius: 10px;
-    box-shadow: 3px 3px 0 #000;
-    cursor: pointer;
-    transition: all 0.15s;
-    font-family: 'Noto Sans TC', sans-serif;
-
-    &:hover {
-        transform: translateY(-1px);
-        box-shadow: 4px 4px 0 #000;
-    }
-}
-
-// ── 分隔線 ──
-.s-section-divider {
-    border: none;
-    border-top: 2px dashed #e8e8e8;
-    margin: 24px 0;
-}
-
-.s-section-title {
-    font-size: 0.82rem;
-    font-weight: 900;
-    color: #333;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    margin-bottom: 16px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-// ── 通知開關 ──
-.s-toggle-row {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 20px;
-    padding: 14px 0;
-    border-bottom: 1px solid #f0f0f0;
-    &:hover { background: #334155; }
-}
-
-// ── 表單元素 ──
-.settings-label {
-    font-size: 0.82rem;
-    font-weight: 700;
-    color: #64748b;
-    display: block;
-    margin-bottom: 6px;
-}
-
-.settings-input {
-    display: block;
-    width: 100%;
-    padding: 10px 14px;
-    border: 2px solid #e2e8f0;
-    border-radius: 10px;
-    font-size: 0.88rem;
-    color: #1A2238;
-    font-family: 'Noto Sans TC', sans-serif;
-    transition: border-color 0.15s;
-    outline: none;
-    background: #fff;
-
-    &:focus { border-color: #1A2238; }
-
-    &:disabled {
-        background: #f8fafc;
-        color: #94a3b8;
-        cursor: not-allowed;
-    }
-}
-
-textarea.settings-input {
-    min-height: 160px;
-    line-height: 1.7;
-}
-
-// ── 上傳框 ──
-.settings-upload-box {
-    min-height: 150px;
-    border: 2px dashed #e2e8f0;
-    border-radius: 12px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 16px;
-    background: #f8fafc;
-    overflow: hidden;
-    transition: border-color 0.15s;
-
-    &:hover { border-color: #cbd5e1; }
-}
-
-.settings-upload-placeholder {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    color: #94a3b8;
-    text-align: center;
-}
-
-// ── 上傳按鈕 ──
-.settings-upload-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 8px 16px;
-    border-radius: 10px;
-    border: 2px solid #1A2238;
-    background: #fff;
-    color: #1A2238;
-    font-size: 0.82rem;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.15s;
-    user-select: none;
-
-    &:hover {
+    .settings-avatar-edit {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
         background: #1A2238;
         color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: background 0.15s;
+
+        &:hover {
+            background: #b8e600;
+        }
     }
-}
 
-// ── 顯示模式文字 ──
-.settings-text-display {
-    font-size: 0.92rem;
-    color: #334155;
-    line-height: 1.8;
-    min-height: 24px;
-    padding: 4px 0;
-}
+    .s-avatar-info {
+        font-size: 0.78rem;
+        color: #888;
+        font-weight: 500;
+        line-height: 1.6;
 
-// ── 個人資料顯示列 ──
-.settings-info-row {
-    display: flex;
-    align-items: center;
-    padding: 12px 0;
-    border-bottom: 1px solid #f1f5f9;
+        strong {
+            color: #333;
+        }
+    }
 
-    &:last-child { border-bottom: none; }
-}
+    // ── 表單 ──
+    .s-form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-bottom: 16px;
 
-.s-toggle-info {
-    h4 {
-        font-size: 0.88rem;
+        @media (max-width: 640px) {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .s-form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+
+        &.full {
+            grid-column: 1 / -1;
+        }
+    }
+
+    .s-label {
+        font-size: 0.78rem;
         font-weight: 700;
-        color: #111;
-        margin: 0 0 3px;
+        color: #333;
+
+        .req {
+            color: #FF4433;
+            margin-left: 2px;
+        }
     }
 
-    p {
-        font-size: 0.75rem;
+    .s-input {
+        border: 2px solid #000;
+        border-radius: 10px;
+        padding: 10px 14px;
+        font-size: 0.88rem;
+        font-family: 'Noto Sans TC', sans-serif;
+        background: #F5F7FF;
+        box-shadow: 2px 2px 0 #000;
+        outline: none;
+        transition: border-color 0.15s, box-shadow 0.15s;
+        width: 100%;
+
+        &:focus {
+            border-color: #0055FF;
+            box-shadow: 2px 2px 0 #0055FF;
+        }
+
+        &:disabled {
+            background: #f0f0f0;
+            color: #888;
+            cursor: not-allowed;
+            box-shadow: 2px 2px 0 #ccc;
+            border-color: #ccc;
+        }
+    }
+
+    .s-textarea {
+        resize: vertical;
+        min-height: 90px;
+    }
+
+    .s-input-hint {
+        font-size: 0.72rem;
         color: #aaa;
-        margin: 0;
+        font-weight: 500;
     }
-}
 
-.s-toggle {
-    position: relative;
-    width: 44px;
-    height: 24px;
-    flex-shrink: 0;
+    // ── 儲存按鈕 ──
+    .s-save-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 10px 24px;
+        background: #0055FF;
+        color: #fff;
+        font-weight: 900;
+        font-size: 0.88rem;
+        border: 2px solid #000;
+        border-radius: 10px;
+        box-shadow: 3px 3px 0 #000;
+        cursor: pointer;
+        transition: all 0.15s;
+        font-family: 'Noto Sans TC', sans-serif;
 
-    input { display: none; }
-}
+        &:hover {
+            transform: translateY(-1px);
+            box-shadow: 4px 4px 0 #000;
+        }
+    }
 
-.s-toggle-track {
-    width: 44px;
-    height: 24px;
-    background: #ddd;
-    border: 2px solid #000;
-    border-radius: 12px;
-    box-shadow: 2px 2px 0 #000;
-    cursor: pointer;
-    transition: background 0.2s;
-    position: relative;
+    // ── 分隔線 ──
+    .s-section-divider {
+        border: none;
+        border-top: 2px dashed #e8e8e8;
+        margin: 24px 0;
+    }
 
-    &::after {
-        content: '';
-        position: absolute;
-        width: 16px;
-        height: 16px;
+    .s-section-title {
+        font-size: 0.82rem;
+        font-weight: 900;
+        color: #333;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    // ── 通知開關 ──
+    .s-toggle-row {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 20px;
+        padding: 14px 0;
+        border-bottom: 1px solid #f0f0f0;
+
+        &:hover {
+            background: #334155;
+        }
+    }
+
+    // ── 表單元素 ──
+    .settings-label {
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: #64748b;
+        display: block;
+        margin-bottom: 6px;
+    }
+
+    .settings-input {
+        display: block;
+        width: 100%;
+        padding: 10px 14px;
+        border: 2px solid #e2e8f0;
+        border-radius: 10px;
+        font-size: 0.88rem;
+        color: #1A2238;
+        font-family: 'Noto Sans TC', sans-serif;
+        transition: border-color 0.15s;
+        outline: none;
         background: #fff;
-        border: 1.5px solid #000;
-        border-radius: 50%;
-        top: 2px;
-        left: 2px;
-        transition: transform 0.2s;
+
+        &:focus {
+            border-color: #1A2238;
+        }
+
+        &:disabled {
+            background: #f8fafc;
+            color: #94a3b8;
+            cursor: not-allowed;
+        }
     }
-}
 
-.s-toggle input:checked + .s-toggle-track {
-    background: #0055FF;
-}
+    textarea.settings-input {
+        min-height: 160px;
+        line-height: 1.7;
+    }
 
-.s-toggle input:checked + .s-toggle-track::after {
-    transform: translateX(20px);
-}
+    // ── 上傳框 ──
+    .settings-upload-box {
+        min-height: 150px;
+        border: 2px dashed #e2e8f0;
+        border-radius: 12px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+        background: #f8fafc;
+        overflow: hidden;
+        transition: border-color 0.15s;
 
-// ── tab 面板 ──
-.s-tab-panel { display: none; }
-.s-tab-panel.active { display: block; }
+        &:hover {
+            border-color: #cbd5e1;
+        }
+    }
 
-// ── 密碼強度 ──
-.s-pwd-strength {
-    display: flex;
-    gap: 4px;
-    margin-top: 6px;
-}
+    .settings-upload-placeholder {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        color: #94a3b8;
+        text-align: center;
+    }
 
-.s-pwd-bar {
-    flex: 1;
-    height: 4px;
-    background: #eee;
-    border-radius: 2px;
-    border: 1px solid #ddd;
-    transition: background 0.2s;
+    // ── 上傳按鈕 ──
+    .settings-upload-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 16px;
+        border-radius: 10px;
+        border: 2px solid #1A2238;
+        background: #fff;
+        color: #1A2238;
+        font-size: 0.82rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.15s;
+        user-select: none;
 
-    &.active { background: #0055FF; }
-    &.strong { background: #00C48C; }
-}
+        &:hover {
+            background: #1A2238;
+            color: #fff;
+        }
+    }
 
-.s-pwd-label {
-    font-size: 0.72rem;
-    color: #aaa;
-    font-weight: 600;
-    margin-top: 4px;
-}
-.settings-info-label {
-    font-size: 0.8rem;
-    font-weight: 700;
-    color: #94a3b8;
-    width: 100px;
-    flex-shrink: 0;
-}
+    // ── 顯示模式文字 ──
+    .settings-text-display {
+        font-size: 0.92rem;
+        color: #334155;
+        line-height: 1.8;
+        min-height: 24px;
+        padding: 4px 0;
+    }
 
-.settings-info-value {
-    font-size: 0.92rem;
-    font-weight: 600;
-    color: #1A2238;
+    // ── 個人資料顯示列 ──
+    .settings-info-row {
+        display: flex;
+        align-items: center;
+        padding: 12px 0;
+        border-bottom: 1px solid #f1f5f9;
+
+        &:last-child {
+            border-bottom: none;
+        }
+    }
+
+    .s-toggle-info {
+        h4 {
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: #111;
+            margin: 0 0 3px;
+        }
+
+        p {
+            font-size: 0.75rem;
+            color: #aaa;
+            margin: 0;
+        }
+    }
+
+    .s-toggle {
+        position: relative;
+        width: 44px;
+        height: 24px;
+        flex-shrink: 0;
+
+        input {
+            display: none;
+        }
+    }
+
+    .s-toggle-track {
+        width: 44px;
+        height: 24px;
+        background: #ddd;
+        border: 2px solid #000;
+        border-radius: 12px;
+        box-shadow: 2px 2px 0 #000;
+        cursor: pointer;
+        transition: background 0.2s;
+        position: relative;
+
+        &::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            background: #fff;
+            border: 1.5px solid #000;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: transform 0.2s;
+        }
+    }
+
+    .s-toggle input:checked+.s-toggle-track {
+        background: #0055FF;
+    }
+
+    .s-toggle input:checked+.s-toggle-track::after {
+        transform: translateX(20px);
+    }
+
+    // ── tab 面板 ──
+    .s-tab-panel {
+        display: none;
+    }
+
+    .s-tab-panel.active {
+        display: block;
+    }
+
+    // ── 密碼強度 ──
+    .s-pwd-strength {
+        display: flex;
+        gap: 4px;
+        margin-top: 6px;
+    }
+
+    .s-pwd-bar {
+        flex: 1;
+        height: 4px;
+        background: #eee;
+        border-radius: 2px;
+        border: 1px solid #ddd;
+        transition: background 0.2s;
+
+        &.active {
+            background: #0055FF;
+        }
+
+        &.strong {
+            background: #00C48C;
+        }
+    }
+
+    .s-pwd-label {
+        font-size: 0.72rem;
+        color: #aaa;
+        font-weight: 600;
+        margin-top: 4px;
+    }
+
+    .settings-info-label {
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: #94a3b8;
+        width: 100px;
+        flex-shrink: 0;
+    }
+
+    .settings-info-value {
+        font-size: 0.92rem;
+        font-weight: 600;
+        color: #1A2238;
+    }
 }
