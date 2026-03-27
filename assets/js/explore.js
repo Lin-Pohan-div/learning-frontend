@@ -3,7 +3,8 @@
 // 需要先引入 navbar.js（包含 API_BASE_URL）
 // ==========================================
 
-let allCoursesData = [];
+let allCoursesData = []; // 儲存所有課程資料
+let filteredCourses = []; // 儲存過濾後的課程資料
 let currentPage = 0;
 let totalPages = 0;
 const PAGE_SIZE = 8; // 每頁顯示 8 筆
@@ -35,35 +36,55 @@ function getSubjectLabel(subject) {
 }
 
 // ══════════════════════════════════════════
-// 載入課程資料（支援分頁）
+// 載入所有課程資料（一次載入全部）
 // ══════════════════════════════════════════
-async function fetchCourses(page = 0) {
+async function fetchAllCourses() {
   const container = document.getElementById("course-list-container");
   container.innerHTML =
     '<h3 style="text-align: center; width: 100%; color: #666;">⏳ 課程資料載入中...</h3>';
 
   try {
+    // 一次載入所有課程（設定 size 為很大的數字）
     const response = await axios.get(`${API_BASE_URL}/view/courses`, {
       params: {
-        page: page,
-        size: PAGE_SIZE
+        page: 0,
+        size: 1000 // 載入所有課程
       }
     });
     
     allCoursesData = response.data.content;
-    currentPage = response.data.number;
-    totalPages = response.data.totalPages;
+    filteredCourses = [...allCoursesData]; // 初始化為所有課程
     
-    console.log("成功拿到資料：", allCoursesData);
-    console.log(`目前頁數: ${currentPage + 1} / ${totalPages}`);
+    console.log("成功載入所有課程：", allCoursesData.length, "筆");
     
-    renderCards(allCoursesData);
-    renderPagination();
+    // 顯示第一頁
+    displayPage(0);
   } catch (error) {
     console.error("撈取課程資料失敗:", error);
     container.innerHTML =
       '<h3 style="text-align: center; width: 100%; color: #d9534f;">🚨 無法連線到伺服器</h3>';
   }
+}
+
+// ══════════════════════════════════════════
+// 顯示指定頁的課程
+// ══════════════════════════════════════════
+function displayPage(page) {
+  currentPage = page;
+  totalPages = Math.ceil(filteredCourses.length / PAGE_SIZE);
+  
+  // 計算當前頁的起始和結束索引
+  const startIndex = page * PAGE_SIZE;
+  const endIndex = startIndex + PAGE_SIZE;
+  const pageData = filteredCourses.slice(startIndex, endIndex);
+  
+  console.log(`顯示第 ${page + 1} 頁，共 ${totalPages} 頁，本頁 ${pageData.length} 筆，總共 ${filteredCourses.length} 筆符合條件`);
+  
+  renderCards(pageData);
+  renderPagination();
+  
+  // 平滑捲動到頁面頂部
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 // ══════════════════════════════════════════
@@ -184,8 +205,10 @@ function renderCards(coursesToRender) {
 function renderPagination() {
   const container = document.getElementById("pagination-container");
   
+  // 只有 1 頁或沒有資料時，完全隱藏分頁
   if (totalPages <= 1) {
     container.style.display = "none";
+    container.innerHTML = ""; // 清空內容
     return;
   }
   
@@ -194,10 +217,9 @@ function renderPagination() {
   
   // 上一頁按鈕
   const prevBtn = document.createElement("button");
-  prevBtn.className = "btn btn-outline-primary mx-1";
   prevBtn.textContent = "← 上一頁";
   prevBtn.disabled = currentPage === 0;
-  prevBtn.onclick = () => fetchCourses(currentPage - 1);
+  prevBtn.onclick = () => displayPage(currentPage - 1);
   container.appendChild(prevBtn);
   
   // 頁碼按鈕（最多顯示 5 頁）
@@ -206,23 +228,22 @@ function renderPagination() {
   
   for (let i = startPage; i <= endPage; i++) {
     const pageBtn = document.createElement("button");
-    pageBtn.className = i === currentPage ? "btn btn-primary mx-1" : "btn btn-outline-primary mx-1";
+    pageBtn.className = i === currentPage ? "btn-primary" : ""; // SCSS 會處理樣式
     pageBtn.textContent = i + 1;
-    pageBtn.onclick = () => fetchCourses(i);
+    pageBtn.onclick = () => displayPage(i);
     container.appendChild(pageBtn);
   }
   
   // 下一頁按鈕
   const nextBtn = document.createElement("button");
-  nextBtn.className = "btn btn-outline-primary mx-1";
   nextBtn.textContent = "下一頁 →";
   nextBtn.disabled = currentPage >= totalPages - 1;
-  nextBtn.onclick = () => fetchCourses(currentPage + 1);
+  nextBtn.onclick = () => displayPage(currentPage + 1);
   container.appendChild(nextBtn);
 }
 
 // ══════════════════════════════════════════
-// 前端搜尋過濾（在當前頁資料中搜尋）
+// 全域搜尋過濾（在所有課程中搜尋）
 // ══════════════════════════════════════════
 function handleSearch() {
   const keyword = document
@@ -233,7 +254,8 @@ function handleSearch() {
   const dayValue = document.getElementById("daySelect").value;
   const timeValue = document.getElementById("timeSelect").value;
 
-  const filteredCourses = allCoursesData.filter((course) => {
+  // 在所有課程中過濾
+  filteredCourses = allCoursesData.filter((course) => {
     const matchKeyword =
       !keyword ||
       (course.teacherName &&
@@ -256,15 +278,37 @@ function handleSearch() {
     return matchKeyword && matchSubject && matchSchedule;
   });
 
-  renderCards(filteredCourses);
+  console.log(`過濾結果：${filteredCourses.length} 筆課程符合條件`);
+  
+  // 顯示第一頁過濾結果
+  displayPage(0);
+}
+
+// ══════════════════════════════════════════
+// 清除搜尋條件
+// ══════════════════════════════════════════
+function clearSearch() {
+  // 清空所有搜尋欄位
+  document.getElementById("searchInput").value = "";
+  document.getElementById("subjectSelect").value = "";
+  document.getElementById("daySelect").value = "";
+  document.getElementById("timeSelect").value = "";
+  
+  // 重置為所有課程
+  filteredCourses = [...allCoursesData];
+  
+  console.log("搜尋條件已清除，顯示所有課程");
+  
+  // 顯示第一頁
+  displayPage(0);
 }
 
 // ══════════════════════════════════════════
 // 頁面初始化
 // ══════════════════════════════════════════
 document.addEventListener("DOMContentLoaded", () => {
-  // 載入第一頁資料
-  fetchCourses(0);
+  // 載入所有課程資料
+  fetchAllCourses();
   
   // 綁定搜尋事件
   document.getElementById("searchInput").addEventListener("input", handleSearch);
