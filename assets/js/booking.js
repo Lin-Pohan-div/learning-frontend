@@ -146,11 +146,11 @@ async function booking() {
             card.classList.add("btn-dark", "text-dark");
           } else {
             card.classList.remove("btn-dark", "text-dark");
-          }
+          } //4個條件 
 
           orderTime(day, h, isSelected);
         };
-
+ 
         dayColumn.appendChild(timeBox);
       });
 
