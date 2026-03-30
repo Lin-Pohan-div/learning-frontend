@@ -74,8 +74,8 @@ document.getElementById('password-form').addEventListener('submit', async (e) =>
     
     try {
         await axios.put(`${API_BASE_URL}/users/me/password`, {
-            currentPassword,
-            newPassword
+            oldPassword: currentPassword,  // 把 Key 改成跟後端要的一樣的 'oldPassword'
+            newPassword: newPassword
         });
         
         alert('✅ 密碼已更新，請重新登入');
