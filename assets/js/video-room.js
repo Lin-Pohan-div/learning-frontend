@@ -959,7 +959,7 @@ async function loadChatHistory() {
 // ═══════════════════════════════════════════════════
 function onChatMessage(frame) {
     const msg = JSON.parse(frame.body);
-    appendMessage(msg, msg.role === userRole);
+    appendMessage(msg, normalizeRole(msg.role) === userRole);
     scrollChatToBottom();
 }
 
@@ -1050,7 +1050,7 @@ function appendMessage(msg, isMine) {
 
     const meta = document.createElement('div');
     meta.className = 'msg-meta';
-    const roleName = msg.role === 'tutor' ? '老師' : '學生';
+    const roleName = normalizeRole(msg.role) === 'tutor' ? '老師' : '學生';
     meta.textContent = `${isMine ? '我' : roleName} · ${formatTime(msg.createdAt)}`;
 
     const bubble = document.createElement('div');
