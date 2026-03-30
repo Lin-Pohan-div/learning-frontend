@@ -807,6 +807,51 @@ function bindControls() {
     document.getElementById('btn-cam').addEventListener('click', toggleCam);
     document.getElementById('btn-screen').addEventListener('click', toggleScreen);
     document.getElementById('btn-hangup').addEventListener('click', hangUp);
+    initPipResize();
+}
+
+function initPipResize() {
+    const wrapper = document.getElementById('local-video-wrapper');
+    if (!wrapper) return;
+
+    const handle = document.createElement('div');
+    handle.className = 'pip-resize-handle';
+    wrapper.appendChild(handle);
+
+    const MIN_W = 90;
+    const MAX_W = 320;
+    let startX, startW, dragging = false;
+
+    function onStart(e) {
+        e.preventDefault();
+        dragging = true;
+        startX = (e.touches ? e.touches[0].clientX : e.clientX);
+        startW = wrapper.offsetWidth;
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup',   onEnd);
+        document.addEventListener('touchmove', onMove, { passive: false });
+        document.addEventListener('touchend',  onEnd);
+    }
+
+    function onMove(e) {
+        if (!dragging) return;
+        e.preventDefault();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const dx = startX - clientX;
+        const newW = Math.min(MAX_W, Math.max(MIN_W, startW + dx));
+        wrapper.style.width = newW + 'px';
+    }
+
+    function onEnd() {
+        dragging = false;
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup',   onEnd);
+        document.removeEventListener('touchmove', onMove);
+        document.removeEventListener('touchend',  onEnd);
+    }
+
+    handle.addEventListener('mousedown',  onStart);
+    handle.addEventListener('touchstart', onStart, { passive: false });
 }
 
 function toggleMic() {
