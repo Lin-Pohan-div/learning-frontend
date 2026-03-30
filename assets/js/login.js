@@ -42,6 +42,14 @@ document
 
         alert("🎉 登入成功！");
 
+        // 若有待跳轉頁面（如 video-room），優先跳轉
+        const redirectUrl = localStorage.getItem('redirect_after_login');
+        if (redirectUrl) {
+          localStorage.removeItem('redirect_after_login');
+          window.location.href = redirectUrl;
+          return;
+        }
+
         // 依角色跳轉
         if (payload.role === 'ADMIN') {
           window.location.href = "admin-dashboard.html";

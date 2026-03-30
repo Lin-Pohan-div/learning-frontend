@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>控制台 - Merge 學生後台</title>
+    
+    <!-- Google Material Symbols -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200">
+    
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Custom SCSS -->
+    <link rel="stylesheet" href="./assets/scss/all.scss">
+</head>
+<body class="student-layout">
+
+    <div class="student-container">
+        
+        <!-- 左側導覽列 -->
+        <aside class="student-sidebar" id="student-sidebar">
+            <div class="student-sidebar-logo">
+                <a href="student-dashboard.html" class="d-flex align-items-center gap-3 text-decoration-none">
+                    <div>
+                        <div class="logo-text">Merge</div>
+                        <div class="logo-sub">STUDENT</div>
+                    </div>
+                </a>
+            </div>
+
+            <nav class="student-nav">
+                <a href="student-dashboard.html" class="student-nav-link active">
+                    <span class="material-symbols-outlined">dashboard</span>
+                    <span>控制台</span>
+                </a>
+                <a href="student-courses.html" class="student-nav-link">
+                    <span class="material-symbols-outlined">school</span>
+                    <span>學習與課程</span>
+                </a>
+                <a href="StudentChat.html" class="student-nav-link">
+                    <span class="material-symbols-outlined">chat_bubble</span>
+                    <span>訊息中心</span>
+                </a>
+                <a href="student-credits.html" class="student-nav-link">
+                    <span class="material-symbols-outlined">account_balance_wallet</span>
+                    <span>儲值與明細</span>
+                </a>
+                <a href="student-settings.html" class="student-nav-link">
+                    <span class="material-symbols-outlined">settings</span>
+                    <span>設定</span>
+                </a>
+            </nav>
+
+            <div class="student-sidebar-footer">
+                <div class="student-user-info">
+                    <div class="student-avatar">
+                        <span class="material-symbols-outlined">account_circle</span>
+                    </div>
+                    <div class="student-info">
+                        <div class="student-name" id="sidebar-name">學生</div>
+                        <div class="student-role">Student</div>
+                    </div>
+                </div>
+                <button class="student-logout-btn" id="logout-btn" title="登出">
+                    <span class="material-symbols-outlined">logout</span>
+                </button>
+            </div>
+        </aside>
+
+        <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+        <!-- 主內容區 -->
+        <main class="student-main">
+            
+            <!-- 頁面標題 -->
+            <div class="page-header">
+                <div>
+                    <h1 class="page-title">控制台</h1>
+                    <p class="page-desc" id="greeting-text">歡迎回來</p>
+                </div>
+                <button class="btn-mobile-menu" id="sidebar-toggle">
+                    <span class="material-symbols-outlined">menu</span>
+                </button>
+            </div>
+
+            <!-- 歡迎卡片 -->
+            <div class="welcome-card">
+                <div class="welcome-content">
+                    <div class="welcome-icon">👋</div>
+                    <div>
+                        <h2 class="welcome-title">
+                            <span id="greeting-prefix">早安</span>，<span id="welcome-name">同學</span>！
+                        </h2>
+                        <p class="welcome-text">
+                            今天有 <strong id="today-count">0</strong> 堂課程安排
+                        </p>
+                    </div>
+                </div>
+                <a href="student-courses.html" class="welcome-btn">
+                    <span class="material-symbols-outlined">calendar_month</span>
+                    查看課程
+                </a>
+            </div>
+
+            <!-- 統計卡片 -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <div class="stat-card stat-card-primary">
+                        <div class="stat-header">
+                            <span class="stat-label">今日課程</span>
+                            <div class="stat-icon">
+                                <span class="material-symbols-outlined">today</span>
+                            </div>
+                        </div>
+                        <div class="stat-value">
+                            <span id="stat-today">0</span>
+                            <span class="stat-unit">堂</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stat-card stat-card-success">
+                        <div class="stat-header">
+                            <span class="stat-label">完成課程</span>
+                            <div class="stat-icon">
+                                <span class="material-symbols-outlined">task_alt</span>
+                            </div>
+                        </div>
+                        <div class="stat-value">
+                            <span id="stat-completed">0</span>
+                            <span class="stat-unit">堂</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stat-card stat-card-warning">
+                        <div class="stat-header">
+                            <span class="stat-label">可用點數</span>
+                            <div class="stat-icon">
+                                <span class="material-symbols-outlined">account_balance_wallet</span>
+                            </div>
+                        </div>
+                        <div class="stat-value">
+                            <span id="stat-credits">0</span>
+                            <span class="stat-unit">點</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 即將開始的課程 -->
+            <div class="content-card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <span class="material-symbols-outlined">upcoming</span>
+                        即將開始的課程
+                    </h3>
+                    <a href="student-courses.html" class="card-link">
+                        查看全部
+                        <span class="material-symbols-outlined">arrow_forward</span>
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div id="upcoming-list" class="upcoming-list">
+                        <!-- JS 動態渲染 -->
+                        <div class="empty-state">
+                            <span class="material-symbols-outlined">event_busy</span>
+                            <p>近期無課程安排</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="./assets/js/navbar.js"></script>
+    <script src="./assets/js/student-layout.js"></script>
+    <script src="./assets/js/student-dashboard.js"></script>
+
+</body>
+</html>
