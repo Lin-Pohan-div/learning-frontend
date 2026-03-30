@@ -8,6 +8,7 @@ let filteredCourses = []; // 儲存過濾後的課程資料
 let currentPage = 0;
 let totalPages = 0;
 const PAGE_SIZE = 8; // 每頁顯示 8 筆
+let trialEligible = true; // 預設顯示體驗課價格（未登入訪客也看得到）
 
 // ══════════════════════════════════════════
 // Google Drive 連結轉換
@@ -52,7 +53,10 @@ async function fetchAllCourses() {
       },
     });
 
-    allCoursesData = response.data.content;
+    // 過濾掉體驗課（已整合到預約流程，不在探索頁獨立顯示）
+    allCoursesData = response.data.content.filter(
+      (course) => !course.courseName.startsWith("體驗課")
+    );
     filteredCourses = [...allCoursesData]; // 初始化為所有課程
 
     console.log("成功載入所有課程：", allCoursesData.length, "筆");
@@ -157,10 +161,11 @@ function renderCards(coursesToRender) {
               </div>
               <div class="explore-card-footer">
                 <div class="d-flex justify-content-center gap-4 mb-2">
+                  ${trialEligible ? `
                   <div>
                     <span class="explore-price-label">體驗課 <span class="explore-price-badge explore-badge-grey">首堂優惠</span></span>
                     <div class="explore-price explore-price-pink text-center">200<span class="explore-price-unit"> / 60 mins</span></div>
-                  </div>
+                  </div>` : ""}
                   <div>
                     <span class="explore-price-label">單堂 <span class="explore-price-badge explore-badge-blue">一般方案</span></span>
                     <div class="explore-price explore-price-blue text-center">${course.price || 0}<span class="explore-price-unit"> / 60 mins</span></div>
@@ -307,7 +312,18 @@ function clearSearch() {
 // ══════════════════════════════════════════
 // 頁面初始化
 // ══════════════════════════════════════════
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
+  // 檢查體驗課資格（已登入才有效，失敗則維持預設 true）
+  try {
+    const token = localStorage.getItem("jwt_token");
+    if (token) {
+      const res = await axios.get(`${API_BASE_URL}/shop/trial/eligible`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      trialEligible = res.data.eligible;
+    }
+  } catch (_) {}
+
   // 載入所有課程資料
   fetchAllCourses();
 
