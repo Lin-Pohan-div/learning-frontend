@@ -2,7 +2,7 @@
 // 教師後台共用邏輯 (student-layout.js)
 // ==========================================
 
-const API_BASE_URL = 'http://localhost:8080/api';
+/* const API_BASE_URL = 'http://localhost:8080/api'; */
 
 // ── 自動帶入 JWT Token（所有學生後台 API 都需要）──
 // ── 自動帶入 JWT Token ──
@@ -68,13 +68,13 @@ document.addEventListener('DOMContentLoaded', () => {
     if (nameEl && userName) nameEl.textContent = userName;
 
     // 載入頭貼
-    if (tutorId) loadSidebarAvatar(tutorId);
+    if (tutorId) loadSidebarAvatar();
 });
 
 // ── 載入側邊欄頭貼 ──
-async function loadSidebarAvatar(tutorId) {
+async function loadSidebarAvatar() {
     try {
-        const res = await axios.get(`${API_BASE_URL}/tutor/${tutorId}`);
+        const res = await axios.get(`${API_BASE_URL}/tutor/me/profile`);
         const avatarUrl = res.data.avatar;
         const avatarEl = document.getElementById('sidebar-avatar');
 

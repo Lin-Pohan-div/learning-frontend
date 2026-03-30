@@ -9,11 +9,11 @@ let currentProfile = {};
 
 // 暫存各檔案上傳後的 URL
 let uploadedUrls = {
-    avatar:       null,
+    avatar: null,
     certificate1: null,
     certificate2: null,
-    videoUrl1:    null,
-    videoUrl2:    null,
+    videoUrl1: null,
+    videoUrl2: null,
 };
 
 // ── 分頁切換 ──
@@ -35,7 +35,7 @@ function convertGoogleDriveUrl(url) {
 
 // ── 設定圖片預覽 ──
 function setImagePreview(imgId, placeholderId, url) {
-    const img         = document.getElementById(imgId);
+    const img = document.getElementById(imgId);
     const placeholder = document.getElementById(placeholderId);
     if (url) {
         img.src = convertGoogleDriveUrl(url);
@@ -49,7 +49,7 @@ function setImagePreview(imgId, placeholderId, url) {
 
 // ── 設定影片預覽 ──
 function setVideoPreview(videoId, placeholderId, url) {
-    const video       = document.getElementById(videoId);
+    const video = document.getElementById(videoId);
     const placeholder = document.getElementById(placeholderId);
     if (url) {
         video.src = url;
@@ -106,8 +106,8 @@ async function saveField(fieldKey) {
     const fieldMap = {
         title: 'title',
         intro: 'intro',
-        exp1:  'experience1',
-        exp2:  'experience2',
+        exp1: 'experience1',
+        exp2: 'experience2',
     };
 
     try {
@@ -133,15 +133,15 @@ async function saveField(fieldKey) {
 document.getElementById('btn-edit-profile').addEventListener('click', () => {
     document.getElementById('profile-view-mode').style.display = 'none';
     document.getElementById('profile-edit-mode').style.display = 'block';
-    document.getElementById('avatar-edit-btn').style.display   = 'flex';
-    document.getElementById('btn-edit-profile').style.display  = 'none';
+    document.getElementById('avatar-edit-btn').style.display = 'flex';
+    document.getElementById('btn-edit-profile').style.display = 'none';
 });
 
 document.getElementById('btn-cancel-profile').addEventListener('click', () => {
     document.getElementById('profile-view-mode').style.display = 'block';
     document.getElementById('profile-edit-mode').style.display = 'none';
-    document.getElementById('avatar-edit-btn').style.display   = 'none';
-    document.getElementById('btn-edit-profile').style.display  = '';
+    document.getElementById('avatar-edit-btn').style.display = 'none';
+    document.getElementById('btn-edit-profile').style.display = '';
 });
 
 // ==========================================
@@ -156,20 +156,20 @@ document.addEventListener('DOMContentLoaded', async () => {
             axios.get(`${API_BASE_URL}/tutor/me/profile`)
         ]);
 
-        const me      = meRes.data;
+        const me = meRes.data;
         const profile = profileRes.data;
         currentProfile = { ...profile };
 
         // 個人資料 - 顯示模式
-        document.getElementById('view-name').textContent    = me.name || '—';
-        document.getElementById('view-email').textContent   = me.email || '—';
+        document.getElementById('view-name').textContent = me.name || '—';
+        document.getElementById('view-email').textContent = me.email || '—';
         document.getElementById('view-birthday').textContent = me.birthday || '—';
-        document.getElementById('profile-name-display').textContent  = me.name || '';
+        document.getElementById('profile-name-display').textContent = me.name || '';
         document.getElementById('profile-email-display').textContent = me.email || '';
 
         // 個人資料 - 編輯模式
-        document.getElementById('input-name').value     = me.name || '';
-        document.getElementById('input-email').value    = me.email || '';
+        document.getElementById('input-name').value = me.name || '';
+        document.getElementById('input-email').value = me.email || '';
         document.getElementById('input-birthday').value = me.birthday || '';
 
         // 頭貼
@@ -178,10 +178,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         uploadedUrls.avatar = profile.avatar;
 
         // 自我介紹 - 顯示模式
-        document.getElementById('title-view').textContent = profile.title       || '—';
-        document.getElementById('intro-view').textContent = profile.intro       || '—';
-        document.getElementById('exp1-view').textContent  = profile.experience1 || '—';
-        document.getElementById('exp2-view').textContent  = profile.experience2 || '—';
+        document.getElementById('title-view').textContent = profile.title || '—';
+        document.getElementById('intro-view').textContent = profile.intro || '—';
+        document.getElementById('exp1-view').textContent = profile.experience1 || '—';
+        document.getElementById('exp2-view').textContent = profile.experience2 || '—';
 
         // 證照
         document.getElementById('input-cert1-name').value = profile.certificateName1 || '';
@@ -226,7 +226,7 @@ document.getElementById('avatar-input').addEventListener('change', async (e) => 
 // 個人資料儲存
 // ==========================================
 document.getElementById('btn-save-profile').addEventListener('click', async () => {
-    const name     = document.getElementById('input-name').value.trim();
+    const name = document.getElementById('input-name').value.trim();
     const birthday = document.getElementById('input-birthday').value;
 
     if (!name) { alert('姓名不能為空！'); return; }
@@ -247,7 +247,7 @@ document.getElementById('btn-save-profile').addEventListener('click', async () =
         }
 
         // 更新顯示
-        document.getElementById('view-name').textContent    = name;
+        document.getElementById('view-name').textContent = name;
         document.getElementById('view-birthday').textContent = birthday || '—';
         localStorage.setItem('userName', name);
         document.getElementById('sidebar-name').textContent = name;
@@ -294,10 +294,10 @@ function setupFilePreview(inputId, previewId, placeholderId, uploadEndpoint, url
     });
 }
 
-setupFilePreview('cert1-input',  'cert1-preview',  'cert1-placeholder',  'certificate1', 'certificate1');
-setupFilePreview('cert2-input',  'cert2-preview',  'cert2-placeholder',  'certificate2', 'certificate2');
-setupFilePreview('video1-input', 'video1-preview', 'video1-placeholder', 'video1',       'videoUrl1', true);
-setupFilePreview('video2-input', 'video2-preview', 'video2-placeholder', 'video2',       'videoUrl2', true);
+setupFilePreview('cert1-input', 'cert1-preview', 'cert1-placeholder', 'certificate1', 'certificate1');
+setupFilePreview('cert2-input', 'cert2-preview', 'cert2-placeholder', 'certificate2', 'certificate2');
+setupFilePreview('video1-input', 'video1-preview', 'video1-placeholder', 'video1', 'videoUrl1', true);
+setupFilePreview('video2-input', 'video2-preview', 'video2-placeholder', 'video2', 'videoUrl2', true);
 
 // ==========================================
 // 媒體儲存
@@ -313,12 +313,12 @@ document.getElementById('btn-save-media').addEventListener('click', async () => 
     try {
         const payload = {
             ...currentProfile,
-            certificate1:     uploadedUrls.certificate1,
+            certificate1: uploadedUrls.certificate1,
             certificateName1: cert1Name,
-            certificate2:     uploadedUrls.certificate2,
+            certificate2: uploadedUrls.certificate2,
             certificateName2: cert2Name,
-            videoUrl1:        uploadedUrls.videoUrl1,
-            videoUrl2:        uploadedUrls.videoUrl2,
+            videoUrl1: uploadedUrls.videoUrl1,
+            videoUrl2: uploadedUrls.videoUrl2,
         };
         await axios.put(`${API_BASE_URL}/tutor/me/profile`, payload);
         currentProfile = { ...payload };
@@ -336,8 +336,8 @@ document.getElementById('btn-save-media').addEventListener('click', async () => 
 // 修改密碼
 // ==========================================
 document.getElementById('btn-save-password').addEventListener('click', async () => {
-    const oldPassword     = document.getElementById('input-old-password').value;
-    const newPassword     = document.getElementById('input-new-password').value;
+    const oldPassword = document.getElementById('input-old-password').value;
+    const newPassword = document.getElementById('input-new-password').value;
     const confirmPassword = document.getElementById('input-confirm-password').value;
 
     if (!oldPassword || !newPassword || !confirmPassword) {
@@ -369,103 +369,104 @@ document.getElementById('btn-save-password').addEventListener('click', async () 
         btn.disabled = false;
         btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:16px;">lock_reset</span> 更新密碼';
     }
-// 設定頁面 - 個人資料與密碼管理
-// ==========================================
+    // 設定頁面 - 個人資料與密碼管理
+    // ==========================================
 
-// 載入使用者資料
-async function loadUserProfile() {
-    try {
-        const res = await axios.get(`${API_BASE_URL}/users/me`);
-        const user = res.data;
-        
-        document.getElementById('input-name').value = user.name || '';
-        document.getElementById('input-email').value = user.email || '';
-        document.getElementById('input-birthday').value = user.birthday || '';
-        
-    } catch (error) {
-        console.error('載入資料失敗:', error);
-        if (error.response?.status === 401) {
+    // 載入使用者資料
+    async function loadUserProfile() {
+        try {
+            const res = await axios.get(`${API_BASE_URL}/users/me`);
+            const user = res.data;
+
+            document.getElementById('input-name').value = user.name || '';
+            document.getElementById('input-email').value = user.email || '';
+            document.getElementById('input-birthday').value = user.birthday || '';
+
+        } catch (error) {
+            console.error('載入資料失敗:', error);
+            if (error.response?.status === 401) {
+                localStorage.clear();
+                window.location.href = 'login.html';
+            }
+        }
+    }
+
+    // 更新個人資料
+    document.getElementById('profile-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const name = document.getElementById('input-name').value.trim();
+        const birthday = document.getElementById('input-birthday').value;
+
+        if (!name) {
+            alert('請輸入姓名');
+            return;
+        }
+
+        try {
+            const payload = { name };
+            if (birthday) payload.birthday = birthday;
+
+            await axios.put(`${API_BASE_URL}/users/me`, payload);
+
+            // 更新 localStorage
+            localStorage.setItem('userName', name);
+
+            alert('✅ 資料已更新');
+
+            // 重新載入頁面以更新 sidebar 名稱
+            window.location.reload();
+
+        } catch (error) {
+            console.error('更新失敗:', error);
+            alert('❌ 更新失敗：' + (error.response?.data?.message || '請稍後再試'));
+        }
+    });
+
+    // 修改密碼
+    document.getElementById('password-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const currentPassword = document.getElementById('input-current-password').value;
+        const newPassword = document.getElementById('input-new-password').value;
+        const confirmPassword = document.getElementById('input-confirm-password').value;
+
+        // 驗證
+        if (newPassword.length < 8) {
+            alert('新密碼至少需要 8 個字元');
+            return;
+        }
+
+        if (newPassword !== confirmPassword) {
+            alert('新密碼與確認密碼不一致');
+            return;
+        }
+
+        try {
+            await axios.put(`${API_BASE_URL}/users/me/password`, {
+                currentPassword,
+                newPassword
+            });
+
+            alert('✅ 密碼已更新，請重新登入');
+
+            // 清除登入資訊並跳轉
             localStorage.clear();
             window.location.href = 'login.html';
+
+        } catch (error) {
+            console.error('修改密碼失敗:', error);
+
+            if (error.response?.status === 401) {
+                alert('❌ 目前密碼錯誤');
+            } else {
+                alert('❌ 修改失敗：' + (error.response?.data?.message || '請稍後再試'));
+            }
         }
-    }
-}
+    });
 
-// 更新個人資料
-document.getElementById('profile-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    const name = document.getElementById('input-name').value.trim();
-    const birthday = document.getElementById('input-birthday').value;
-    
-    if (!name) {
-        alert('請輸入姓名');
-        return;
-    }
-    
-    try {
-        const payload = { name };
-        if (birthday) payload.birthday = birthday;
-        
-        await axios.put(`${API_BASE_URL}/users/me`, payload);
-        
-        // 更新 localStorage
-        localStorage.setItem('userName', name);
-        
-        alert('✅ 資料已更新');
-        
-        // 重新載入頁面以更新 sidebar 名稱
-        window.location.reload();
-        
-    } catch (error) {
-        console.error('更新失敗:', error);
-        alert('❌ 更新失敗：' + (error.response?.data?.message || '請稍後再試'));
-    }
-});
-
-// 修改密碼
-document.getElementById('password-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    const currentPassword = document.getElementById('input-current-password').value;
-    const newPassword = document.getElementById('input-new-password').value;
-    const confirmPassword = document.getElementById('input-confirm-password').value;
-    
-    // 驗證
-    if (newPassword.length < 8) {
-        alert('新密碼至少需要 8 個字元');
-        return;
-    }
-    
-    if (newPassword !== confirmPassword) {
-        alert('新密碼與確認密碼不一致');
-        return;
-    }
-    
-    try {
-        await axios.put(`${API_BASE_URL}/users/me/password`, {
-            currentPassword,
-            newPassword
-        });
-        
-        alert('✅ 密碼已更新，請重新登入');
-        
-        // 清除登入資訊並跳轉
-        localStorage.clear();
-        window.location.href = 'login.html';
-        
-    } catch (error) {
-        console.error('修改密碼失敗:', error);
-        
-        if (error.response?.status === 401) {
-            alert('❌ 目前密碼錯誤');
-        } else {
-            alert('❌ 修改失敗：' + (error.response?.data?.message || '請稍後再試'));
-        }
-    }
-});
-
-// 頁面載入
-document.addEventListener('DOMContentLoaded', () => {
-    loadUserProfile();
-});
+    // 頁面載入
+    document.addEventListener('DOMContentLoaded', () => {
+        loadUserProfile();
+    })
+})
