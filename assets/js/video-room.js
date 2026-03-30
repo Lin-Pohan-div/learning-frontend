@@ -119,17 +119,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    // 頁面角色驗證：防止學生開啟老師頁面（或反之）
+    // 頁面角色驗證：若角色不符則自動導向正確的視訊頁面
     const isTeacherPage = /teacher-VideoRoom/i.test(window.location.pathname);
     const isStudentPage = /Student-VideoRoom/i.test(window.location.pathname);
     if (isTeacherPage && userRole !== 'tutor') {
-        alert('此頁面僅供老師使用，請確認您的帳號角色後重新登入');
-        window.location.href = 'login.html';
+        alert('您的帳號為學生，正在為您導向學生教室');
+        window.location.href = `Student-VideoRoom.html?bookingId=${bookingId}`;
         return;
     }
     if (isStudentPage && userRole !== 'student') {
-        alert('此頁面僅供學生使用，請確認您的帳號角色後重新登入');
-        window.location.href = 'login.html';
+        alert('您的帳號為老師，正在為您導向老師教室');
+        window.location.href = `teacher-VideoRoom.html?bookingId=${bookingId}`;
         return;
     }
 
