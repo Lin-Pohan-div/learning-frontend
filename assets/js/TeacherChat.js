@@ -126,21 +126,44 @@ async function loadConversations() {
             `${API_BASE_URL}/chatMessage/conversations/tutor/${tutorId}`,
             { headers: authHeaders() }
         );
-        
-        conversations = res.data.map(conv => ({
-            studentId: conv.studentId,
-            studentName: conv.studentName,
-            // ✅ 正確寫法 (統一使用最上面定義好的 DEFAULT_AVATAR)
-studentAvatar: conv.studentAvatar || DEFAULT_AVATAR,
-            orderIds: conv.orderIds,
-            courses: conv.courses,
-            lastMessage: conv.lastMessage || '',
-            lastMessageTime: conv.lastMessageTime,
-            unreadCount: conv.unreadCount || 0
-        }));
-        
+
+        // 後端回傳 flat List<ConversationDTO>: { orderId, studentId, studentName, courseId, courseName, lastMessage, lastMessageAt }
+        // 依 studentId 分組，將同一學生的多筆訂單合併為一個對話
+        const groupMap = new Map();
+        for (const conv of res.data) {
+            const key = conv.studentId;
+            if (!groupMap.has(key)) {
+                groupMap.set(key, {
+                    studentId: conv.studentId,
+                    studentName: conv.studentName,
+                    studentAvatar: '/assets/img/student.png',
+                    orderIds: [conv.orderId],
+                    courses: conv.courseName ? [conv.courseName] : [],
+                    lastMessage: conv.lastMessage || '',
+                    lastMessageTime: conv.lastMessageAt || null,
+                    unreadCount: 0
+                });
+            } else {
+                const g = groupMap.get(key);
+                if (!g.orderIds.includes(conv.orderId)) g.orderIds.push(conv.orderId);
+                if (conv.courseName && !g.courses.includes(conv.courseName)) {
+                    g.courses.push(conv.courseName);
+                }
+                if (conv.lastMessageAt && (!g.lastMessageTime || conv.lastMessageAt > g.lastMessageTime)) {
+                    g.lastMessage = conv.lastMessage || '';
+                    g.lastMessageTime = conv.lastMessageAt;
+                }
+            }
+        }
+
+        conversations = [...groupMap.values()].sort((a, b) => {
+            if (!a.lastMessageTime) return 1;
+            if (!b.lastMessageTime) return -1;
+            return b.lastMessageTime > a.lastMessageTime ? 1 : -1;
+        });
+
         renderChatList();
-        
+
         if (conversations.length > 0) {
             selectConversation(conversations[0].studentId);
         }
@@ -169,11 +192,11 @@ function renderChatList(filter = '') {
                     <span class="contact-name">${escapeHtml(c.studentName)}</span>
                     <span class="contact-time">${formatTime(c.lastMessageTime)}</span>
                 </div>
+                <span class="subject-tag">${escapeHtml(c.courses.join("、"))}</span>
                 <div class="chat-item-bottom">
                     <span class="contact-preview">${escapeHtml(c.lastMessage)}</span>
                     ${c.unreadCount > 0 ? `<span class="unread-badge">${c.unreadCount}</span>` : ''}
                 </div>
-                <span class="subject-tag">${escapeHtml(c.courses.join(", "))}</span>
             </div>
         </li>
     `).join('');
@@ -188,7 +211,7 @@ function renderChatList(filter = '') {
 // ── 渲染訊息 ──────────────────────────────
 
 function buildMsgHtml(m, conv) {
-    const isMe = m.role === 2 || m.role === '2';  // role = 2 是老師
+    const isMe = m.role === 'tutor';  // role = 'tutor' 是老師
     const timeStr = formatTime(m.createdAt);
     let content = '';
 
@@ -358,7 +381,7 @@ function subscribeBooking(bookingId) {
         frame => {
             const msg = JSON.parse(frame.body);
             // 避免重複顯示自己送出的訊息
-            if (msg.role !== 2) {  // 老師 = 2
+            if (msg.role !== 'tutor') {
                 appendMessage(msg);
             }
         }
@@ -394,14 +417,14 @@ async function sendMessage() {
     
     const payload = {
         bookingId: targetOrderId,
-        role: 2,  // 老師 = 2
+        role: 'tutor',
         messageType: 1,
         message: text,
         mediaUrl: null
     };
 
     const now = new Date().toISOString();
-    appendMessage({ ...payload, role: 2, createdAt: now });  // 顯示時用數字
+    appendMessage({ ...payload, role: 'tutor', createdAt: now });
     input.value = '';
 
     try {
@@ -435,7 +458,9 @@ function detectLocalType(file) {
 }
 
 async function uploadFile(file) {
-    if (!file || !currentBookingId) return;
+    const conv = conversations.find(c => c.studentId === currentStudentId);
+    if (!file || !conv) return;
+    const targetOrderId = conv.orderIds[0];
 
     const fileInput = document.getElementById('fileInput');
     fileInput.disabled = true;
@@ -443,11 +468,10 @@ async function uploadFile(file) {
     const localType = detectLocalType(file);
     const blobUrl = URL.createObjectURL(file);
     const tempId = 'upload-preview-' + Date.now();
-    const conv = conversations.find(c => c.studentId === currentStudentId);
     const msgArea = document.getElementById('chatMessages');
 
     const previewMsg = {
-        role: 2,  // 老師 = 2
+        role: 'tutor',
         messageType: localType,
         mediaUrl: blobUrl,
         message: file.name,
@@ -461,8 +485,8 @@ async function uploadFile(file) {
 
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('bookingId', currentBookingId);
-    formData.append('role', 2);  // 老師 = 2
+    formData.append('bookingId', targetOrderId);
+    formData.append('role', 'tutor');
     formData.append('message', '');
 
     try {
