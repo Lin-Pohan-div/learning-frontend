@@ -22,11 +22,10 @@ const nextWeekBtnEl  = document.getElementById("nextWeekBtn");
 const weekBarEl      = document.getElementById("weekBar");
 
 // ─── 狀態 ───
-let unitPrice      = 0;
-let selectedSlots  = [];   // [{ date, hour }]
-let weekIndex      = 0;    // 0~3
-let lessonPlan     = 1;
-let walletBalance  = 0;
+let unitPrice     = 0;
+let selectedSlots = [];   // [{ date, hour }]
+let weekIndex     = 0;    // 0~3
+let walletBalance = 0;
 
 // 老師可用時段 Map：weekday(1~7) -> Set<hour>
 let tutorAvailableMap = {};
@@ -47,8 +46,8 @@ function formatDate(d) {
   return `${d.getFullYear()}-${padTwo(d.getMonth()+1)}-${padTwo(d.getDate())}`;
 }
 function discountedUnitPrice(base, count) {
-  if (count === 10) return Math.floor(base * 0.9);
-  if (count === 5)  return Math.floor(base * 0.95);
+  if (count >= 10) return Math.floor(base * 0.9);
+  if (count >= 5)  return Math.floor(base * 0.95);
   return base;
 }
 
@@ -113,7 +112,7 @@ async function booking() {
     }
 
     injectGridStyles();
-    injectPlanSelector();
+    injectDiscountBanner();
     injectWalletRow();
     renderWeekBar();
     renderGrid();
@@ -360,17 +359,11 @@ function toggleSlot(date, hour, cell) {
   const idx = selectedSlots.findIndex(s => s.date === date && s.hour === hour);
 
   if (idx !== -1) {
-    // 取消
     selectedSlots.splice(idx, 1);
     cell.className = "g-cell c-open";
     cell.textContent = "";
     cell.onclick = () => toggleSlot(date, hour, cell);
   } else {
-    // 選取
-    if (selectedSlots.length >= lessonPlan) {
-      alert(`目前方案最多選 ${lessonPlan} 堂，請先調整方案或取消其他時段。`);
-      return;
-    }
     selectedSlots.push({ date, hour });
     cell.className = "g-cell c-selected";
     cell.textContent = "✓";
@@ -380,49 +373,31 @@ function toggleSlot(date, hour, cell) {
   updateSummary();
 }
 
-// ─── 購買方案選擇器 ───
-function injectPlanSelector() {
+// ─── 折扣提示橫幅 ───
+function injectDiscountBanner() {
   const anchor = selectedListEl?.closest(".pb-4");
-  if (!anchor) return;
+  if (!anchor || document.getElementById("discountBanner")) return;
 
-  document.getElementById("planSelector")?.remove();
-
-  const wrapper = document.createElement("div");
-  wrapper.id = "planSelector";
-  wrapper.className = "mb-4 border-top pt-4";
-  wrapper.innerHTML = `
-    <p class="ms-1 mb-3">✦ 請選擇購買方案</p>
-    <div class="d-flex gap-3 flex-wrap ms-2" id="planBtns">
-      ${[1, 5, 10].map(n => {
-        const disc  = discountedUnitPrice(unitPrice, n);
-        const label = n === 1 ? '原價' : n === 5 ? '95折' : '9折';
-        return `
-          <button type="button"
-            class="btn plan-btn ${n === lessonPlan ? 'btn-dark' : 'btn-outline-dark'} px-4 py-3 rounded-3"
-            data-plan="${n}">
-            <div class="fw-bold fs-5">${n} 堂</div>
-            <small class="d-block">${label} · ${disc} 點/堂</small>
-          </button>`;
-      }).join("")}
+  const banner = document.createElement("div");
+  banner.id = "discountBanner";
+  banner.className = "border-top pt-4 mb-4";
+  banner.innerHTML = `
+    <p class="ms-1 mb-3">✦ 多堂優惠</p>
+    <div class="d-flex gap-3 ms-2 flex-wrap">
+      <div class="border rounded-3 px-4 py-3 text-center" style="min-width:120px">
+        <div class="sansTeg fs-3 text-primary fw-bold">95折</div>
+        <div class="fw-bold mt-1">5 堂以上</div>
+        <small class="text-muted d-block">單堂 ${Math.floor(unitPrice * 0.95)} 點</small>
+      </div>
+      <div class="border rounded-3 px-4 py-3 text-center bg-dark text-white" style="min-width:120px">
+        <div class="sansTeg fs-3 fw-bold" style="color:#7dd3fc">9折</div>
+        <div class="fw-bold mt-1">10 堂以上</div>
+        <small class="d-block" style="color:#cbd5e1">單堂 ${Math.floor(unitPrice * 0.9)} 點</small>
+      </div>
     </div>
   `;
 
-  anchor.insertAdjacentElement("beforebegin", wrapper);
-
-  document.querySelectorAll(".plan-btn").forEach(btn => {
-    btn.onclick = () => {
-      lessonPlan = Number(btn.dataset.plan);
-      document.querySelectorAll(".plan-btn").forEach(b => {
-        b.classList.toggle("btn-dark", b === btn);
-        b.classList.toggle("btn-outline-dark", b !== btn);
-      });
-      if (selectedSlots.length > lessonPlan) {
-        selectedSlots = selectedSlots.slice(0, lessonPlan);
-        renderGrid();
-      }
-      updateSummary();
-    };
-  });
+  anchor.insertAdjacentElement("beforebegin", banner);
 }
 
 // ─── 注入錢包餘額列到右側欄（格式同「課程總時長」、「預約總堂數」） ───
@@ -452,7 +427,7 @@ function injectWalletRow() {
 // ─── 右側摘要更新 ───
 function updateSummary() {
   const count  = selectedSlots.length;
-  const uPrice = discountedUnitPrice(unitPrice, lessonPlan);
+  const uPrice = discountedUnitPrice(unitPrice, count);
   const total  = uPrice * count;
 
   if (totalLessonsEl) totalLessonsEl.innerText = count;
@@ -480,22 +455,21 @@ function updateSummary() {
   if (!bookingBtnEl) return;
 
   const isInsufficient = walletBalance > 0 && total > walletBalance;
-  const isMismatch     = count !== lessonPlan;
 
   if (isInsufficient) {
     bookingBtnEl.disabled = false;
     bookingBtnEl.className = "btn btn-warning border border-1 p-3 w-100";
     bookingBtnEl.innerHTML = `<p class="mb-0 px-5 nunito">餘額不足，請儲值</p>`;
     bookingBtnEl.onclick = () => { window.location.href = "wallet.html"; };
-  } else if (count === 0 || isMismatch) {
+  } else if (count === 0) {
     bookingBtnEl.disabled = true;
     bookingBtnEl.className = "btn btn-success border border-1 p-3 w-100";
-    bookingBtnEl.innerHTML = `<p class="mb-0 px-5 nunito">請選擇 ${lessonPlan} 個時段（已選 ${count}）</p>`;
+    bookingBtnEl.innerHTML = `<p class="mb-0 px-5 nunito">確定預約</p>`;
     bookingBtnEl.onclick = null;
   } else {
     bookingBtnEl.disabled = false;
     bookingBtnEl.className = "btn btn-success border border-1 p-3 w-100";
-    bookingBtnEl.innerHTML = `<p class="mb-0 px-5 nunito">確定預約</p>`;
+    bookingBtnEl.innerHTML = `<p class="mb-0 px-5 nunito">確定預約 ${count} 堂</p>`;
     bookingBtnEl.onclick = handlePurchase;
   }
 }
@@ -503,9 +477,10 @@ function updateSummary() {
 // ─── 送出預約 ───
 async function handlePurchase() {
   const courseId = new URLSearchParams(window.location.search).get("courseId");
+  const count    = selectedSlots.length;
 
-  if (selectedSlots.length !== lessonPlan) {
-    alert(`請選擇 ${lessonPlan} 個時段（目前已選 ${selectedSlots.length} 個）`);
+  if (count === 0) {
+    alert("請至少選擇一個時段");
     return;
   }
 
@@ -515,7 +490,7 @@ async function handlePurchase() {
   try {
     const resp = await axios.post("/api/shop/purchase", {
       courseId:      Number(courseId),
-      lessonCount:   lessonPlan,
+      lessonCount:   count,
       selectedSlots: selectedSlots.map(s => ({ date: s.date, hour: s.hour })),
     });
     alert("🎉 " + (resp.data.msg || "購買並預約成功！"));
