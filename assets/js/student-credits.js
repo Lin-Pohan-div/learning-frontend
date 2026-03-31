@@ -77,12 +77,24 @@ function renderTransactions(logs) {
                         ${log.merchantTradeNo ? `<div class="transaction-no">交易編號：${log.merchantTradeNo}</div>` : ''}
                     </div>
                     <div class="transaction-amount ${log.amount > 0 ? 'positive' : 'negative'}">
-                        ${log.amount > 0 ? '+' : ''}${log.amount} 點
+                        ${log.transactionType === 1
+                            ? `<div style="text-align:right;">
+                                 <div style="font-size:0.78rem; color:#94a3b8; font-weight:500;">NT$ ${Number(log.amount).toLocaleString()}</div>
+                                 <div>+${getPointsFromAmount(Number(log.amount)).toLocaleString()} 點</div>
+                               </div>`
+                            : `${log.amount > 0 ? '+' : ''}${log.amount} 點`
+                        }
                     </div>
                 </div>
             `).join('')}
         </div>
     `;
+}
+
+// NT$ → 獲得點數對照
+function getPointsFromAmount(amount) {
+    const map = { 1500: 1700, 3000: 3600, 5000: 6200 };
+    return map[amount] || amount;
 }
 
 // 取得交易類型標題
@@ -152,7 +164,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 function handlePurchase(amount, points) {
-
     Swal.fire({
         title: '確認購買？',
         html: `
@@ -164,18 +175,16 @@ function handlePurchase(amount, points) {
         confirmButtonText: '確定購買',
         cancelButtonText: '取消'
     }).then((result) => {
-
         if (!result.isConfirmed) return;
 
         const token = localStorage.getItem('jwt_token');
-
         if (!token) {
             Swal.fire('錯誤', '請先登入', 'error');
             return;
         }
 
         $.ajax({
-            url: "https://subjugable-uncreditably-ignacia.ngrok-free.dev/api/ecpay/pay",
+            url: "/api/ecpay/pay",
             type: "POST",
             data: {
                 ecpayprice: String(amount)
@@ -190,12 +199,46 @@ function handlePurchase(amount, points) {
                 Swal.fire('失敗', '跳轉失敗，請重新登入', 'error');
             }
         });
-
     });
 }
 
 const urlParams = new URLSearchParams(window.location.search);
+if (urlParams.get('success') === 'yes') {
+    document.addEventListener('DOMContentLoaded', async () => {
+        const amount = urlParams.get('amount');
+        const token  = localStorage.getItem('jwt_token');
 
+        // 呼叫模擬入帳 API
+        if (amount && token) {
+            try {
+                await axios.post(`/api/ecpay/simulate?amount=${amount}`, {}, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                // 重新載入餘額與明細
+                await loadBalance();
+                await loadTransactions();
+            } catch (e) {
+                console.error('模擬入帳失敗:', e);
+            }
+        }
+
+        // 顯示成功 toast
+        const toast = document.createElement('div');
+        toast.style.cssText = `
+            position:fixed; top:24px; right:24px; z-index:9999;
+            background:#10B981; color:#fff; padding:14px 24px;
+            border-radius:12px; font-weight:700; font-size:1rem;
+            box-shadow:0 4px 16px rgba(0,0,0,0.15);
+            display:flex; align-items:center; gap:10px;
+        `;
+        toast.innerHTML = `<span>✅ 儲值成功！點數已入帳</span>`;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 4000);
+
+        // 移除網址參數
+        window.history.replaceState({}, '', 'student-credits.html');
+    });
+}
 
 
 
