@@ -24,7 +24,7 @@
                   >我要找老師</a
                 >
               </li>
-              <li>
+              <li id="register-nav-item">
                 <a href="register.html" class="text-decoration-none px-3"
                   >註冊送代幣</a
                 >
@@ -56,24 +56,11 @@
                     Ms.Emma
                   </p>
                   <span id="courseName" class="ms-2 fw-light">低年級英文</span>
-                  <div class="ms-auto row">
-                    <div class="col">
-                      <p class="mb-0">正式課程單價</p>
-                      <div class="text-end">
-                        <p
-                          id="coursePrice"
-                          class="sansTeg fs-3 text-end d-inline-block"
-                        >
-                          500
-                        </p>
-                        <span style="font-size: 12px"> / 點</span>
-                      </div>
-                    </div>
-                    <div class="col">
-                      <p class="mb-0">體驗課程單價</p>
-                      <p class="sansTeg fs-3 text-end">
-                        300<span style="font-size: 12px"> / 點</span>
-                      </p>
+                  <div class="ms-auto">
+                    <p class="mb-0">正式課程單價</p>
+                    <div class="text-end">
+                      <p id="coursePrice" class="sansTeg fs-3 text-end d-inline-block">500</p>
+                      <span style="font-size: 12px"> / 點</span>
                     </div>
                   </div>
                 </div>
@@ -118,57 +105,75 @@
 
           <div class="col-12 col-md-4">
             <div class="border-top border-bottom pt-3 pb-4">
-              <div class="d-flex justify-content-between border-bottom py-3">
-                <div>
-                  <p
-                    class="border d-inline-block px-3 bg-light py-1 rounded-pill"
-                  >
-                    課程總時長
-                  </p>
+
+              <!-- 套餐選擇 -->
+              <div class="border-bottom pb-3 mb-1">
+                <p class="ms-1 mb-2 mt-2">✦ 選擇購買方案</p>
+                <div class="d-flex flex-column gap-2">
+                  <!-- 體驗課（預設隱藏，已購買過則不顯示） -->
+                  <button type="button" id="trialBtn" class="btn btn-outline-primary text-start rounded-3 d-none" data-count="1" data-trial="true">
+                    <div class="d-flex justify-content-between align-items-center">
+                      <span class="fw-bold">體驗課 <span class="badge bg-primary ms-1">限一次</span></span>
+                      <span class="sansTeg">200 點</span>
+                    </div>
+                    <small class="text-muted">固定優惠，每帳號限購一次</small>
+                  </button>
+                  <button type="button" class="btn btn-outline-dark text-start rounded-3 package-btn" data-count="1">
+                    <div class="d-flex justify-content-between align-items-center">
+                      <span class="fw-bold">1 堂</span>
+                      <span class="sansTeg" id="price1">—</span>
+                    </div>
+                    <small class="text-muted">原價</small>
+                  </button>
+                  <button type="button" class="btn btn-outline-dark text-start rounded-3 package-btn" data-count="5">
+                    <div class="d-flex justify-content-between align-items-center">
+                      <span class="fw-bold">5 堂 <span class="badge bg-warning text-dark ms-1">95折</span></span>
+                      <span class="sansTeg" id="price5">—</span>
+                    </div>
+                    <small class="text-muted">每堂均一</small>
+                  </button>
+                  <button type="button" class="btn btn-outline-dark text-start rounded-3 package-btn" data-count="10">
+                    <div class="d-flex justify-content-between align-items-center">
+                      <span class="fw-bold">10 堂 <span class="badge bg-success ms-1">9折</span></span>
+                      <span class="sansTeg" id="price10">—</span>
+                    </div>
+                    <small class="text-muted">每堂均一</small>
+                  </button>
                 </div>
+              </div>
+
+              <!-- 統計 -->
+              <div class="d-flex justify-content-between border-bottom py-3">
+                <p class="border d-inline-block px-3 bg-light py-1 rounded-pill mb-0">課程總時長</p>
                 <div>
-                  <p id="totalMinutes" class="sansTeg d-inline-block fs-4">0</p>
+                  <p id="totalMinutes" class="sansTeg d-inline-block fs-4 mb-0">0</p>
                   <span class="fw-light"> / mins</span>
                 </div>
               </div>
 
               <div class="d-flex justify-content-between border-bottom py-3">
-                <div class="pt-3">
-                  <p
-                    class="border d-inline-block px-3 bg-light py-1 rounded-pill"
-                  >
-                    預約總堂數
-                  </p>
-                </div>
-                <div class="pt-3">
-                  <p id="totalLessons" class="sansTeg d-inline-block fs-4">0</p>
-                  <span class="fw-light"> / 堂</span>
+                <p class="border d-inline-block px-3 bg-light py-1 rounded-pill mb-0">已選 / 需選</p>
+                <div>
+                  <p id="totalLessons" class="sansTeg d-inline-block fs-4 mb-0">0</p>
+                  <span id="packageTarget" class="fw-light"> / — 堂</span>
                 </div>
               </div>
 
-              <div class="d-flex">
-                <div class="mt-auto ms-auto">
-                  <div class="d-flex flex-column align-items-center">
-                    <p class="mb-0 ms-auto mt-5">共計點數花費</p>
-                    <div class="d-flex align-items-center">
-                      <div class="ms-auto">
-                        <p
-                          id="totalPoints"
-                          class="sansTeg display-2 text-primary d-inline-block mb-0 pe-2"
-                        >
-                          0
-                        </p>
-                        <span>/ 點</span>
-                      </div>
-                    </div>
-                  </div>
+              <!-- 金額 -->
+              <div class="mt-3 text-end">
+                <p id="discountLabel" class="mb-0 text-success small fw-bold"></p>
+                <p class="mb-0 text-muted small">共計點數花費</p>
+                <div class="d-flex align-items-end justify-content-end gap-2">
+                  <p id="originalPoints" class="text-muted text-decoration-line-through mb-0 fs-6 d-none">0 點</p>
+                  <p id="totalPoints" class="sansTeg display-2 text-primary d-inline-block mb-0 pe-2">0</p>
+                  <span>/ 點</span>
                 </div>
               </div>
 
               <button
                 id="bookingBtn"
                 type="button"
-                class="btn btn-success border border-1 p-3 w-100"
+                class="btn btn-success border border-1 p-3 w-100 mt-3"
               >
                 <p class="mb-0 px-5 nunito">確定預約</p>
               </button>
@@ -222,6 +227,92 @@
       </div>
     </footer>
 
+    <!-- 確認預約 Modal -->
+    <div class="modal fade" id="confirmModal" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header border-0">
+            <h5 class="modal-title fw-bold">確認預約內容</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div class="d-flex justify-content-between py-2 border-bottom">
+              <span class="text-muted">課程名稱</span>
+              <span id="confirmCourseName" class="fw-bold text-end"></span>
+            </div>
+            <div class="d-flex justify-content-between py-2 border-bottom">
+              <span class="text-muted">購買方案</span>
+              <span id="confirmLessons" class="fw-bold sansTeg"></span>
+            </div>
+            <div class="d-flex justify-content-between py-2 border-bottom">
+              <span class="text-muted">折扣優惠</span>
+              <span id="confirmDiscount" class="text-success fw-bold"></span>
+            </div>
+            <div class="d-flex justify-content-between py-2 border-bottom">
+              <span class="text-muted">本次花費</span>
+              <strong id="confirmTotal" class="sansTeg fs-5 text-primary"></strong>
+            </div>
+            <div class="d-flex justify-content-between py-2 border-bottom">
+              <span class="text-muted">目前錢包餘額</span>
+              <span id="confirmWallet" class="sansTeg"></span>
+            </div>
+            <div class="d-flex justify-content-between py-2">
+              <span class="text-muted">扣除後餘額</span>
+              <strong id="confirmRemaining" class="sansTeg"></strong>
+            </div>
+          </div>
+          <div class="modal-footer border-0">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">返回修改</button>
+            <button type="button" class="btn btn-success px-4" id="confirmBookingBtn">確認送出</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 餘額不足 Modal -->
+    <div class="modal fade" id="insufficientModal" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header border-0">
+            <h5 class="modal-title fw-bold">點數不足</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <p>您的錢包餘額：<strong id="modalWallet" class="text-primary sansTeg fs-4">0</strong> 點</p>
+            <p>本次預約需要：<strong id="modalNeeded" class="sansTeg fs-4">0</strong> 點</p>
+            <p>尚差：<strong id="modalShortfall" class="text-danger sansTeg fs-4">0</strong> 點</p>
+          </div>
+          <div class="modal-footer border-0">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">取消</button>
+            <a href="student-credits.html" class="btn btn-primary">前往儲值</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 預約成功 Modal -->
+    <div class="modal fade" id="successModal" tabindex="-1" data-bs-backdrop="static">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header border-0">
+            <h5 class="modal-title fw-bold">預約成功！</h5>
+          </div>
+          <div class="modal-body">
+            <p>已成功預約 <strong id="modalSuccessLessons" class="sansTeg fs-4">0</strong> 堂課，共扣除 <strong id="modalSuccessPoints" class="text-primary sansTeg fs-4">0</strong> 點</p>
+            <p id="modalChatStatus" class="text-muted small"></p>
+          </div>
+          <div class="modal-footer border-0">
+            <a href="student-dashboard.html" class="btn btn-outline-secondary">回首頁</a>
+            <a href="StudentChat.html" class="btn btn-success">前往聊天室</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toastContainer" class="position-fixed bottom-0 end-0 p-3" style="z-index: 1100;"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="./assets/js/navbar.js"></script>
     <script src="./assets/js/bookingV4.js"></script>
   </body>
