@@ -5,13 +5,125 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Merge | 課程管理</title>
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap"
-        rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="./assets/scss/all.scss">
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400;
+            font-size: 20px;
+            vertical-align: middle;
+        }
+
+        /* ── 課程卡片 ── */
+        .course-card {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 12px;
+            display: flex;
+            gap: 16px;
+            transition: box-shadow 0.2s;
+        }
+        .course-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,.08); }
+
+        .date-badge {
+            flex-shrink: 0;
+            width: 52px;
+            height: 60px;
+            background: #f3f4f6;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .date-badge .month { font-size: 11px; color: #6b7280; text-transform: uppercase; }
+        .date-badge .day   { font-size: 22px; font-weight: 700; color: #111827; line-height: 1; }
+        .date-badge.completed { background: #d1fae5; }
+        .date-badge.cancelled { background: #fee2e2; }
+
+        .course-info { flex: 1; min-width: 0; }
+        .course-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+        .course-title { font-size: 16px; font-weight: 700; margin: 0 0 4px; }
+        .instructor-meta { display: flex; align-items: center; gap: 6px; color: #6b7280; font-size: 13px; }
+
+        .status-pill {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+        .status-pill.completed { background: #d1fae5; color: #065f46; }
+        .status-pill.cancelled { background: #fee2e2; color: #991b1b; }
+
+        .time-meta { display: flex; align-items: center; gap: 4px; font-size: 13px; color: #6b7280; }
+        .time-meta .material-symbols-outlined { font-size: 16px; }
+
+        /* ── 已完成卡片的評價區 ── */
+        .feedback-box {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 14px;
+            height: 100%;
+        }
+        .feedback-box-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #374151;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .feedback-box-title .material-symbols-outlined { font-size: 16px; }
+
+        /* ── 星星評分 ── */
+        .star-input { font-size: 24px; cursor: pointer; letter-spacing: 2px; }
+        .star-btn { color: #d1d5db; transition: color 0.1s; user-select: none; }
+        .star-btn.active { color: #f59e0b; }
+        .star-btn:hover { color: #fbbf24; }
+
+        /* ── 分數條 ── */
+        .score-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+            font-size: 13px;
+        }
+        .score-row > span:first-child { width: 44px; color: #6b7280; flex-shrink: 0; }
+        .score-row > span:last-child  { width: 28px; text-align: right; color: #374151; font-weight: 600; flex-shrink: 0; }
+        .score-bar {
+            flex: 1;
+            height: 6px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .score-bar > div {
+            height: 100%;
+            background: #10b981;
+            border-radius: 4px;
+        }
+
+        /* ── 空狀態 ── */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #9ca3af;
+        }
+        .empty-state .material-symbols-outlined { font-size: 48px; margin-bottom: 12px; }
+
+        /* ── 載入中 ── */
+        .loading-state { text-align: center; padding: 40px; color: #9ca3af; }
+    </style>
 </head>
 
 <body>
@@ -23,7 +135,6 @@
     <div style="width: 36px;"></div>
 </header>
 
-<!-- 手機版遮罩 -->
 <div class="student-overlay" id="sidebar-overlay"></div>
 
 <div class="student-layout">
@@ -72,135 +183,41 @@
 
     <!-- ===== 右側主內容區 ===== -->
     <main class="student-main">
+        <h1 class="student-page-title">課程管理</h1>
+        <p class="student-page-subtitle">查看並管理您的所有學習紀錄與評價</p>
 
-        <div id="incourse">
-            <div>
-                <h1 class="student-page-title">課程管理</h1>
-                <p class="student-page-subtitle">查看並管理您的所有學習進度與紀錄</p>
-                <!-- Filters & Tabs -->
-                <div class="controls-row">
-                    <div class="schedule-tabs">
-                        <button class="schedule-tab-btn active" data-tab="schedule">
-                            <span class="material-symbols-outlined">calendar_month</span> 已購課程
-                        </button>
-                        <button class="schedule-tab-btn" data-tab="manage">
-                            <span class="material-symbols-outlined">tune</span> 即將開始
-                        </button>
-                        <button class="schedule-tab-btn" data-tab="manage">
-                            <span class="material-symbols-outlined">tune</span> 已完成
-                        </button>
-                        <button class="schedule-tab-btn" data-tab="manage">
-                            <span class="material-symbols-outlined">tune</span> 已取消
-                        </button>
-                    </div>
-                    <button class="sort-btn">
-                        <span>排序方式: 日期</span>
-                        <span class="material-symbols-outlined">keyboard_arrow_down</span>
-                    </button>
-                </div>
-                <!-- Course List -->
-                <div class="course-list">
-                    <!-- Course Card 1 -->
-                    <div class="course-card">
-                        <div class="date-badge">
-                            <span class="month">Oct</span>
-                            <span class="day">25</span>
-                        </div>
-                        <div class="course-info">
-                            <div class="course-meta">
-                                <span class="status-pill">即將開始</span>
-                                <div class="time-meta">
-                                    <span class="material-symbols-outlined">schedule</span>
-                                    04:00 PM - 05:30 PM
-                                </div>
-                            </div>
-                            <h3 class="course-title">初級國語</h3>
-                            <div class="instructor-meta">
-                                <div class="avatar-group">
-                                    <span class="instructor-name">李美玲</span>
-                                </div>
-                                <span class="divider">•</span>
-                                <span class="session-info">04/12</span>
-                            </div>
-                        </div>
-                        <div class="actions">
-                            <button class="btn-text">請假申請</button>
-                            <button class="btn-primary">
-                                進入教室
-                                <span class="material-symbols-outlined">login</span>
-                            </button>
-                        </div>
-                    </div>
-                    <!-- Course Card 2 -->
-                    <div class="course-card">
-                        <div class="date-badge">
-                            <span class="month">Oct</span>
-                            <span class="day">27</span>
-                        </div>
-                        <div class="course-info">
-                            <div class="course-meta">
-                                <span class="status-pill">即將開始</span>
-                                <div class="time-meta">
-                                    <span class="material-symbols-outlined">schedule</span>
-                                    01:30 PM - 03:00 PM
-                                </div>
-                            </div>
-                            <h3 class="course-title">初級數學</h3>
-                            <div class="instructor-meta">
-                                <div class="avatar-group">
-                                    <span class="instructor-name">吳建志</span>
-                                </div>
-                                <span class="divider">•</span>
-                                <span class="session-info">08/10</span>
-                            </div>
-                        </div>
-                        <div class="actions">
-                            <button class="btn-text">請假申請</button>
-                            <button class="btn-primary">
-                                進入教室
-                                <span class="material-symbols-outlined">login</span>
-                            </button>
-                        </div>
-                    </div>
-                    <!-- Course Card 3 -->
-                    <div class="course-card">
-                        <div class="date-badge">
-                            <span class="month">Oct</span>
-                            <span class="day">28</span>
-                        </div>
-                        <div class="course-info">
-                            <div class="course-meta">
-                                <span class="status-pill">即將開始</span>
-                                <div class="time-meta">
-                                    <span class="material-symbols-outlined">schedule</span>
-                                    10:00 AM - 11:30 AM
-                                </div>
-                            </div>
-                            <h3 class="course-title">初級英文</h3>
-                            <div class="instructor-meta">
-                                <div class="avatar-group">
-                                    <span class="instructor-name">鄭雅文</span>
-                                </div>
-                                <span class="divider">•</span>
-                                <span class="session-info">02/08</span>
-                            </div>
-                        </div>
-                        <div class="actions">
-                            <button class="btn-text">請假申請</button>
-                            <button class="btn-primary">
-                                進入教室
-                                <span class="material-symbols-outlined">login</span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
+        <!-- Tabs -->
+        <div class="controls-row">
+            <div class="schedule-tabs">
+                <button class="schedule-tab-btn active" data-tab="upcoming">
+                    <span class="material-symbols-outlined">event_upcoming</span> 即將開始
+                </button>
+                <button class="schedule-tab-btn" data-tab="completed">
+                    <span class="material-symbols-outlined">task_alt</span> 已完成
+                </button>
+                <button class="schedule-tab-btn" data-tab="cancelled">
+                    <span class="material-symbols-outlined">cancel</span> 已取消
+                </button>
             </div>
         </div>
-    </main>
-    </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="./assets/js/student-layout.js"></script>
+        <!-- Tab 內容 -->
+        <div id="tab-upcoming" class="tab-pane mt-3">
+            <div class="loading-state"><span class="material-symbols-outlined">hourglass_empty</span><br>載入中...</div>
+        </div>
+        <div id="tab-completed" class="tab-pane mt-3 d-none">
+            <div class="loading-state"><span class="material-symbols-outlined">hourglass_empty</span><br>載入中...</div>
+        </div>
+        <div id="tab-cancelled" class="tab-pane mt-3 d-none">
+            <div class="loading-state"><span class="material-symbols-outlined">hourglass_empty</span><br>載入中...</div>
+        </div>
+    </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script src="./assets/js/student-layout.js"></script>
+<script src="./assets/js/lstudent-courses.js"></script>
 </body>
 
 </html>

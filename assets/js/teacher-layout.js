@@ -8,6 +8,21 @@ if (_token) {
     axios.defaults.headers.common['Authorization'] = `Bearer ${_token}`;
 }
 
+// ── 全域攔截：Token 過期或無效 → 自動登出 ──
+axios.interceptors.response.use(
+    res => res,
+    err => {
+        if (err.response && (err.response.status === 401 || err.response.status === 403)) {
+            localStorage.removeItem('jwt_token');
+            localStorage.removeItem('userId');
+            localStorage.removeItem('userRole');
+            localStorage.removeItem('userName');
+            window.location.href = 'login.html';
+        }
+        return Promise.reject(err);
+    }
+);
+
 // ── 手機版側邊欄開關 ──
 const sidebarToggle = document.getElementById('sidebar-toggle');
 const sidebar = document.getElementById('teacher-sidebar');
@@ -48,16 +63,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const tutorId = localStorage.getItem('userId');
 
     // 未登入 → 跳回登入頁
-    // if (!token) {
-    //     window.location.href = 'login.html';
-    //     return;
-    // }
+    if (!token) {
+        window.location.href = 'login.html';
+        return;
+    }
 
-    // 不是老師 → 跳回首頁
-    // if (userRole !== 'TUTOR') {
-    //     window.location.href = 'index.html';
-    //     return;
-    // }
+    // 學生角色 → 跳到學生後台
+    if (userRole === 'STUDENT') {
+        window.location.href = 'student-dashboard.html';
+        return;
+    }
 
     // 從 localStorage 填入側邊欄姓名
     const userName = localStorage.getItem('userName');
