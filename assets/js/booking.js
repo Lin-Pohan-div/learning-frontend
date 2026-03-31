@@ -451,6 +451,37 @@ async function booking() {
 
           orderTime(fullDate, h, isSelected);
         };
+ 
+        dayColumn.appendChild(timeBox);
+      });
+
+      canSelect.appendChild(dayColumn);
+      prevWeekBtn.onclick = function () {
+        if (currentWeekIndex > 0) {
+          currentWeekIndex--;
+          renderWeekBar(weekBar);
+        }
+      };
+
+      nextWeekBtn.onclick = function () {
+        if (currentWeekIndex < 3) {
+          currentWeekIndex++;
+          renderWeekBar(weekBar);
+        }
+      };
+    }
+  } catch {
+    console.log("booking render error:", err);
+  }
+
+  function orderTime(day, h, isSelected) {
+    let takeTime = `${day} ${String(h).padStart(2, "0")}:00`;
+    if (isSelected) {
+      selectedTime.push(takeTime);
+    } else {
+      let cancel = selectedTime.indexOf(takeTime);
+      if (cancel != -1) {
+        selectedTime.splice(cancel, 1);
       }
 
       canSelect.appendChild(timeBox);
