@@ -8,6 +8,21 @@ if (_token) {
     axios.defaults.headers.common['Authorization'] = `Bearer ${_token}`;
 }
 
+// ── 全域攔截：Token 過期或無效 → 自動登出 ──
+axios.interceptors.response.use(
+    res => res,
+    err => {
+        if (err.response && (err.response.status === 401 || err.response.status === 403)) {
+            localStorage.removeItem('jwt_token');
+            localStorage.removeItem('userId');
+            localStorage.removeItem('userRole');
+            localStorage.removeItem('userName');
+            window.location.href = 'login.html';
+        }
+        return Promise.reject(err);
+    }
+);
+
 // ── 手機版側邊欄開關 ──
 const sidebarToggle = document.getElementById('sidebar-toggle');
 const sidebar = document.getElementById('student-sidebar');

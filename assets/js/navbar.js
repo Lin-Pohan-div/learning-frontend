@@ -13,6 +13,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (!authNavItem) return;
 
   if (token) {
+    // 已登入 → 隱藏「註冊送代幣」
+    const registerNavItem = document.getElementById('register-nav-item');
+    if (registerNavItem) registerNavItem.style.display = 'none';
+
     try {
       // 解析 JWT payload
       const base64Url = token.split(".")[1];
