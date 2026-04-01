@@ -8,19 +8,20 @@
 ## 目錄
 
 1. [專案總覽](#1-專案總覽)
-2. [認證模組（Auth）](#2-認證模組auth)
-3. [使用者模組（User/Profile）](#3-使用者模組userprofile)
-4. [老師申請與審核模組（Tutor Application）](#4-老師申請與審核模組tutor-application)
-5. [課程模組（Course）](#5-課程模組course)
-6. [排程模組（Schedule）](#6-排程模組schedule)
-7. [訂課與付款模組（Booking & Checkout）](#7-訂課與付款模組booking--checkout)
-8. [學生課程管理模組（Student Course）](#8-學生課程管理模組student-course)
-9. [評價與回饋模組（Review & Feedback）](#9-評價與回饋模組review--feedback)
-10. [訊息模組（Chat）](#10-訊息模組chat)
-11. [視訊模組（Video Room / WebRTC）](#11-視訊模組video-room--webrtc)
-12. [管理後台模組（Admin）](#12-管理後台模組admin)
-13. [老師個人檔案模組（Tutor Profile）](#13-老師個人檔案模組tutor-profile)
-14. [Email 通知模組](#14-email-通知模組)
+2. [核心功能說明](#2-核心功能說明)
+3. [認證模組（Auth）](#3-認證模組auth)
+4. [使用者模組（User/Profile）](#4-使用者模組userprofile)
+5. [老師申請與審核模組（Tutor Application）](#5-老師申請與審核模組tutor-application)
+6. [課程模組（Course）](#6-課程模組course)
+7. [排程模組（Schedule）](#7-排程模組schedule)
+8. [訂課與付款模組（Booking & Checkout）](#8-訂課與付款模組booking--checkout)
+9. [學生課程管理模組（Student Course）](#9-學生課程管理模組student-course)
+10. [評價與回饋模組（Review & Feedback）](#10-評價與回饋模組review--feedback)
+11. [訊息模組（Chat）](#11-訊息模組chat)
+12. [視訊模組（Video Room / WebRTC）](#12-視訊模組video-room--webrtc)
+13. [管理後台模組（Admin）](#13-管理後台模組admin)
+14. [老師個人檔案模組（Tutor Profile）](#14-老師個人檔案模組tutor-profile)
+15. [Email 通知模組](#15-email-通知模組)
 
 ---
 
@@ -86,7 +87,317 @@
 
 ---
 
-## 2. 認證模組（Auth）
+## 2. 核心功能說明
+
+本節整合各模組，說明平台最重要的業務流程與設計重點，方便快速掌握系統全貌。
+
+---
+
+### 2.1 使用者角色與身份升級
+
+```mermaid
+flowchart LR
+    REG([使用者註冊]) --> S[STUDENT]
+    S -->|POST /api/tutor/become| P{status=1\n待審核}
+    P -->|ADMIN 核准\nPATCH status=2| T[TUTOR]
+    P -->|ADMIN 停權\nPATCH status=3| BAN[已停權]
+    T -.->|系統直接設定| A[ADMIN]
+```
+
+平台以 **三角色** 設計：
+
+| 角色 | 取得方式 | 主要能力 |
+|------|----------|----------|
+| STUDENT | 預設（註冊即得） | 購課、預約、聊天、視訊 |
+| TUTOR | STUDENT 提交申請 → ADMIN 審核通過 | 開課、排程、收款、聊天、視訊 |
+| ADMIN | 系統直接設定 | 審核老師、查看平台統計 |
+
+> 角色升級流程：`POST /api/tutor/become` → status=1（待審）→ ADMIN PATCH status=2（通過）→ JWT 內角色不變，仍須透過 `tutor.status` 判斷老師資格。
+
+---
+
+### 2.2 課程預約完整流程
+
+```mermaid
+sequenceDiagram
+    participant S as 學生
+    participant UI as 前端（booking.js）
+    participant API as 後端 API
+    participant SCH as ScheduledTaskService
+
+    S->>UI: 選擇課程與時段
+    UI->>API: GET /api/view/teacher_schedule/{tutorId}
+    API-->>UI: 7×13 可用時段矩陣
+    UI->>API: GET /api/users/me（確認點數）
+    API-->>UI: wallet 餘額
+    S->>UI: 確認購買
+    UI->>API: POST /api/shop/purchase
+    API->>API: 扣除 wallet / 建立 Order / 建立 Booking(slotLocked=true) / 寫 WalletLog(type=2)
+    API-->>UI: 購買成功
+    Note over SCH: 每 1 小時自動執行
+    SCH->>API: 查詢時間已過 status=1 的 Booking
+    SCH->>API: 計算老師收入（100% or 80%）/ 寫 WalletLog(type=3) / Booking status→2
+```
+
+```
+① 學生在 explore.js 瀏覽課程
+      GET /api/view/courses（含篩選：科目 / 週幾 / 時段 / 價格）
+
+② 進入 booking.js 選取時段
+      GET /api/view/teacher_schedule/{tutorId} → 取得老師 7×13 可用矩陣
+      → buildFourWeeksDates()：產生 4 週日期
+      → 學生勾選 → lessonCount × unitPrice = 總金額
+
+③ 確認點數充足
+      GET /api/users/me → wallet ≥ 總金額
+      若不足 → 跳至 student-credits.js 儲值（ECPay）
+
+④ 送出購買
+      POST /api/shop/purchase { courseId, lessonCount, slots:[{date,hour},...] }
+      後端 CheckoutService：
+        1. 扣除學生 wallet
+        2. 建立 Order（isExperienced = lessonCount=1）
+        3. 逐筆建立 Booking（slotLocked=true 防重複）
+        4. 寫入 WalletLog（transactionType=2 購課）
+        5. 觸發 EmailService 寄送預約確認信
+
+⑤ 課後自動撥款（ScheduledTaskService，每 1 小時）
+      → 找出時間已過且 status=1 的 Booking
+      → 體驗課（isExperienced=true）：老師拿 unitPrice 100%
+      → 正式課（isExperienced=false）：老師拿 unitPrice × 80%
+      → 防重複：merchantTradeNo="TUTOR_EARN_{bookingId}" 唯一性檢查
+      → Booking status 1 → 2（已完成）
+      → 寫入 WalletLog（transactionType=3 授課收入）
+```
+
+---
+
+### 2.3 點數（Wallet）體系
+
+```mermaid
+flowchart TD
+    subgraph 來源
+        ECP[ECPay 付款成功\ncallback]
+        BUY[購買課程\nPOST /api/shop/purchase]
+        SCH[每小時排程\nScheduledTaskService]
+        CANCEL[取消預約 / 整筆退款]
+    end
+    ECP -->|type=1 儲值| W[(WalletLog\n+ wallet 增加)]
+    BUY -->|type=2 購課| W
+    SCH -->|type=3 授課收入| W
+    CANCEL -->|type=4 退款| W
+    W --> CHK{merchantTradeNo\n唯一性檢查}
+    CHK -->|已存在| SKIP[跳過，防重複]
+    CHK -->|不存在| WRITE[寫入並更新 wallet]
+```
+
+平台以「點數」取代直接金流，所有交易都記錄於 `WalletLog`：
+
+| transactionType | 說明 | 發生時機 |
+|-----------------|------|----------|
+| 1 | 儲值 | ECPay 付款成功 callback |
+| 2 | 購課扣款 | `POST /api/shop/purchase` |
+| 3 | 授課收入 | 每小時排程自動撥款 |
+| 4 | 退款 | 學生取消預約 / 整筆退款 |
+
+> `merchantTradeNo` 欄位設計為唯一鍵，防止網路重試或排程重跑造成重複入帳。
+
+---
+
+### 2.4 即時通訊架構
+
+```mermaid
+flowchart LR
+    subgraph 前端
+        SC[StudentChat.js]
+        TC[TeacherChat.js]
+        VR[video-room.js]
+    end
+    subgraph 後端
+        CM[ChatMessageController\nREST /api/chatMessage]
+        VRC[VideoRoomController\nSTOMP /app/...]
+        FSS[FileStorageService\nuploads/]
+    end
+
+    SC -->|HTTP POST/GET| CM
+    TC -->|HTTP POST/GET| CM
+    TC -->|STOMP subscribe\n/topic/chat/{bookingId}| VRC
+    VR -->|STOMP publish\n/app/signal,chat,event| VRC
+    CM --> FSS
+    VRC -->|broadcast| TC
+    VRC -->|broadcast| VR
+```
+
+平台同時支援 **HTTP REST**（持久化訊息）與 **WebSocket STOMP**（即時推播）：
+
+```
+REST API（ChatMessageController）
+  → 傳送文字、上傳媒體、查詢歷史記錄
+  → 支援 6 種 messageType（文字/貼圖/語音/圖片/影片/檔案）
+
+WebSocket STOMP（VideoRoomController）
+  → /app/signal/{bookingId}  ← WebRTC 信令（offer/answer/ICE candidate）
+  → /app/chat/{bookingId}    ← 課中聊天（持久化 + broadcast）
+  → /app/event/{bookingId}   ← 進出房間事件
+  → /topic/chat/{bookingId}  ← TeacherChat.js 訂閱，即時收訊
+```
+
+> **WebSocketAuthInterceptor**：STOMP CONNECT 時從 header 取出 JWT 驗證，確保 WebSocket 連線身份安全。
+
+---
+
+### 2.5 視訊課（WebRTC）信令流程
+
+```mermaid
+sequenceDiagram
+    participant T as 老師（Offerer）
+    participant B as STOMP Broker
+    participant S as 學生（Answerer）
+
+    T->>T: getUserMedia() + createOffer()
+    T->>B: publish /app/signal/{bookingId} {type:offer, sdp}
+    B->>S: 轉發 offer
+    S->>S: setRemoteDescription(offer)
+    S->>S: createAnswer() + setLocalDescription()
+    S->>B: publish {type:answer, sdp}
+    B->>T: 轉發 answer
+    T->>T: setRemoteDescription(answer)
+    loop ICE Candidates
+        T->>B: publish {type:candidate}
+        B->>S: 轉發
+        S->>T: publish {type:candidate}（反向）
+    end
+    T-->>S: P2P 媒體串流建立
+```
+
+```mermaid
+flowchart TD
+    subgraph 老師端
+        T1[進入視訊房間] --> T2[getUserMedia\n取得鏡頭/麥克風]
+        T2 --> T3[建立 RTCPeerConnection\nICE Server 設定]
+        T3 --> T4[createOffer\nsetLocalDescription]
+        T4 --> T5[publish STOMP\n/app/signal/{bookingId}\ntype: offer]
+        T8[收到 answer] --> T9[setRemoteDescription]
+        T10[收到 ICE candidate] --> T11[addIceCandidate]
+    end
+
+    subgraph STOMP Broker
+        B1{轉發信令}
+    end
+
+    subgraph 學生端
+        S1[進入視訊房間] --> S2[getUserMedia\n取得鏡頭/麥克風]
+        S2 --> S3[建立 RTCPeerConnection\nICE Server 設定]
+        S4[收到 offer] --> S5[setRemoteDescription]
+        S5 --> S6[createAnswer\nsetLocalDescription]
+        S6 --> S7[publish STOMP\ntype: answer]
+        S8[收到 ICE candidate] --> S9[addIceCandidate]
+    end
+
+    T5 -->|offer| B1
+    B1 -->|轉發 offer| S4
+    S7 -->|answer| B1
+    B1 -->|轉發 answer| T8
+    T9 & S9 --> P2P[P2P 媒體串流建立\nSTUN/TURN 協助 NAT 穿透]
+
+    T11 <-->|ICE candidates 雙向交換| S8
+```
+
+```
+老師進入房間（Offerer）            學生進入房間（Answerer）
+       ↓                                    ↓
+  getUserMedia()                      getUserMedia()
+  createOffer()                              ↓
+  setLocalDescription()     ←── STOMP signal(offer) ───→
+       ↓                          setRemoteDescription()
+  setRemoteDescription()    ←── STOMP signal(answer) ───
+  （連線建立）                       createAnswer()
+       ↓                          setLocalDescription()
+  雙方 onicecandidate → STOMP signal(candidate) → addIceCandidate()
+  → P2P 媒體串流建立（STUN/TURN 協助穿透 NAT）
+```
+
+ICE Server：Google STUN + OpenRelay TURN（確保不同網路環境下均可連線）
+
+---
+
+### 2.6 動態課程搜尋（CourseSpec）
+
+```mermaid
+flowchart TD
+    REQ["GET /api/view/courses\n?teacherName&subject&price&weekday&timeSlot"] --> SPEC[CourseSpec\nJPA Specification]
+    SPEC --> C1[isActive = true]
+    SPEC --> C2[老師姓名 LIKE\nJOIN tutor→user]
+    SPEC --> C3[課程名稱 LIKE]
+    SPEC --> C4[科目代碼 or 大類範圍\n+9 區間]
+    SPEC --> C5[價格區間\nmin-max 解析]
+    SPEC --> C6[週幾 + 時段\nJOIN tutor_schedules\n早9-12 / 午13-16 / 晚17-20]
+    C1 & C2 & C3 & C4 & C5 & C6 --> AND[AND 組合\n+ distinct=true]
+    AND --> DB[(Course DB)]
+    DB --> PAGE[Page 分頁回傳]
+```
+
+`CourseSpec.java` 使用 **JPA Specification** 動態組合 WHERE 條件，支援：
+
+- 老師姓名模糊搜尋（跨 join：course → tutor → user → name LIKE）
+- 科目大類篩選（`subjectCategory` 代碼 + 9 範圍）
+- 價格區間（`"min-max"` 字串解析）
+- 週幾 + 時段（JOIN tutor_schedules；早上 9-12 / 下午 13-16 / 晚上 17-20）
+- `query.distinct(true)` — 防止時段 JOIN 造成課程記錄重複展開
+
+---
+
+### 2.7 老師審核狀態機
+
+```mermaid
+stateDiagram-v2
+    [*] --> 待審核 : POST /api/tutor/become（status=1）
+    待審核 --> 已通過 : ADMIN PATCH status=2\nnav 顯示「老師後台」
+    待審核 --> 已停權 : ADMIN PATCH status=3\nnav 顯示「已停權」
+    已通過 --> 已停權 : ADMIN PATCH status=3
+    已停權 --> 已通過 : ADMIN PATCH status=2（復權）
+```
+
+```
+申請（status=1）
+   → ADMIN 通過 → status=2（正式老師，可開課、排程、收款）
+   → ADMIN 拒絕 → status=3（停權，前端 navbar 顯示「已停權」）
+```
+
+> navbar.js 每次載入時呼叫 `GET /api/tutor/application/status`，依狀態動態切換顯示「審核中 / 老師後台 / 已停權」。
+
+---
+
+### 2.8 安全性設計重點
+
+```mermaid
+flowchart TD
+    REQ[HTTP 請求] --> JF[JwtFilter\n讀取 Authorization: Bearer]
+    JF -->|驗證失敗| E401[401 Unauthorized]
+    JF -->|驗證成功| SC[SecurityConfig\n角色路由檢查]
+    SC -->|角色不符| E403[403 Forbidden]
+    SC -->|通過| CTRL[Controller]
+    CTRL --> SL{slotLocked\n時段重複檢查}
+    SL -->|已鎖定| EDUP[400 時段衝突]
+    SL -->|未鎖定| SVC[Service 執行業務邏輯]
+
+    WS[WebSocket STOMP CONNECT] --> WSAI[WebSocketAuthInterceptor\n驗證 JWT header]
+    WSAI -->|失敗| WSD[拒絕連線]
+    WSAI -->|成功| WSSUB[允許訂閱 /topic/...]
+```
+
+| 機制 | 實作位置 | 說明 |
+|------|----------|------|
+| JWT 認證 | `JwtFilter` + `JwtService` | 每個請求驗證 Bearer Token |
+| 路由角色保護 | `SecurityConfig` | 依角色限制 `/api/student/**`、`/api/tutor/**`、`/api/admin/**` |
+| BCrypt 密碼加密 | `MemberService` | 註冊時加密，登入時驗證 |
+| 時段防重複鎖 | `Booking.slotLocked` | 同一老師同一時段只能有一筆有效預約 |
+| 撥款防重複 | `WalletLog.merchantTradeNo` 唯一鍵 | 排程重跑時不會重複入帳 |
+| WebSocket 身份驗證 | `WebSocketAuthInterceptor` | STOMP 連線時驗證 JWT |
+
+---
+
+## 3. 認證模組（Auth）
 
 ### 模組說明
 
@@ -200,7 +511,7 @@ Controller 方法執行
 
 ---
 
-## 3. 使用者模組（User/Profile）
+## 4. 使用者模組（User/Profile）
 
 ### 模組說明
 
@@ -261,7 +572,7 @@ Controller 方法執行
 
 ---
 
-## 4. 老師申請與審核模組（Tutor Application）
+## 5. 老師申請與審核模組（Tutor Application）
 
 ### 模組說明
 
@@ -380,7 +691,7 @@ navbar 定期或登入時
 
 ---
 
-## 5. 課程模組（Course）
+## 6. 課程模組（Course）
 
 ### 模組說明
 
@@ -501,7 +812,7 @@ GET /api/view/teacher_schedule/{tutorId} → 可用時段
 
 ---
 
-## 6. 排程模組（Schedule）
+## 7. 排程模組（Schedule）
 
 ### 模組說明
 
@@ -574,7 +885,7 @@ GET /api/view/teacher_schedule/{tutorId} → 老師可用時段
 
 ---
 
-## 7. 訂課與付款模組（Booking & Checkout）
+## 8. 訂課與付款模組（Booking & Checkout）
 
 ### 模組說明
 
@@ -739,7 +1050,7 @@ GET /api/users/wallet-logs → 詳細交易記錄（篩選 transactionType=3）
 
 ---
 
-## 8. 學生課程管理模組（Student Course）
+## 9. 學生課程管理模組（Student Course）
 
 ### 模組說明
 
@@ -813,7 +1124,7 @@ GET /api/courses/me?userId={userId}
 
 ---
 
-## 9. 評價與回饋模組（Review & Feedback）
+## 10. 評價與回饋模組（Review & Feedback）
 
 ### 模組說明
 
@@ -909,7 +1220,7 @@ GET /api/feedbacks/lesson/{bookingId} → 查看/編輯課堂回饋
 
 ---
 
-## 10. 訊息模組（Chat）
+## 11. 訊息模組（Chat）
 
 ### 模組說明
 
@@ -1000,7 +1311,7 @@ GET /api/chatMessage/conversations/tutor/{tutorId} → 左側學生對話列表
 
 ---
 
-## 11. 視訊模組（Video Room / WebRTC）
+## 12. 視訊模組（Video Room / WebRTC）
 
 ### 模組說明
 
@@ -1089,7 +1400,7 @@ ICE Servers：
 
 ---
 
-## 12. 管理後台模組（Admin）
+## 13. 管理後台模組（Admin）
 
 ### 模組說明
 
@@ -1139,7 +1450,7 @@ GET /api/admin/tutors/counts → 各狀態數字
 
 ---
 
-## 13. 老師個人檔案模組（Tutor Profile）
+## 14. 老師個人檔案模組（Tutor Profile）
 
 ### 模組說明
 
@@ -1226,7 +1537,7 @@ GET /api/tutor/me/profile → 填入現有資料
 
 ---
 
-## 14. Email 通知模組
+## 15. Email 通知模組
 
 ### 模組說明
 

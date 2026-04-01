@@ -74,13 +74,51 @@ function updateTotals() {
     originalPointsEl.classList.add("d-none");
   }
 
-  // 已選清單改為 badge pills
+  // 已選清單改為 badge pills（含右上角 X 刪除鈕）
   if (lessonCount === 0) {
     selectedList.innerHTML = "";
   } else {
     selectedList.innerHTML = selectedTime.map(function (t) {
-      return `<div class="col-auto"><span class="badge bg-dark text-white px-3 py-2 rounded-3">${t}</span></div>`;
+      return `
+        <div class="col-auto">
+          <span class="badge bg-dark text-white px-3 py-2 rounded-3 position-relative" style="padding-right:1.6rem !important;">
+            ${t}
+            <button
+              type="button"
+              data-time="${t}"
+              class="btn-remove-time position-absolute rounded-circle border-0 d-flex align-items-center justify-content-center"
+              style="width:16px;height:16px;background:#dc3545;cursor:pointer;padding:0;line-height:1;top:-6px;right:-6px;"
+              title="移除">
+              <span style="font-size:10px;color:#fff;line-height:1;">&times;</span>
+            </button>
+          </span>
+        </div>`;
     }).join("");
+
+    // 綁定刪除事件
+    selectedList.querySelectorAll(".btn-remove-time").forEach(function (btn) {
+      btn.onclick = function () {
+        let timeToRemove = btn.dataset.time;
+        let idx = selectedTime.indexOf(timeToRemove);
+        if (idx !== -1) selectedTime.splice(idx, 1);
+
+        // 同步取消格子上的 selected 樣式
+        canSelect.querySelectorAll(".card-content.selected").forEach(function (card) {
+          let parts = timeToRemove.split(" ");
+          let h = parseInt(parts[1]);
+          let dateText = parts[0];
+          let cardTime = card.closest("[data-time]");
+          // 比對格子的顯示時間文字
+          let hourEl = card.querySelector("p.display-5");
+          if (hourEl && hourEl.textContent.trim() === String(h).padStart(2, "0") + ":00"
+              && card.closest(".col-md-4") && activeDate === dateText) {
+            card.classList.remove("selected", "btn-dark", "text-dark");
+          }
+        });
+
+        updateTotals();
+      };
+    });
   }
 
   // 確定預約按鈕：要選滿方案堂數才能啟用
@@ -144,6 +182,166 @@ function setupPackageButtons(unitPrice) {
   // 正式課程按鈕
   document.querySelectorAll(".package-btn").forEach(function (btn) {
     btn.onclick = function () { selectPackage(btn, Number(btn.dataset.count), false); };
+  });
+}
+
+// ─── 選取 / 取消時段 ───
+function orderTime(fullDate, h, isSelected) {
+  let takeTime = `${fullDate} ${String(h).padStart(2, "0")}:00`;
+  if (isSelected) {
+    selectedTime.push(takeTime);
+  } else {
+    let idx = selectedTime.indexOf(takeTime);
+    if (idx !== -1) selectedTime.splice(idx, 1);
+  }
+  updateTotals();
+}
+
+function buildFourWeeksDates() {
+  let today = new Date();
+  today.setHours(0, 0, 0, 0);
+  let todayWeekday = today.getDay() === 0 ? 7 : today.getDay();
+  let monday = new Date(today);
+  monday.setDate(today.getDate() - (todayWeekday - 1));
+
+  let list = [];
+  for (let i = 0; i < 28; i++) {
+    let d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    d.setHours(0, 0, 0, 0);
+    let wd = d.getDay() === 0 ? 7 : d.getDay();
+    list.push({
+      fullDate: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`,
+      month: d.getMonth() + 1,
+      day:   d.getDate(),
+      weekdayNumber: wd,
+      isToday: d.getTime() === today.getTime(),
+      isPast:  d.getTime() < today.getTime(),
+    });
+  }
+  return list;
+}
+
+function renderWeekBar(wb) {
+  wb.innerHTML = "";
+  let dayMap = { 1:"一", 2:"二", 3:"三", 4:"四", 5:"五", 6:"六", 7:"日" };
+  let start = currentWeekIndex * 7;
+  let currentWeekDates = allDates.slice(start, start + 7);
+
+  currentWeekDates.forEach(function (item) {
+    let box = document.createElement("div");
+    box.className = "flex-shrink-0";
+    let isDisabled = item.isPast || item.isToday;
+    box.innerHTML = `
+      <button
+        type="button"
+        class="btn rounded-3 border py-2 ${isDisabled ? "btn-outline-secondary" : "btn-outline-dark"}"
+        style="width: 110px;"
+        data-date="${item.fullDate}"
+        data-weekday="${item.weekdayNumber}"
+        ${isDisabled ? "disabled" : ""}
+      >
+        <p class="mb-1 fw-bold">${item.month}/${item.day}</p>
+        <small>週${dayMap[item.weekdayNumber]}</small>
+      </button>
+    `;
+
+    let btn = box.querySelector("button");
+    btn.onclick = function () {
+      if (btn.disabled) return;
+      wb.querySelectorAll("button").forEach(function (b) {
+        b.classList.remove("btn-dark", "text-white");
+        b.classList.add("btn-outline-dark");
+      });
+      btn.classList.remove("btn-outline-dark");
+      btn.classList.add("btn-dark", "text-white");
+
+      activeDate = btn.dataset.date;
+      renderDaySlots(activeDate, Number(btn.dataset.weekday));
+    };
+
+    wb.appendChild(box);
+  });
+
+  prevWeekBtn.disabled = currentWeekIndex === 0;
+  nextWeekBtn.disabled = currentWeekIndex === 3;
+}
+
+function renderDaySlots(fullDate, weekdayNumber) {
+  canSelect.innerHTML = "";
+  let dayMap = { 1:"週一", 2:"週二", 3:"週三", 4:"週四", 5:"週五", 6:"週六", 7:"週日" };
+  let hours = currentScheduleData[weekdayNumber];
+
+  if (!hours || hours.length === 0) {
+    canSelect.innerHTML = `<p class="text-muted ms-2">此日期老師沒有開放時段</p>`;
+    return;
+  }
+
+  let day = dayMap[weekdayNumber];
+
+  hours.forEach(function (h) {
+    let timeBox = document.createElement("div");
+    timeBox.className = "col-md-4 mb-2";
+
+    let timeKey           = `${fullDate} ${String(h).padStart(2, "0")}:00`;
+    let isAlreadySelected = selectedTime.indexOf(timeKey) !== -1;
+    let isBooked          = bookedSlots.some((s) => s.date === fullDate && s.hour === h);
+
+    timeBox.innerHTML = `
+      <div type="btn" class="btn rounded-0 card-content border p-0 w-100
+        ${isBooked ? "border-gary" : ""}
+        ${isAlreadySelected && !isBooked ? "btn-dark text-dark selected" : ""}"
+        style="${isBooked ? "background-color:#f0f0f0; opacity:0.2; cursor:not-allowed; border-color:$gray;" : ""}">
+        <div class="border-bottom px-3 d-flex align-items-center"
+          style="${isBooked ? "border-color:$gray;" : ""}">
+          <p class="mb-0 ps-2 py-2 sansTeg d-inline-block ${isBooked ? "text-gray;" : ""}">${fullDate} ${day}</p>
+        </div>
+        <div class="d-flex align-items-center">
+          <div>
+            <p class="display-5 sansTeg ps-3 pt-3 mb-0 pb-3 border-end pe-4 ${isBooked ? "text-gary" : ""}"
+              style="${isBooked ? "border-color:$gray;" : ""}">
+              ${String(h).padStart(2, "0")}:00
+            </p>
+          </div>
+          <div class="mx-auto">
+            <small class="border px-3 rounded-3 text-center ${isBooked ? "text-gary border-gary" : ""}">
+              ${isBooked ? "已預約" : "60mins"}
+            </small>
+          </div>
+        </div>
+      </div>
+    `;
+
+    if (!isBooked) {
+      timeBox.onclick = function () {
+        if (selectedPackage === 0) {
+          showToast("請先選擇購買方案", "warning");
+          return;
+        }
+
+        let card = this.querySelector(".card-content");
+        if (!card) return;
+
+        let isCurrentlySelected = card.classList.contains("selected");
+
+        if (!isCurrentlySelected && selectedTime.length >= selectedPackage) {
+          showToast(`已達 ${selectedPackage} 堂上限，請先取消其他時段`, "warning");
+          return;
+        }
+
+        card.classList.toggle("selected");
+        let isSelected = card.classList.contains("selected");
+        if (isSelected) {
+          card.classList.add("btn-dark", "text-dark");
+        } else {
+          card.classList.remove("btn-dark", "text-dark");
+        }
+
+        orderTime(fullDate, h, isSelected);
+      };
+    }
+
+    canSelect.appendChild(timeBox);
   });
 }
 
