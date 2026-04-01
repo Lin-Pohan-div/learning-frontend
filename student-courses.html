@@ -112,6 +112,38 @@
             color: #9ca3af;
         }
         .empty-state .material-symbols-outlined { font-size: 48px; margin-bottom: 8px; }
+
+        /* ── 視訊教室按鈕 ── */
+        .booking-card-actions {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+        }
+        .btn-enter-videoroom {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 20px;
+            background: #FF8C00;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background 0.2s, transform 0.1s;
+            box-shadow: 0 4px 12px rgba(255,140,0,0.25);
+        }
+        .btn-enter-videoroom:hover  { background: #E67E00; transform: translateY(-1px); }
+        .btn-enter-videoroom:active { transform: translateY(0); }
+        .btn-enter-videoroom:disabled { background: #d1d5db; box-shadow: none; cursor: not-allowed; transform: none; }
+        .btn-enter-videoroom .material-symbols-outlined { font-size: 18px; }
+
+        @media (max-width: 600px) {
+            .booking-card-actions { width: 100%; }
+            .btn-enter-videoroom  { width: 100%; justify-content: center; }
+        }
     </style>
 </head>
 <body class="student-layout">

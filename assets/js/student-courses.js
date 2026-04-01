@@ -110,6 +110,12 @@ function renderUpcomingCard(b) {
                 <span class="material-symbols-outlined">person</span> ${b.tutorName}
             </div>
         </div>
+        <div class="booking-card-actions">
+            <button class="btn-enter-videoroom" onclick="enterVideoRoom(${b.bookingId}, this)">
+                <span class="material-symbols-outlined">videocam</span>
+                進入視訊教室
+            </button>
+        </div>
     </div>`;
 }
 
@@ -196,6 +202,47 @@ function renderCancelledCard(b) {
             </div>
         </div>
     </div>`;
+}
+
+// ══════════════════════════════════════════
+// 進入視訊教室
+// ══════════════════════════════════════════
+async function enterVideoRoom(bookingId, btn) {
+    const token = localStorage.getItem('jwt_token');
+    if (!token) {
+        alert('請先登入以進入教室');
+        window.location.href = 'login.html';
+        return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="material-symbols-outlined">hourglass_top</span> 驗證中...';
+
+    try {
+        const res = await axios.get(`${API_BASE_URL}/student/bookings`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const booking = (res.data || []).find(b =>
+            String(b.id) === String(bookingId) || String(b.orderId) === String(bookingId)
+        );
+        if (!booking) {
+            alert('找不到此預約，請重新整理後再試');
+            btn.disabled = false;
+            btn.innerHTML = '<span class="material-symbols-outlined">videocam</span> 進入視訊教室';
+            return;
+        }
+        window.location.href = `Student-VideoRoom.html?bookingId=${bookingId}`;
+    } catch (err) {
+        console.error('驗證預約失敗', err);
+        if (err.response?.status === 401) {
+            alert('登入已過期，請重新登入');
+            localStorage.clear();
+            window.location.href = 'login.html';
+        } else {
+            // API 驗證失敗不阻止進入教室，仍允許導向
+            window.location.href = `Student-VideoRoom.html?bookingId=${bookingId}`;
+        }
+    }
 }
 
 // ══════════════════════════════════════════
