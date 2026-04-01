@@ -74,10 +74,11 @@ async function loadDashboardData() {
     
     try {
         // 並行載入資料
-        const [userRes, todayRes, futureRes] = await Promise.allSettled([
+        const [userRes, todayRes, futureRes, coursesRes] = await Promise.allSettled([
             axios.get(`${API_BASE_URL}/users/me`),
             axios.get(`${API_BASE_URL}/today/me?userId=${userId}`),
-            axios.get(`${API_BASE_URL}/future/me?userId=${userId}`)
+            axios.get(`${API_BASE_URL}/future/me?userId=${userId}`),
+            axios.get(`${API_BASE_URL}/courses/me`)
         ]);
         
         // 使用者資料
@@ -96,6 +97,11 @@ async function loadDashboardData() {
         const futureCourses = futureRes.status === 'fulfilled' ? (futureRes.value.data || []) : [];
         const allCourses = [...todayCourses, ...futureCourses].slice(0, 5);
         renderUpcomingCourses(allCourses);
+
+        // 完成課程數
+        const allBookings = coursesRes.status === 'fulfilled' ? (coursesRes.value.data || []) : [];
+        const completedCount = allBookings.filter(b => b.status === 2).length;
+        document.getElementById('stat-completed').textContent = completedCount;
         
     } catch (error) {
         console.error('載入資料失敗:', error);
