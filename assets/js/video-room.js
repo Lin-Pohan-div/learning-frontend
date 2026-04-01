@@ -947,7 +947,7 @@ async function loadChatHistory() {
         const res = await axios.get(`${API_BASE_URL}/chatMessage/booking/${bookingId}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
-        (res.data || []).forEach(msg => appendMessage(msg, msg.role === userRole));
+        (res.data || []).forEach(msg => appendMessage(msg, normalizeRole(msg.role) === userRole));
         scrollChatToBottom();
     } catch (err) {
         console.error('無法載入聊天記錄', err);
