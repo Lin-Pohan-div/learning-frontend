@@ -27,12 +27,12 @@ let bookedSlots = [];
 let allDates = [];
 let activeDate = null;
 let selectedPackage = 0; // 目前選擇的方案（1 / 5 / 10）
-let isTrial = false;     // 是否為體驗課方案
+let isTrial = false; // 是否為體驗課方案
 
 // ─── 折扣率 ───
 function getDiscountRate(count) {
-  if (count === 10) return 0.90;
-  if (count === 5)  return 0.95;
+  if (count === 10) return 0.9;
+  if (count === 5) return 0.95;
   return 1.0;
 }
 
@@ -66,7 +66,8 @@ function updateTotals() {
     originalPointsEl.classList.remove("d-none");
   } else if (!isTrial && selectedPackage > 1 && lessonCount > 0) {
     let originalTotal = unitPrice * lessonCount;
-    discountLabel.innerText = selectedPackage === 10 ? "✦ 9折優惠" : "✦ 95折優惠";
+    discountLabel.innerText =
+      selectedPackage === 10 ? "✦ 9折優惠" : "✦ 95折優惠";
     originalPointsEl.innerText = originalTotal + " 點";
     originalPointsEl.classList.remove("d-none");
   } else {
@@ -78,8 +79,9 @@ function updateTotals() {
   if (lessonCount === 0) {
     selectedList.innerHTML = "";
   } else {
-    selectedList.innerHTML = selectedTime.map(function (t) {
-      return `
+    selectedList.innerHTML = selectedTime
+      .map(function (t) {
+        return `
         <div class="col-auto">
           <span class="badge bg-dark text-white px-3 py-2 rounded-3 position-relative" style="padding-right:1.6rem !important;">
             ${t}
@@ -93,7 +95,8 @@ function updateTotals() {
             </button>
           </span>
         </div>`;
-    }).join("");
+      })
+      .join("");
 
     // 綁定刪除事件
     selectedList.querySelectorAll(".btn-remove-time").forEach(function (btn) {
@@ -103,18 +106,25 @@ function updateTotals() {
         if (idx !== -1) selectedTime.splice(idx, 1);
 
         // 同步取消格子上的 selected 樣式
-        canSelect.querySelectorAll(".card-content.selected").forEach(function (card) {
-          let parts = timeToRemove.split(" ");
-          let h = parseInt(parts[1]);
-          let dateText = parts[0];
-          let cardTime = card.closest("[data-time]");
-          // 比對格子的顯示時間文字
-          let hourEl = card.querySelector("p.display-5");
-          if (hourEl && hourEl.textContent.trim() === String(h).padStart(2, "0") + ":00"
-              && card.closest(".col-md-4") && activeDate === dateText) {
-            card.classList.remove("selected", "btn-dark", "text-dark");
-          }
-        });
+        canSelect
+          .querySelectorAll(".card-content.selected")
+          .forEach(function (card) {
+            let parts = timeToRemove.split(" ");
+            let h = parseInt(parts[1]);
+            let dateText = parts[0];
+            let cardTime = card.closest("[data-time]");
+            // 比對格子的顯示時間文字
+            let hourEl = card.querySelector("p.display-5");
+            if (
+              hourEl &&
+              hourEl.textContent.trim() ===
+                String(h).padStart(2, "0") + ":00" &&
+              card.closest(".col-md-4") &&
+              activeDate === dateText
+            ) {
+              card.classList.remove("selected", "btn-dark", "text-dark");
+            }
+          });
 
         updateTotals();
       };
@@ -122,18 +132,20 @@ function updateTotals() {
   }
 
   // 確定預約按鈕：要選滿方案堂數才能啟用
-  bookingBtn.disabled = !(selectedPackage > 0 && lessonCount === selectedPackage);
+  bookingBtn.disabled = !(
+    selectedPackage > 0 && lessonCount === selectedPackage
+  );
 }
 
 // ─── 套餐按鈕初始化 ───
 function setupPackageButtons(unitPrice) {
-  let price1  = unitPrice;
-  let price5  = getDiscountedUnitPrice(unitPrice, 5);
+  let price1 = unitPrice;
+  let price5 = getDiscountedUnitPrice(unitPrice, 5);
   let price10 = getDiscountedUnitPrice(unitPrice, 10);
 
-  document.getElementById("price1").innerText  = price1  + " 點";
-  document.getElementById("price5").innerText  = price5  + " 點/堂";
-  document.getElementById("price10").innerText = price10 + " 點/堂";
+  document.getElementById("price1").innerText = price1;
+  document.getElementById("price5").innerText = price5;
+  document.getElementById("price10").innerText = price10;
 
   function selectPackage(btn, count, trial) {
     // 取消所有按鈕的選中狀態
@@ -166,7 +178,9 @@ function setupPackageButtons(unitPrice) {
     updateTotals();
 
     if (activeDate) {
-      let activeBtn = weekBar.querySelector(`button[data-date="${activeDate}"]`);
+      let activeBtn = weekBar.querySelector(
+        `button[data-date="${activeDate}"]`,
+      );
       if (activeBtn) {
         renderDaySlots(activeDate, Number(activeBtn.dataset.weekday));
       }
@@ -176,12 +190,16 @@ function setupPackageButtons(unitPrice) {
   // 體驗課按鈕
   let trialBtn = document.getElementById("trialBtn");
   if (trialBtn) {
-    trialBtn.onclick = function () { selectPackage(trialBtn, 1, true); };
+    trialBtn.onclick = function () {
+      selectPackage(trialBtn, 1, true);
+    };
   }
 
   // 正式課程按鈕
   document.querySelectorAll(".package-btn").forEach(function (btn) {
-    btn.onclick = function () { selectPackage(btn, Number(btn.dataset.count), false); };
+    btn.onclick = function () {
+      selectPackage(btn, Number(btn.dataset.count), false);
+    };
   });
 }
 
@@ -213,10 +231,10 @@ function buildFourWeeksDates() {
     list.push({
       fullDate: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`,
       month: d.getMonth() + 1,
-      day:   d.getDate(),
+      day: d.getDate(),
       weekdayNumber: wd,
       isToday: d.getTime() === today.getTime(),
-      isPast:  d.getTime() < today.getTime(),
+      isPast: d.getTime() < today.getTime(),
     });
   }
   return list;
@@ -224,7 +242,15 @@ function buildFourWeeksDates() {
 
 function renderWeekBar(wb) {
   wb.innerHTML = "";
-  let dayMap = { 1:"一", 2:"二", 3:"三", 4:"四", 5:"五", 6:"六", 7:"日" };
+  let dayMap = {
+    1: "一",
+    2: "二",
+    3: "三",
+    4: "四",
+    5: "五",
+    6: "六",
+    7: "日",
+  };
   let start = currentWeekIndex * 7;
   let currentWeekDates = allDates.slice(start, start + 7);
 
@@ -269,7 +295,15 @@ function renderWeekBar(wb) {
 
 function renderDaySlots(fullDate, weekdayNumber) {
   canSelect.innerHTML = "";
-  let dayMap = { 1:"週一", 2:"週二", 3:"週三", 4:"週四", 5:"週五", 6:"週六", 7:"週日" };
+  let dayMap = {
+    1: "週一",
+    2: "週二",
+    3: "週三",
+    4: "週四",
+    5: "週五",
+    6: "週六",
+    7: "週日",
+  };
   let hours = currentScheduleData[weekdayNumber];
 
   if (!hours || hours.length === 0) {
@@ -283,9 +317,9 @@ function renderDaySlots(fullDate, weekdayNumber) {
     let timeBox = document.createElement("div");
     timeBox.className = "col-md-4 mb-2";
 
-    let timeKey           = `${fullDate} ${String(h).padStart(2, "0")}:00`;
+    let timeKey = `${fullDate} ${String(h).padStart(2, "0")}:00`;
     let isAlreadySelected = selectedTime.indexOf(timeKey) !== -1;
-    let isBooked          = bookedSlots.some((s) => s.date === fullDate && s.hour === h);
+    let isBooked = bookedSlots.some((s) => s.date === fullDate && s.hour === h);
 
     timeBox.innerHTML = `
       <div type="btn" class="btn rounded-0 card-content border p-0 w-100
@@ -325,7 +359,10 @@ function renderDaySlots(fullDate, weekdayNumber) {
         let isCurrentlySelected = card.classList.contains("selected");
 
         if (!isCurrentlySelected && selectedTime.length >= selectedPackage) {
-          showToast(`已達 ${selectedPackage} 堂上限，請先取消其他時段`, "warning");
+          showToast(
+            `已達 ${selectedPackage} 堂上限，請先取消其他時段`,
+            "warning",
+          );
           return;
         }
 
@@ -347,7 +384,7 @@ function renderDaySlots(fullDate, weekdayNumber) {
 
 async function booking() {
   let url = new URLSearchParams(window.location.search);
-  let tutorId  = url.get("tutorId");
+  let tutorId = url.get("tutorId");
   let courseId = url.get("courseId");
 
   if (!tutorId || !courseId) return;
@@ -355,13 +392,13 @@ async function booking() {
   try {
     // 課程資訊
     let coursesResp = await axios.get(`/api/view/courses`);
-    let courseList  = coursesResp.data.content;
+    let courseList = coursesResp.data.content;
 
     for (let i = 0; i < courseList.length; i++) {
       if (courseList[i].id === Number(courseId)) {
         coursePrice.innerText = courseList[i].price;
-        courseName.innerText  = courseList[i].courseName;
-        tutorName.innerText   = courseList[i].teacherName;
+        courseName.innerText = courseList[i].courseName;
+        tutorName.innerText = courseList[i].teacherName;
         setupPackageButtons(courseList[i].price);
         break;
       }
@@ -380,11 +417,13 @@ async function booking() {
     currentScheduleData = scheduleResp.data;
 
     // 已被預約的時段
-    let bookedResp = await axios.get(`/api/shop/course/${courseId}/futurebookings`);
+    let bookedResp = await axios.get(
+      `/api/shop/course/${courseId}/futurebookings`,
+    );
     bookedSlots = bookedResp.data;
 
-    canSelect.innerHTML  = "";
-    weekBar.innerHTML    = "";
+    canSelect.innerHTML = "";
+    weekBar.innerHTML = "";
     allDates = buildFourWeeksDates();
     renderWeekBar(weekBar);
 
@@ -410,31 +449,43 @@ async function booking() {
 
       try {
         let meResp = await axios.get("/api/users/me");
-        let me     = meResp.data;
+        let me = meResp.data;
         let wallet = me.wallet;
 
         // 餘額不足
         if (wallet < needed) {
-          document.getElementById("modalWallet").innerText    = wallet;
-          document.getElementById("modalNeeded").innerText    = needed;
+          document.getElementById("modalWallet").innerText = wallet;
+          document.getElementById("modalNeeded").innerText = needed;
           document.getElementById("modalShortfall").innerText = needed - wallet;
-          new bootstrap.Modal(document.getElementById("insufficientModal")).show();
+          new bootstrap.Modal(
+            document.getElementById("insufficientModal"),
+          ).show();
           return;
         }
 
         // 填入確認 Modal
-        let unitPrice      = Number(coursePrice.innerText);
-        let discountRate   = getDiscountRate(selectedPackage);
-        let discountText   = selectedPackage === 10 ? "9折優惠" : selectedPackage === 5 ? "95折優惠" : "無折扣（原價）";
+        let unitPrice = Number(coursePrice.innerText);
+        let discountRate = getDiscountRate(selectedPackage);
+        let discountText =
+          selectedPackage === 10
+            ? "9折優惠"
+            : selectedPackage === 5
+              ? "95折優惠"
+              : "無折扣（原價）";
 
-        document.getElementById("confirmCourseName").innerText = courseName.innerText;
-        document.getElementById("confirmLessons").innerText    = selectedPackage + " 堂";
-        document.getElementById("confirmDiscount").innerText   = discountText;
-        document.getElementById("confirmTotal").innerText      = needed + " 點";
-        document.getElementById("confirmWallet").innerText     = wallet + " 點";
-        document.getElementById("confirmRemaining").innerText  = (wallet - needed) + " 點";
+        document.getElementById("confirmCourseName").innerText =
+          courseName.innerText;
+        document.getElementById("confirmLessons").innerText =
+          selectedPackage + " 堂";
+        document.getElementById("confirmDiscount").innerText = discountText;
+        document.getElementById("confirmTotal").innerText = needed + " 點";
+        document.getElementById("confirmWallet").innerText = wallet + " 點";
+        document.getElementById("confirmRemaining").innerText =
+          wallet - needed + " 點";
 
-        let confirmModal = new bootstrap.Modal(document.getElementById("confirmModal"));
+        let confirmModal = new bootstrap.Modal(
+          document.getElementById("confirmModal"),
+        );
         confirmModal.show();
 
         // 替換確認按鈕的事件（避免重複綁定）
@@ -454,9 +505,9 @@ async function booking() {
             confirmModal.hide();
 
             await axios.post("/api/shop/purchase", {
-              studentId:     me.id,
-              courseId:      Number(courseId),
-              lessonCount:   selectedPackage,
+              studentId: me.id,
+              courseId: Number(courseId),
+              lessonCount: selectedPackage,
               selectedSlots: slots,
               isExperienced: isTrial,
             });
@@ -466,35 +517,38 @@ async function booking() {
             try {
               let convsResp = await axios.get("/api/chatMessage/conversations");
               chatCreated = convsResp.data.some(
-                (c) => String(c.participantId) === String(tutorId)
+                (c) => String(c.participantId) === String(tutorId),
               );
             } catch (_) {}
 
-            document.getElementById("modalSuccessLessons").innerText = selectedPackage;
-            document.getElementById("modalSuccessPoints").innerText  = needed;
-            document.getElementById("modalChatStatus").innerText     = chatCreated
+            document.getElementById("modalSuccessLessons").innerText =
+              selectedPackage;
+            document.getElementById("modalSuccessPoints").innerText = needed;
+            document.getElementById("modalChatStatus").innerText = chatCreated
               ? "聊天室通道已建立，可立即與老師聯繫。"
               : "聊天室通道建立中，稍後可在聊天室與老師聯繫。";
             new bootstrap.Modal(document.getElementById("successModal")).show();
-
           } catch (err) {
             console.error("購買失敗:", err);
-            let msg = err.response?.data?.message || err.response?.data || "購買失敗，請稍後再試";
-            showToast(typeof msg === "string" ? msg : "購買失敗，請稍後再試", "error");
+            let msg =
+              err.response?.data?.message ||
+              err.response?.data ||
+              "購買失敗，請稍後再試";
+            showToast(
+              typeof msg === "string" ? msg : "購買失敗，請稍後再試",
+              "error",
+            );
             newBtn.disabled = false;
           }
         };
-
       } catch (err) {
         console.error("取得用戶資料失敗:", err);
         showToast("無法取得用戶資料，請稍後再試", "error");
       }
     };
-
   } catch (err) {
     console.log("booking render error:", err);
   }
-
 }
 
 booking();
