@@ -1010,27 +1010,13 @@ async function handleFileUpload(e) {
     formData.append('role',      roleToNumber(userRole));
 
     try {
-        const res = await axios.post(`${API_BASE_URL}/chatMessage/upload`, formData, {
+        await axios.post(`${API_BASE_URL}/chatMessage/upload`, formData, {
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type':  'multipart/form-data'
             }
         });
-        // Send message via STOMP so both parties receive it
-        const mediaUrl = res.data.mediaUrl || '';
-        const msgType  = detectMessageType(file.type);
-        if (isConnected) {
-            stompClient.publish({
-                destination: `/app/chat/${bookingId}`,
-                body: JSON.stringify({
-                    bookingId:   parseInt(bookingId),
-                    role:        userRole,
-                    messageType: msgType,
-                    message:     file.name,
-                    mediaUrl:    mediaUrl
-                })
-            });
-        }
+        // 後端 upload() 已透過 messagingTemplate 廣播，不需再 STOMP publish
     } catch (err) {
         alert('檔案上傳失敗：' + (err.response?.data?.message || err.message));
     } finally {

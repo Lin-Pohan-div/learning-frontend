@@ -1311,6 +1311,207 @@ GET /api/chatMessage/conversations/tutor/{tutorId} → 左側學生對話列表
 
 ---
 
+### 訊息模組架構圖
+
+```mermaid
+graph TB
+    subgraph 前端["前端（Browser）"]
+        subgraph StudentChat["StudentChat.html / StudentChat.js"]
+            SC_LIST[對話列表\nconversations]
+            SC_MSG[訊息區\nchatMessages]
+            SC_INPUT[輸入列\nmsgInput / fileInput]
+        end
+        subgraph TeacherChat["TeacherChat.html / TeacherChat.js"]
+            TC_LIST[對話列表\nconversations]
+            TC_MSG[訊息區\nchatMessages]
+            TC_INPUT[輸入列\nmsgInput / fileInput]
+        end
+        STOMP_CLIENT["STOMP Client\n(SockJS + @stomp/stompjs)"]
+    end
+
+    subgraph 後端["後端（Spring Boot）"]
+        subgraph REST_API["REST Controller\nChatMessageController\n/api/chatMessage"]
+            R1["GET /conversations\n學生對話列表"]
+            R2["GET /conversations/tutor/{id}\n老師對話列表"]
+            R3["GET /booking/{bookingId}\n單筆訊息"]
+            R4["GET /orders?ids=…\n批次訊息"]
+            R5["POST /\n傳送文字"]
+            R6["POST /upload\n上傳媒體"]
+            R7["GET /download/{filename}\n下載檔案"]
+            R8["PUT /{id}  DELETE /{id}\n修改 / 刪除"]
+        end
+        subgraph WS_CTRL["WebSocket Controller\nVideoRoomController\n/app"]
+            WS1["/app/chat/{bookingId}\n送出訊息（持久化 + broadcast）"]
+        end
+        subgraph BROKER["STOMP Message Broker"]
+            TOPIC["/topic/room/{orderId}/chat\n即時推播"]
+            ERR_TOPIC["/topic/room/{orderId}/errors\n錯誤通知"]
+        end
+        subgraph SERVICES["Service Layer"]
+            SVC1["ChatMessageService\nCRUD / 分組查詢"]
+            SVC2["FileStorageService\nstore / load / detectMessageType"]
+        end
+        subgraph STORAGE["儲存層"]
+            DB[("資料庫\nChatMessage\norderId / role\nmessageType / message\nmediaUrl / createdAt")]
+            FS[("檔案系統\n/uploads/**\n(WebMvcConfig 靜態對應)")]
+        end
+        LP["LinkPreviewController\n/api/linkPreview\nGET /?url=…"]
+    end
+
+    %% 學生端 REST 呼叫
+    SC_LIST -- "GET /conversations" --> R1
+    SC_MSG -- "GET /booking or /orders" --> R3
+    SC_MSG -- "GET /orders?ids" --> R4
+    SC_INPUT -- "POST /" --> R5
+    SC_INPUT -- "POST /upload" --> R6
+    SC_MSG -- "GET /download" --> R7
+
+    %% 老師端 REST 呼叫
+    TC_LIST -- "GET /conversations/tutor/{id}" --> R2
+    TC_MSG -- "GET /orders?ids" --> R4
+    TC_INPUT -- "POST /upload" --> R6
+    TC_MSG -- "GET /download" --> R7
+
+    %% WebSocket 傳送（優先）
+    SC_INPUT -. "STOMP publish\n/app/chat/{bookingId}" .-> WS1
+    TC_INPUT -. "STOMP publish\n/app/chat/{bookingId}" .-> WS1
+
+    %% Broker 推播訂閱
+    WS1 --> TOPIC
+    WS1 --> ERR_TOPIC
+    TOPIC -. "subscribe\n即時收訊" .-> STOMP_CLIENT
+    ERR_TOPIC -. "subscribe\n錯誤通知" .-> STOMP_CLIENT
+    STOMP_CLIENT -. appendMessage .-> SC_MSG
+    STOMP_CLIENT -. appendMessage .-> TC_MSG
+
+    %% Service 層
+    R1 & R2 & R3 & R4 & R5 & R8 --> SVC1
+    R6 & R7 --> SVC2
+    WS1 --> SVC1
+    SVC1 --> DB
+    SVC2 --> FS
+    SVC2 --> DB
+
+    %% 靜態媒體直接存取
+    SC_MSG -. "img/video/audio src\n/uploads/**" .-> FS
+    TC_MSG -. "img/video/audio src\n/uploads/**" .-> FS
+
+    style 前端 fill:#e0f2fe,stroke:#0284c7
+    style 後端 fill:#f0fdf4,stroke:#16a34a
+    style StudentChat fill:#bfdbfe,stroke:#3b82f6
+    style TeacherChat fill:#bbf7d0,stroke:#22c55e
+    style REST_API fill:#fef9c3,stroke:#ca8a04
+    style WS_CTRL fill:#fce7f3,stroke:#db2777
+    style BROKER fill:#ede9fe,stroke:#7c3aed
+    style SERVICES fill:#fff7ed,stroke:#ea580c
+    style STORAGE fill:#f1f5f9,stroke:#64748b
+```
+
+---
+
+### 訊息模組流程圖
+
+```mermaid
+flowchart TD
+    subgraph 初始化["初始化"]
+        A([使用者進入聊天頁]) --> B{JWT 有效?}
+        B -- 否 --> C([導向 login.html])
+        B -- 是 --> D[載入對話列表]
+    end
+
+    subgraph 載入對話列表["載入對話列表"]
+        D --> E_S["GET /api/chatMessage/conversations\n（學生端）"]
+        D --> E_T["GET /api/chatMessage/conversations/tutor/{tutorId}\n（老師端）"]
+        E_S --> F[依老師分組 conversations]
+        E_T --> F2[依學生分組 conversations]
+        F --> G[renderChatList]
+        F2 --> G
+        G --> H{URL 有 bookingId?}
+        H -- 是 --> I[selectConversation bookingId]
+        H -- 否 --> J[selectConversation 第一筆]
+    end
+
+    subgraph 選取對話["選取對話 selectConversation"]
+        I & J --> K[更新 header 頭像/名稱/標籤]
+        K --> L{有多筆 orderIds?}
+        L -- 是 --> M["GET /api/chatMessage/orders?ids={id1,id2,...}"]
+        L -- 否 --> N["GET /api/chatMessage/booking/{bookingId}"]
+        M & N --> O[renderMessages 渲染訊息列表]
+        O --> P[connectWebSocket orderIds]
+    end
+
+    subgraph 渲染訊息["renderMessages / buildMsgHtml"]
+        O --> Q{messageType}
+        Q -- 1 TEXT --> R[顯示文字氣泡]
+        Q -- 2 STICKER --> R
+        Q -- 3 VOICE --> S["&lt;audio controls&gt;"]
+        Q -- 4 IMAGE --> T["&lt;img&gt; 最大寬度 200px"]
+        Q -- 5 VIDEO --> U["&lt;video controls&gt;"]
+        Q -- 6 FILE --> V["📎 下載按鈕 / &lt;a download&gt;"]
+    end
+
+    subgraph WebSocket["WebSocket STOMP 連線"]
+        P --> W{stompClient 已連線?}
+        W -- 是 --> X[直接 subscribeOrders]
+        W -- 否 --> Y[stompClient.activate 建立新連線]
+        Y --> Z[onConnect → subscribeOrders]
+        X & Z --> AA["訂閱 /topic/room/{orderId}/chat"]
+        AA --> AB["訂閱 /topic/room/{orderId}/errors"]
+    end
+
+    subgraph 發送文字訊息["發送文字訊息 sendMessage"]
+        BA([使用者輸入文字 → 按送出]) --> BB[appendMessage 即時顯示]
+        BB --> BC{STOMP 已連線?}
+        BC -- 是 --> BD["publish /app/chat/{actualBookingId}"]
+        BC -- 否 --> BE["POST /api/chatMessage（HTTP fallback）"]
+        BD & BE --> BF{成功?}
+        BF -- 否 --> BG[還原輸入框 / alert 錯誤]
+    end
+
+    subgraph 上傳媒體檔案["上傳媒體檔案 uploadFile"]
+        CA([使用者選取檔案]) --> CB[detectLocalType 判斷 MIME]
+        CB --> CC[createObjectURL 本地預覽]
+        CC --> CD["POST /api/chatMessage/upload FormData"]
+        CD --> CE{成功?}
+        CE -- 是 --> CF[移除預覽 → appendMessage 最終訊息]
+        CE -- 否 --> CG[移除預覽 / alert 錯誤]
+    end
+
+    subgraph 下載檔案["下載檔案 downloadFile"]
+        DA([點擊 📎 檔案按鈕]) --> DB["GET /api/chatMessage/download/{storedName}"]
+        DB --> DC[Blob → createObjectURL]
+        DC --> DD[模擬 &lt;a&gt; click → 瀏覽器下載]
+        DD --> DE[revokeObjectURL 釋放記憶體]
+    end
+
+    subgraph 即時接收訊息["即時接收訊息（WebSocket 推播）"]
+        EA["/topic/room/{orderId}/chat"] --> EB{role 是自己?}
+        EB -- 否 --> EC[appendMessage]
+        EB -- 是 --> ED[忽略，避免重複顯示]
+        EC --> EE[更新 lastMessage 及側邊欄]
+        EF["/topic/room/{orderId}/errors"] --> EG[console.error 記錄錯誤]
+    end
+
+    subgraph 搜尋對話["搜尋對話列表"]
+        FA([searchInput 輸入關鍵字]) --> FB[renderChatList keyword]
+        FB --> FC[過濾 participantName / subject]
+        FC --> GG[重新渲染 chatList]
+    end
+
+    style 初始化 fill:#f0f4ff,stroke:#6b7280
+    style 載入對話列表 fill:#f0fdf4,stroke:#6b7280
+    style 選取對話 fill:#fefce8,stroke:#6b7280
+    style 渲染訊息 fill:#fff7ed,stroke:#6b7280
+    style WebSocket fill:#fdf4ff,stroke:#6b7280
+    style 發送文字訊息 fill:#f0f9ff,stroke:#6b7280
+    style 上傳媒體檔案 fill:#fff1f2,stroke:#6b7280
+    style 下載檔案 fill:#f5f3ff,stroke:#6b7280
+    style 即時接收訊息 fill:#ecfdf5,stroke:#6b7280
+    style 搜尋對話 fill:#fffbeb,stroke:#6b7280
+```
+
+---
+
 ## 12. 視訊模組（Video Room / WebRTC）
 
 ### 模組說明
