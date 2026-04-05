@@ -372,7 +372,7 @@ function subscribeBooking(orderIds) {
             frame => {
                 try {
                     const error = JSON.parse(frame.body);
-                    console.error('聊天室訊息儲存失敗', error);
+                    console.error(`聊天室錯誤 [${error.code}]: ${error.message}`, error);
                 } catch {
                     console.error('聊天室訊息儲存失敗', frame.body);
                 }

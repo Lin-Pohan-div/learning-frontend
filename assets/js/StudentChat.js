@@ -191,7 +191,7 @@ function renderChatList(keyword) {
 // ── 渲染訊息 ──────────────────────────────
 
 function buildMsgHtml(m, conv) {
-    const isMe = m.role === 1;
+    const isMe = m.role === 1 || m.role === 'student';  // 後端回傳 role=1，本地送出用 'student'
     const timeStr = formatTime(m.createdAt);
     let content = '';
 
@@ -374,7 +374,7 @@ function subscribeOrders(orderIds) {
             frame => {
                 try {
                     const error = JSON.parse(frame.body);
-                    console.error('訊息儲存失敗', error);
+                    console.error(`聊天室錯誤 [${error.code}]: ${error.message}`, error);
                 } catch {
                     console.error('訊息儲存失敗', frame.body);
                 }
@@ -400,7 +400,7 @@ async function sendMessage() {
 
     const payload = {
         bookingId: actualBookingId,
-        role: 1,
+        role: 'student',
         messageType: 1,
         message: text,
         mediaUrl: null
