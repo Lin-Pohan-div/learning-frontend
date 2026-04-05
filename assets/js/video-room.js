@@ -506,8 +506,8 @@ async function checkPeerViaRest() {
 
 function updateRoomStatusBadge(state) {
     const badge  = document.getElementById('room-status-badge');
-    const icons  = { WAITING: '⏳', ACTIVE: '🟢', ENDED: '🔴' };
-    const labels = { WAITING: '等待對方加入...', ACTIVE: '課程進行中', ENDED: '課程已結束' };
+    const icons  = { NOT_STARTED: '🔵', WAITING: '⏳', ACTIVE: '🟢', ENDED: '🔴' };
+    const labels = { NOT_STARTED: '尚未開始', WAITING: '等待對方加入...', ACTIVE: '課程進行中', ENDED: '課程已結束' };
     badge.className = 'room-status-badge ' + (state || 'waiting').toLowerCase();
     document.getElementById('status-icon').textContent = icons[state]  || '⏳';
     document.getElementById('status-text').textContent = labels[state] || state;
