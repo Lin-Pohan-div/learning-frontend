@@ -1,0 +1,13 @@
+flowchart TD
+    REQ[HTTP 請求] --> JF[JwtFilter\n讀取 Authorization: Bearer]
+    JF -->|驗證失敗| E401[401 Unauthorized]
+    JF -->|驗證成功| SC[SecurityConfig\n角色路由檢查]
+    SC -->|角色不符| E403[403 Forbidden]
+    SC -->|通過| CTRL[Controller]
+    CTRL --> SL{slotLocked\n時段重複檢查}
+    SL -->|已鎖定| EDUP[400 時段衝突]
+    SL -->|未鎖定| SVC[Service 執行業務邏輯]
+
+    WS[WebSocket STOMP CONNECT] --> WSAI[WebSocketAuthInterceptor\n驗證 JWT header]
+    WSAI -->|失敗| WSD[拒絕連線]
+    WSAI -->|成功| WSSUB[允許訂閱 /topic/...]

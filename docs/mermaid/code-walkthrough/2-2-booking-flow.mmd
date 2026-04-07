@@ -1,0 +1,13 @@
+sequenceDiagram
+    participant S as 學生
+    participant UI as 前端（booking.js）
+    participant API as 後端 API
+    S->>UI: 選擇課程與時段
+    UI->>API: GET /api/view/teacher_schedule/{tutorId}
+    API-->>UI: 7×13 可用時段矩陣
+    UI->>API: GET /api/users/me（確認點數）
+    API-->>UI: wallet 餘額
+    S->>UI: 確認購買
+    UI->>API: POST /api/shop/purchase
+    API->>API: 扣除 wallet / 建立 Order / 建立 Booking(slotLocked=true) / 寫 WalletLog(type=2)
+    API-->>UI: 購買成功

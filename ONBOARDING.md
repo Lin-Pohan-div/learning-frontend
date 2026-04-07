@@ -22,6 +22,8 @@
 14. [已知命名陷阱](#14-已知命名陷阱)
 15. [延伸閱讀](#15-延伸閱讀)
 
+> 📌 **後端開發人員**：請直接閱讀 [BACKEND_ONBOARDING.md](./BACKEND_ONBOARDING.md)，涵蓋 Spring Boot 環境設置、目錄結構、API 速查、Entity 欄位、安全層說明。
+
 ---
 
 ## 1. 專案簡介
@@ -477,11 +479,11 @@ imgEl.src = thumbnailUrl;
 
 | 文件 | 說明 |
 |------|------|
+| [BACKEND_ONBOARDING.md](./BACKEND_ONBOARDING.md) | **後端入門指南**（Spring Boot 環境、目錄結構、API 速查、Entity、安全層、已知 TODO） |
 | [CODE_WALKTHROUGH.md](./CODE_WALKTHROUGH.md) | 完整的前後端模組說明、所有 API 路徑、Entity 欄位、業務邏輯流程 |
 | [README](./README) | 舊版說明（含 Axios GET/POST 程式碼範例） |
 | [PRODUCT_FEATURES.md](./PRODUCT_FEATURES.md) | 產品功能概述（適合理解使用者情境） |
 | [PRESENTATION_OUTLINE.md](./PRESENTATION_OUTLINE.md) | 簡報大綱（了解專案定位） |
-| [proposal.md](./proposal.md) | 專案提案（原始需求） |
 
 ---
 

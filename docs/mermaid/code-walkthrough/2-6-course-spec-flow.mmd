@@ -1,0 +1,11 @@
+flowchart TD
+    REQ["GET /api/view/courses\n?teacherName&subject&price&weekday&timeSlot"] --> SPEC[CourseSpec\nJPA Specification]
+    SPEC --> C1[isActive = true]
+    SPEC --> C2[老師姓名 LIKE\nJOIN tutor→user]
+    SPEC --> C3[課程名稱 LIKE]
+    SPEC --> C4[科目代碼 or 大類範圍\n+9 區間]
+    SPEC --> C5[價格區間\nmin-max 解析]
+    SPEC --> C6[週幾 + 時段\nJOIN tutor_schedules\n早9-12 / 午13-16 / 晚17-20]
+    C1 & C2 & C3 & C4 & C5 & C6 --> AND[AND 組合\n+ distinct=true]
+    AND --> DB[(Course DB)]
+    DB --> PAGE[Page 分頁回傳]

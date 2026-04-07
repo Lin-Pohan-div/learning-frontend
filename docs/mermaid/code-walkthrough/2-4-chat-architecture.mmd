@@ -1,0 +1,19 @@
+flowchart LR
+    subgraph 前端
+        SC[StudentChat.js]
+        TC[TeacherChat.js]
+        VR[video-room.js]
+    end
+    subgraph 後端
+        CM[ChatMessageController\nREST /api/chatMessage]
+        VRC[VideoRoomController\nSTOMP /app/...]
+        FSS[FileStorageService\nuploads/]
+    end
+
+    SC -->|HTTP POST/GET| CM
+    TC -->|HTTP POST/GET| CM
+    TC -->|STOMP subscribe\n/topic/chat/{bookingId}| VRC
+    VR -->|STOMP publish\n/app/signal,chat,event| VRC
+    CM --> FSS
+    VRC -->|broadcast| TC
+    VRC -->|broadcast| VR

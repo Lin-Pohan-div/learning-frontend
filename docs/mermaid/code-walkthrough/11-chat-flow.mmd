@@ -1,0 +1,96 @@
+flowchart TD
+    subgraph 初始化["初始化"]
+        A([使用者進入聊天頁]) --> B{JWT 有效?}
+        B -- 否 --> C([導向 login.html])
+        B -- 是 --> D[載入對話列表]
+    end
+
+    subgraph 載入對話列表["載入對話列表"]
+        D --> E_S["GET /api/chatMessage/conversations\n（學生端）"]
+        D --> E_T["GET /api/chatMessage/conversations/tutor/{tutorId}\n（老師端）"]
+        E_S --> F[依老師分組 conversations]
+        E_T --> F2[依學生分組 conversations]
+        F --> G[renderChatList]
+        F2 --> G
+        G --> H{URL 有 bookingId?}
+        H -- 是 --> I[selectConversation bookingId]
+        H -- 否 --> J[selectConversation 第一筆]
+    end
+
+    subgraph 選取對話["選取對話 selectConversation"]
+        I & J --> K[更新 header 頭像/名稱/標籤]
+        K --> L{有多筆 orderIds?}
+        L -- 是 --> M["GET /api/chatMessage/orders?ids={id1,id2,...}"]
+        L -- 否 --> N["GET /api/chatMessage/booking/{bookingId}"]
+        M & N --> O[renderMessages 渲染訊息列表]
+        O --> P[connectWebSocket orderIds]
+    end
+
+    subgraph 渲染訊息["renderMessages / buildMsgHtml"]
+        O --> Q{messageType}
+        Q -- 1 TEXT --> R[顯示文字氣泡]
+        Q -- 2 STICKER --> R
+        Q -- 3 VOICE --> S["&lt;audio controls&gt;"]
+        Q -- 4 IMAGE --> T["&lt;img&gt; 最大寬度 200px"]
+        Q -- 5 VIDEO --> U["&lt;video controls&gt;"]
+        Q -- 6 FILE --> V["📎 下載按鈕 / &lt;a download&gt;"]
+    end
+
+    subgraph WebSocket["WebSocket STOMP 連線"]
+        P --> W{stompClient 已連線?}
+        W -- 是 --> X[直接 subscribeOrders]
+        W -- 否 --> Y[stompClient.activate 建立新連線]
+        Y --> Z[onConnect → subscribeOrders]
+        X & Z --> AA["訂閱 /topic/room/{orderId}/chat"]
+        AA --> AB["訂閱 /topic/room/{orderId}/errors"]
+    end
+
+    subgraph 發送文字訊息["發送文字訊息 sendMessage"]
+        BA([使用者輸入文字 → 按送出]) --> BB[appendMessage 即時顯示]
+        BB --> BC{STOMP 已連線?}
+        BC -- 是 --> BD["publish /app/chat/{actualBookingId}"]
+        BC -- 否 --> BE["POST /api/chatMessage（HTTP fallback）"]
+        BD & BE --> BF{成功?}
+        BF -- 否 --> BG[還原輸入框 / alert 錯誤]
+    end
+
+    subgraph 上傳媒體檔案["上傳媒體檔案 uploadFile"]
+        CA([使用者選取檔案]) --> CB[detectLocalType 判斷 MIME]
+        CB --> CC[createObjectURL 本地預覽]
+        CC --> CD["POST /api/chatMessage/upload FormData"]
+        CD --> CE{成功?}
+        CE -- 是 --> CF[移除預覽 → appendMessage 最終訊息]
+        CE -- 否 --> CG[移除預覽 / alert 錯誤]
+    end
+
+    subgraph 下載檔案["下載檔案 downloadFile"]
+        DA([點擊 📎 檔案按鈕]) --> DB["GET /api/chatMessage/download/{storedName}"]
+        DB --> DC[Blob → createObjectURL]
+        DC --> DD[模擬 &lt;a&gt; click → 瀏覽器下載]
+        DD --> DE[revokeObjectURL 釋放記憶體]
+    end
+
+    subgraph 即時接收訊息["即時接收訊息（WebSocket 推播）"]
+        EA["/topic/room/{orderId}/chat"] --> EB{role 是自己?}
+        EB -- 否 --> EC[appendMessage]
+        EB -- 是 --> ED[忽略，避免重複顯示]
+        EC --> EE[更新 lastMessage 及側邊欄]
+        EF["/topic/room/{orderId}/errors"] --> EG[console.error 記錄錯誤]
+    end
+
+    subgraph 搜尋對話["搜尋對話列表"]
+        FA([searchInput 輸入關鍵字]) --> FB[renderChatList keyword]
+        FB --> FC[過濾 participantName / subject]
+        FC --> GG[重新渲染 chatList]
+    end
+
+    style 初始化 fill:#f0f4ff,stroke:#6b7280
+    style 載入對話列表 fill:#f0fdf4,stroke:#6b7280
+    style 選取對話 fill:#fefce8,stroke:#6b7280
+    style 渲染訊息 fill:#fff7ed,stroke:#6b7280
+    style WebSocket fill:#fdf4ff,stroke:#6b7280
+    style 發送文字訊息 fill:#f0f9ff,stroke:#6b7280
+    style 上傳媒體檔案 fill:#fff1f2,stroke:#6b7280
+    style 下載檔案 fill:#f5f3ff,stroke:#6b7280
+    style 即時接收訊息 fill:#ecfdf5,stroke:#6b7280
+    style 搜尋對話 fill:#fffbeb,stroke:#6b7280

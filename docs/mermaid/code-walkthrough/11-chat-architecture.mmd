@@ -1,0 +1,85 @@
+graph TB
+    subgraph 前端["前端（Browser）"]
+        subgraph StudentChat["StudentChat.html / StudentChat.js"]
+            SC_LIST[對話列表\nconversations]
+            SC_MSG[訊息區\nchatMessages]
+            SC_INPUT[輸入列\nmsgInput / fileInput]
+        end
+        subgraph TeacherChat["TeacherChat.html / TeacherChat.js"]
+            TC_LIST[對話列表\nconversations]
+            TC_MSG[訊息區\nchatMessages]
+            TC_INPUT[輸入列\nmsgInput / fileInput]
+        end
+        STOMP_CLIENT["STOMP Client\n(SockJS + @stomp/stompjs)"]
+    end
+
+    subgraph 後端["後端（Spring Boot）"]
+        subgraph REST_API["REST Controller\nChatMessageController\n/api/chatMessage"]
+            R1["GET /conversations\n學生對話列表"]
+            R2["GET /conversations/tutor/{id}\n老師對話列表"]
+            R3["GET /booking/{bookingId}\n單筆訊息"]
+            R4["GET /orders?ids=…\n批次訊息"]
+            R5["POST /\n傳送文字"]
+            R6["POST /upload\n上傳媒體"]
+            R7["GET /download/{filename}\n下載檔案"]
+            R8["PUT /{id}  DELETE /{id}\n修改 / 刪除"]
+        end
+        subgraph WS_CTRL["WebSocket Controller\nVideoRoomController\n/app"]
+            WS1["/app/chat/{bookingId}\n送出訊息（持久化 + broadcast）"]
+        end
+        subgraph BROKER["STOMP Message Broker"]
+            TOPIC["/topic/room/{orderId}/chat\n即時推播"]
+            ERR_TOPIC["/topic/room/{orderId}/errors\n錯誤通知"]
+        end
+        subgraph SERVICES["Service Layer"]
+            SVC1["ChatMessageService\nCRUD / 分組查詢"]
+            SVC2["FileStorageService\nstore / load / detectMessageType"]
+        end
+        subgraph STORAGE["儲存層"]
+            DB[("資料庫\nChatMessage\norderId / role\nmessageType / message\nmediaUrl / createdAt")]
+            FS[("檔案系統\n/uploads/**\n(WebMvcConfig 靜態對應)")]
+        end
+        LP["LinkPreviewController\n/api/linkPreview\nGET /?url=…"]
+    end
+
+    SC_LIST -- "GET /conversations" --> R1
+    SC_MSG -- "GET /booking or /orders" --> R3
+    SC_MSG -- "GET /orders?ids" --> R4
+    SC_INPUT -- "POST /" --> R5
+    SC_INPUT -- "POST /upload" --> R6
+    SC_MSG -- "GET /download" --> R7
+
+    TC_LIST -- "GET /conversations/tutor/{id}" --> R2
+    TC_MSG -- "GET /orders?ids" --> R4
+    TC_INPUT -- "POST /upload" --> R6
+    TC_MSG -- "GET /download" --> R7
+
+    SC_INPUT -. "STOMP publish\n/app/chat/{bookingId}" .-> WS1
+    TC_INPUT -. "STOMP publish\n/app/chat/{bookingId}" .-> WS1
+
+    WS1 --> TOPIC
+    WS1 --> ERR_TOPIC
+    TOPIC -. "subscribe\n即時收訊" .-> STOMP_CLIENT
+    ERR_TOPIC -. "subscribe\n錯誤通知" .-> STOMP_CLIENT
+    STOMP_CLIENT -. appendMessage .-> SC_MSG
+    STOMP_CLIENT -. appendMessage .-> TC_MSG
+
+    R1 & R2 & R3 & R4 & R5 & R8 --> SVC1
+    R6 & R7 --> SVC2
+    WS1 --> SVC1
+    SVC1 --> DB
+    SVC2 --> FS
+    SVC2 --> DB
+
+    SC_MSG -. "img/video/audio src\n/uploads/**" .-> FS
+    TC_MSG -. "img/video/audio src\n/uploads/**" .-> FS
+
+    style 前端 fill:#e0f2fe,stroke:#0284c7
+    style 後端 fill:#f0fdf4,stroke:#16a34a
+    style StudentChat fill:#bfdbfe,stroke:#3b82f6
+    style TeacherChat fill:#bbf7d0,stroke:#22c55e
+    style REST_API fill:#fef9c3,stroke:#ca8a04
+    style WS_CTRL fill:#fce7f3,stroke:#db2777
+    style BROKER fill:#ede9fe,stroke:#7c3aed
+    style SERVICES fill:#fff7ed,stroke:#ea580c
+    style STORAGE fill:#f1f5f9,stroke:#64748b

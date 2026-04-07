@@ -1,0 +1,16 @@
+flowchart TD
+    subgraph 來源
+        ECP[ECPay 付款成功\ncallback]
+        BUY[購買課程\nPOST /api/shop/purchase]
+        EARN[授課收入\n課堂完成後]
+        CANCEL[取消預約 / 整筆退款]
+        WD[提現\nPOST /api/wallet/withdraw]
+    end
+    ECP -->|type=1 儲值| W[(WalletLog\n+ wallet 增加)]
+    BUY -->|type=2 購課| W
+    EARN -->|type=3 授課收入| W
+    CANCEL -->|type=4 退款| W
+    WD -->|type=5 提現| W
+    W --> CHK{merchantTradeNo\n唯一性檢查}
+    CHK -->|已存在| SKIP[跳過，防重複]
+    CHK -->|不存在| WRITE[寫入並更新 wallet]

@@ -1,0 +1,30 @@
+flowchart TD
+    subgraph 老師端
+        T1[進入視訊房間] --> T2[getUserMedia\n取得鏡頭/麥克風]
+        T2 --> T3[建立 RTCPeerConnection\nICE Server 設定]
+        T3 --> T4[createOffer\nsetLocalDescription]
+        T4 --> T5[publish STOMP\n/app/signal/{bookingId}\ntype: offer]
+        T8[收到 answer] --> T9[setRemoteDescription]
+        T10[收到 ICE candidate] --> T11[addIceCandidate]
+    end
+
+    subgraph STOMP Broker
+        B1{轉發信令}
+    end
+
+    subgraph 學生端
+        S1[進入視訊房間] --> S2[getUserMedia\n取得鏡頭/麥克風]
+        S2 --> S3[建立 RTCPeerConnection\nICE Server 設定]
+        S4[收到 offer] --> S5[setRemoteDescription]
+        S5 --> S6[createAnswer\nsetLocalDescription]
+        S6 --> S7[publish STOMP\ntype: answer]
+        S8[收到 ICE candidate] --> S9[addIceCandidate]
+    end
+
+    T5 -->|offer| B1
+    B1 -->|轉發 offer| S4
+    S7 -->|answer| B1
+    B1 -->|轉發 answer| T8
+    T9 & S9 --> P2P[P2P 媒體串流建立\nSTUN/TURN 協助 NAT 穿透]
+
+    T11 <-->|ICE candidates 雙向交換| S8

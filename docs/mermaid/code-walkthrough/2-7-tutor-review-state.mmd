@@ -1,0 +1,6 @@
+stateDiagram-v2
+    [*] --> 待審核 : POST /api/tutor/become（status=1）
+    待審核 --> 已通過 : ADMIN PATCH status=2\nnav 顯示「老師後台」
+    待審核 --> 已停權 : ADMIN PATCH status=3\nnav 顯示「已停權」
+    已通過 --> 已停權 : ADMIN PATCH status=3
+    已停權 --> 已通過 : ADMIN PATCH status=2（復權）

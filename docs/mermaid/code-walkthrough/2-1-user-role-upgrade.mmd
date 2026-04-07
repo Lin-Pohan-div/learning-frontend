@@ -1,0 +1,6 @@
+flowchart LR
+    REG([使用者註冊]) --> S[STUDENT]
+    S -->|POST /api/tutor/become| P{status=1\n待審核}
+    P -->|ADMIN 核准\nPATCH status=2| T[TUTOR]
+    P -->|ADMIN 停權\nPATCH status=3| BAN[已停權]
+    T -.->|系統直接設定| A[ADMIN]

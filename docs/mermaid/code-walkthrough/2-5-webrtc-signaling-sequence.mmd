@@ -1,0 +1,19 @@
+sequenceDiagram
+    participant T as 老師（Offerer）
+    participant B as STOMP Broker
+    participant S as 學生（Answerer）
+
+    T->>T: getUserMedia() + createOffer()
+    T->>B: publish /app/signal/{bookingId} {type:offer, sdp}
+    B->>S: 轉發 offer
+    S->>S: setRemoteDescription(offer)
+    S->>S: createAnswer() + setLocalDescription()
+    S->>B: publish {type:answer, sdp}
+    B->>T: 轉發 answer
+    T->>T: setRemoteDescription(answer)
+    loop ICE Candidates
+        T->>B: publish {type:candidate}
+        B->>S: 轉發
+        S->>T: publish {type:candidate}（反向）
+    end
+    T-->>S: P2P 媒體串流建立
