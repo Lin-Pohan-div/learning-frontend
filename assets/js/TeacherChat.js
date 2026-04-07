@@ -22,8 +22,7 @@ let tutorId = null;
 let conversations = [];      // { bookingId (=orderId), bookingRecordId, bookingIds[], bookingRecordIds[], participantId, participantName, avatar, subject, lastMessage, time, unread }
 let currentStudentId = null; // 🆕 改用 studentId（原本是 currentBookingId）
 let stompClient = null;
-let stompSubscription = null;
-let stompErrorSubscription = null;
+let stompSubscriptions = [];
 
 // ── Helpers ──────────────────────────────
 
@@ -127,36 +126,19 @@ async function loadConversations() {
             { headers: authHeaders() }
         );
 
-        // 後端回傳 flat List<ConversationDTO>: { orderId, studentId, studentName, courseId, courseName, lastMessage, lastMessageAt }
-        // 依 studentId 分組，將同一學生的多筆訂單合併為一個對話
-        const groupMap = new Map();
-        for (const conv of res.data) {
-            const key = conv.studentId;
-            if (!groupMap.has(key)) {
-                groupMap.set(key, {
-                    studentId: conv.studentId,
-                    studentName: conv.studentName,
-                    studentAvatar: '/assets/img/student.png',
-                    orderIds: [conv.orderId],
-                    courses: conv.courseName ? [conv.courseName] : [],
-                    lastMessage: conv.lastMessage || '',
-                    lastMessageTime: conv.lastMessageAt || null,
-                    unreadCount: 0
-                });
-            } else {
-                const g = groupMap.get(key);
-                if (!g.orderIds.includes(conv.orderId)) g.orderIds.push(conv.orderId);
-                if (conv.courseName && !g.courses.includes(conv.courseName)) {
-                    g.courses.push(conv.courseName);
-                }
-                if (conv.lastMessageAt && (!g.lastMessageTime || conv.lastMessageAt > g.lastMessageTime)) {
-                    g.lastMessage = conv.lastMessage || '';
-                    g.lastMessageTime = conv.lastMessageAt;
-                }
-            }
-        }
+        // 後端已依 studentId 分組回傳 ConversationDTO: { studentId, studentName, studentAvatar, orderIds[], courses[], lastMessage, lastMessageTime }
+        conversations = (res.data || []).map(conv => ({
+            studentId: conv.studentId,
+            studentName: conv.studentName || '未命名',
+            studentAvatar: convertGoogleDriveUrl(conv.studentAvatar) || '/assets/img/student.png',
+            orderIds: conv.orderIds || [],
+            courses: conv.courses || [],
+            lastMessage: conv.lastMessage || '',
+            lastMessageTime: conv.lastMessageTime || null,
+            unreadCount: conv.unreadCount || 0
+        }));
 
-        conversations = [...groupMap.values()].sort((a, b) => {
+        conversations.sort((a, b) => {
             if (!a.lastMessageTime) return 1;
             if (!b.lastMessageTime) return -1;
             return b.lastMessageTime > a.lastMessageTime ? 1 : -1;
@@ -211,7 +193,7 @@ function renderChatList(filter = '') {
 // ── 渲染訊息 ──────────────────────────────
 
 function buildMsgHtml(m, conv) {
-    const isMe = m.role === 'tutor';  // role = 'tutor' 是老師
+    const isMe = m.role === 2 || m.role === 'tutor';  // 後端回傳 role=2 (tutor)，本地送出用 'tutor'
     const timeStr = formatTime(m.createdAt);
     let content = '';
 
@@ -272,7 +254,7 @@ function appendMessage(m) {
     scrollToBottom();
 
     conv.lastMessage = m.message || '';
-    conv.time = formatTime(m.createdAt);
+    conv.lastMessageTime = m.createdAt;
     renderChatList(document.getElementById('searchInput').value);
 }
 
@@ -308,25 +290,21 @@ async function selectConversation(studentId) {
         const messages = res.data;
         renderMessages(messages, conv);
         scrollToBottom();
-        connectWebSocket(conv.orderIds[0]);
+        connectWebSocket(conv.orderIds);
     } catch (err) {
         console.error('載入訊息失敗', err);
     }
 }
 
-function connectWebSocket(bookingId) {
-    if (stompSubscription) {
-        stompSubscription.unsubscribe();
-        stompSubscription = null;
-    }
-
-    if (stompErrorSubscription) {
-        stompErrorSubscription.unsubscribe();
-        stompErrorSubscription = null;
-    }
+function connectWebSocket(orderIds) {
+    // 取消所有現有訂閱
+    stompSubscriptions.forEach(sub => {
+        try { sub.unsubscribe(); } catch {}
+    });
+    stompSubscriptions = [];
 
     if (isStompConnected()) {
-        subscribeBooking(bookingId);
+        subscribeBooking(orderIds);
         return;
     }
 
@@ -346,7 +324,7 @@ function connectWebSocket(bookingId) {
             webSocketFactory: () => new SockJS(`${WS_BASE_URL}/ws`),
             connectHeaders: { Authorization: 'Bearer ' + jwt },
             reconnectDelay: 5000,
-            onConnect: () => subscribeBooking(bookingId),
+            onConnect: () => subscribeBooking(orderIds),
             onStompError: err => console.error('WebSocket 連線失敗', err)
         });
         stompClient.activate();
@@ -359,7 +337,7 @@ function connectWebSocket(bookingId) {
         stompClient.debug = null;
         stompClient.connect(
             { Authorization: 'Bearer ' + jwt },
-            () => subscribeBooking(bookingId),
+            () => subscribeBooking(orderIds),
             err => console.error('WebSocket 連線失敗', err)
         );
         return;
@@ -375,29 +353,33 @@ function isStompConnected() {
     return false;
 }
 
-function subscribeBooking(bookingId) {
-    stompSubscription = stompClient.subscribe(
-        `/topic/room/${bookingId}/chat`,
-        frame => {
-            const msg = JSON.parse(frame.body);
-            // 避免重複顯示自己送出的訊息
-            if (msg.role !== 'tutor') {
-                appendMessage(msg);
+function subscribeBooking(orderIds) {
+    for (const orderId of orderIds) {
+        const chatSub = stompClient.subscribe(
+            `/topic/room/${orderId}/chat`,
+            frame => {
+                const msg = JSON.parse(frame.body);
+                // 避免重複顯示自己送出的訊息（後端回傳 role=2 代表 tutor）
+                if (msg.role !== 2) {
+                    appendMessage(msg);
+                }
             }
-        }
-    );
+        );
+        stompSubscriptions.push(chatSub);
 
-    stompErrorSubscription = stompClient.subscribe(
-        `/topic/room/${bookingId}/errors`,
-        frame => {
-            try {
-                const error = JSON.parse(frame.body);
-                console.error('聊天室訊息儲存失敗', error);
-            } catch {
-                console.error('聊天室訊息儲存失敗', frame.body);
+        const errSub = stompClient.subscribe(
+            `/topic/room/${orderId}/errors`,
+            frame => {
+                try {
+                    const error = JSON.parse(frame.body);
+                    console.error(`聊天室錯誤 [${error.code}]: ${error.message}`, error);
+                } catch {
+                    console.error('聊天室訊息儲存失敗', frame.body);
+                }
             }
-        }
-    );
+        );
+        stompSubscriptions.push(errSub);
+    }
 }
 
 // ── 傳送訊息 ──────────────────────────────

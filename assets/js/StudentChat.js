@@ -1,12 +1,20 @@
 // ==========================================
-// 學生訊息中心 - 純 HTTP 版本（最終版）
-// 移除所有 WebSocket 相關代碼
+// 學生訊息中心 (StudentChat.js)
+// REST API + WebSocket (STOMP)
 // ==========================================
 
 const BASE_URL = '';
 
+// WebSocket 基礎 URL
+const WS_BASE_URL = (() => {
+    const loc = window.location;
+    return `${loc.protocol}//${loc.host}`;
+})();
+
 let conversations = [];
 let currentBookingId = null;
+let stompClient = null;
+let stompSubscriptions = [];
 
 // ── Helpers ──────────────────────────────
 
@@ -183,7 +191,7 @@ function renderChatList(keyword) {
 // ── 渲染訊息 ──────────────────────────────
 
 function buildMsgHtml(m, conv) {
-    const isMe = m.role === 1;
+    const isMe = m.role === 1 || m.role === 'student';  // 後端回傳 role=1，本地送出用 'student'
     const timeStr = formatTime(m.createdAt);
     let content = '';
 
@@ -278,12 +286,105 @@ async function selectConversation(bookingId) {
         renderMessages(messages, conv);
         conv.unread = 0;
         renderChatList(document.getElementById('searchInput').value);
+
+        // 建立 WebSocket 訂閱以即時接收老師訊息
+        const orderIds = (conv.bookingIds && conv.bookingIds.length > 0)
+            ? conv.bookingIds : [bookingId];
+        connectWebSocket(orderIds);
     } catch (err) {
         console.error('載入訊息失敗', err);
     }
 }
 
-// ── 傳送訊息（純 HTTP）──────────────────────────────
+// ── WebSocket (STOMP) ──────────────────────────────
+
+function connectWebSocket(orderIds) {
+    // 取消所有現有訂閱
+    stompSubscriptions.forEach(sub => {
+        try { sub.unsubscribe(); } catch {}
+    });
+    stompSubscriptions = [];
+
+    if (isStompConnected()) {
+        subscribeOrders(orderIds);
+        return;
+    }
+
+    if (stompClient) {
+        try {
+            if (typeof stompClient.deactivate === 'function') {
+                stompClient.deactivate();
+            } else if (typeof stompClient.disconnect === 'function') {
+                stompClient.disconnect();
+            }
+        } catch {}
+    }
+
+    const jwt = getJwt();
+    if (window.StompJs && window.StompJs.Client) {
+        stompClient = new window.StompJs.Client({
+            webSocketFactory: () => new SockJS(`${WS_BASE_URL}/ws`),
+            connectHeaders: { Authorization: 'Bearer ' + jwt },
+            reconnectDelay: 5000,
+            onConnect: () => subscribeOrders(orderIds),
+            onStompError: err => console.error('WebSocket 連線失敗', err)
+        });
+        stompClient.activate();
+        return;
+    }
+
+    if (window.Stomp && typeof window.Stomp.over === 'function') {
+        const socket = new SockJS(`${WS_BASE_URL}/ws`);
+        stompClient = window.Stomp.over(socket);
+        stompClient.debug = null;
+        stompClient.connect(
+            { Authorization: 'Bearer ' + jwt },
+            () => subscribeOrders(orderIds),
+            err => console.error('WebSocket 連線失敗', err)
+        );
+        return;
+    }
+
+    console.error('找不到 STOMP 客戶端');
+}
+
+function isStompConnected() {
+    if (!stompClient) return false;
+    if (typeof stompClient.connected === 'boolean') return stompClient.connected;
+    if (typeof stompClient.active === 'boolean') return stompClient.active;
+    return false;
+}
+
+function subscribeOrders(orderIds) {
+    for (const orderId of orderIds) {
+        const chatSub = stompClient.subscribe(
+            `/topic/room/${orderId}/chat`,
+            frame => {
+                const msg = JSON.parse(frame.body);
+                // 避免重複顯示自己送出的訊息（後端回傳 role=1 代表 student）
+                if (msg.role !== 1) {
+                    appendMessage(msg);
+                }
+            }
+        );
+        stompSubscriptions.push(chatSub);
+
+        const errSub = stompClient.subscribe(
+            `/topic/room/${orderId}/errors`,
+            frame => {
+                try {
+                    const error = JSON.parse(frame.body);
+                    console.error(`聊天室錯誤 [${error.code}]: ${error.message}`, error);
+                } catch {
+                    console.error('訊息儲存失敗', frame.body);
+                }
+            }
+        );
+        stompSubscriptions.push(errSub);
+    }
+}
+
+// ── 傳送訊息 ──────────────────────────────
 
 async function sendMessage() {
     const input = document.getElementById('msgInput');
@@ -299,7 +400,7 @@ async function sendMessage() {
 
     const payload = {
         bookingId: actualBookingId,
-        role: 1,
+        role: 'student',
         messageType: 1,
         message: text,
         mediaUrl: null
@@ -310,10 +411,22 @@ async function sendMessage() {
     input.value = '';
 
     try {
-        await axios.post(`${BASE_URL}/api/chatMessage`, payload, { 
-            headers: authHeaders() 
-        });
+        if (stompClient && isStompConnected()) {
+            if (typeof stompClient.publish === 'function') {
+                stompClient.publish({
+                    destination: `/app/chat/${actualBookingId}`,
+                    body: JSON.stringify(payload)
+                });
+            } else {
+                stompClient.send(`/app/chat/${actualBookingId}`, {}, JSON.stringify(payload));
+            }
+        } else {
+            await axios.post(`${BASE_URL}/api/chatMessage`, payload, { 
+                headers: authHeaders() 
+            });
+        }
     } catch (err) {
+        input.value = text;
         console.error('傳送訊息失敗', err);
         alert('傳送失敗：' + (err.response?.data?.message || err.message));
     }

@@ -506,8 +506,8 @@ async function checkPeerViaRest() {
 
 function updateRoomStatusBadge(state) {
     const badge  = document.getElementById('room-status-badge');
-    const icons  = { WAITING: '⏳', ACTIVE: '🟢', ENDED: '🔴' };
-    const labels = { WAITING: '等待對方加入...', ACTIVE: '課程進行中', ENDED: '課程已結束' };
+    const icons  = { NOT_STARTED: '🔵', WAITING: '⏳', ACTIVE: '🟢', ENDED: '🔴' };
+    const labels = { NOT_STARTED: '尚未開始', WAITING: '等待對方加入...', ACTIVE: '課程進行中', ENDED: '課程已結束' };
     badge.className = 'room-status-badge ' + (state || 'waiting').toLowerCase();
     document.getElementById('status-icon').textContent = icons[state]  || '⏳';
     document.getElementById('status-text').textContent = labels[state] || state;
@@ -1010,27 +1010,13 @@ async function handleFileUpload(e) {
     formData.append('role',      roleToNumber(userRole));
 
     try {
-        const res = await axios.post(`${API_BASE_URL}/chatMessage/upload`, formData, {
+        await axios.post(`${API_BASE_URL}/chatMessage/upload`, formData, {
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type':  'multipart/form-data'
             }
         });
-        // Send message via STOMP so both parties receive it
-        const mediaUrl = res.data.mediaUrl || '';
-        const msgType  = detectMessageType(file.type);
-        if (isConnected) {
-            stompClient.publish({
-                destination: `/app/chat/${bookingId}`,
-                body: JSON.stringify({
-                    bookingId:   parseInt(bookingId),
-                    role:        userRole,
-                    messageType: msgType,
-                    message:     file.name,
-                    mediaUrl:    mediaUrl
-                })
-            });
-        }
+        // 後端 upload() 已透過 messagingTemplate 廣播，不需再 STOMP publish
     } catch (err) {
         alert('檔案上傳失敗：' + (err.response?.data?.message || err.message));
     } finally {
