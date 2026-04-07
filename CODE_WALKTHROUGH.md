@@ -1353,9 +1353,9 @@ GET /api/feedbacks/lesson/{bookingId} → 查看/編輯課堂回饋
 
 - **`ChatMessageService`** — CRUD、按 bookingId/orderId 查詢、對話分組
 - **`FileStorageService`**
-  - `String store(MultipartFile file)` — 儲存至 `uploads/` 目錄，回傳儲存檔名
-  - `Resource load(String filename)` — 載入檔案供下載
-  - `Integer detectMessageType(String contentType)` — 根據 MIME type 判斷訊息類型
+  - `String store(MultipartFile file)` — 以 UUID 重新命名後寫入 `uploads/` 目錄，回傳相對路徑（格式：`uploads/<uuid>.<ext>`）
+  - `Resource load(String filename)` — 以 `UrlResource` 載入 `uploads/` 目錄下的檔案，供下載 API 回傳
+  - `Integer detectMessageType(String contentType)` — 依 MIME type 對應 messageType 代碼（`image/* → 4`、`audio/* → 3`、`video/* → 5`、其他 → `6`）
 
 #### Entity — `entity/ChatMessage.java`（推測）
 
@@ -1398,7 +1398,11 @@ GET /api/feedbacks/lesson/{bookingId} → 查看/編輯課堂回饋
 | 5 VIDEO | `<video src="${resolveMediaUrl(m.mediaUrl)}" controls>` 最大寬 240px | `loadMediaWithAuth(video, msg.mediaUrl)` → blob URL |
 | 6 FILE | 取 `m.mediaUrl.split('/').pop()` 為 storedName；非 blob 時呼叫 `downloadFile(storedName, originalName)` → `GET /api/chatMessage/download/{storedName}` | `downloadWithAuth(msg.mediaUrl, msg.message)`：Axios blob + `<a download>` 觸發下載 |
 
-**上傳流程（`POST /api/chatMessage/upload`）**
+---
+
+### 檔案上傳、儲存與讀取
+
+#### 後端上傳流程（`POST /api/chatMessage/upload`）
 
 ```
 FormData 欄位：
@@ -1407,13 +1411,106 @@ FormData 欄位：
   role      : 1（學生）| 'tutor'（老師）| number（視訊室）
   message   : ''（後端從 MIME type 自動判斷 messageType 並存入 mediaUrl）
 
-detectMessageType(mimeType)：
-  image/* → 4    audio/* → 3    video/* → 5    其他 → 6
+ChatMessageController.uploadFile()：
+  1. FileStorageService.detectMessageType(file.contentType) → messageType
+  2. FileStorageService.store(file)
+       → 取 originalFilename 副檔名
+       → UUID.randomUUID() + 副檔名 → 儲存檔名（防路徑衝突）
+       → Files.copy(inputStream, uploads/<uuid>.<ext>)
+       → 回傳 "uploads/<uuid>.<ext>"（相對路徑）
+  3. 建立 ChatMessage：
+       orderId     = bookingId 參數
+       role        = 請求中的 role 欄位
+       messageType = detectMessageType 結果
+       message     = 原始檔名（僅 type=6；其他類型為空）
+       mediaUrl    = "uploads/<uuid>.<ext>"
+  4. 存入 DB → 回傳完整 ChatMessage JSON
+```
 
-後端 FileStorageService.store()：
-  → 儲存至 uploads/ 目錄，回傳含 mediaUrl 的 ChatMessage 物件
-  → WebMvcConfig 將 /uploads/** 映射為靜態資源（StudentChat / TeacherChat 直接存取）
-  → video-room.js 透過 toProxyPath() 轉換完整 URL 為 /uploads/... 相對路徑走 Vite proxy
+#### 後端下載端點（`GET /api/chatMessage/download/{filename}`）
+
+```
+ChatMessageController.downloadFile(filename)：
+  → FileStorageService.load(filename)
+       → Path: uploads/ + filename（僅使用檔名，不允許路徑穿越）
+       → new UrlResource(path.toUri())
+       → 若檔案不存在 → 404
+  → ResponseEntity<Resource>
+       Content-Disposition: attachment; filename="<filename>"
+       Content-Type: application/octet-stream
+```
+
+#### 靜態資源映射（`config/WebMvcConfig.java`）
+
+```
+addResourceHandlers：
+  /uploads/**  →  file:uploads/
+```
+
+| 存取路徑 | 說明 | 需要 JWT |
+|----------|------|----------|
+| `GET /uploads/<uuid>.<ext>` | WebMvcConfig 靜態資源直接存取 | ❌ 公開 |
+| `GET /api/chatMessage/download/{filename}` | Controller 端點，可加入鑑權邏輯 | ✅（依 SecurityConfig） |
+
+> ⚠️ 目前 `/uploads/**` 在 `SecurityConfig` 中為 `permitAll()`，知道 UUID 檔名即可匿名存取。視訊教室改走下載 API 並帶 JWT，是更安全的做法。
+
+#### 完整資料流（上傳 → 儲存 → 讀取）
+
+```
+【上傳】
+
+前端選取檔案（<input type="file"> / 錄音 Blob）
+  ↓
+detectLocalType(file.type)                 ← 前端先判斷 messageType（預覽用）
+  ↓
+URL.createObjectURL(file)                  ← blob URL 暫時顯示預覽
+  ↓
+POST /api/chatMessage/upload
+  FormData: { file, bookingId, role, message:'' }
+  ↓
+後端 detectMessageType(contentType)        ← 伺服器最終判斷（以後端為準）
+FileStorageService.store()                 ← UUID 命名，寫入 uploads/
+  ↓
+回傳 ChatMessage { messageType, mediaUrl:"uploads/<uuid>.<ext>", message:原始檔名 }
+  ↓
+前端移除 blob 預覽，改用後端 mediaUrl 重新渲染
+
+【DB 儲存狀態】
+
+ChatMessage.mediaUrl = "uploads/<uuid>.<ext>"   ← 相對路徑，無 host
+ChatMessage.message  = 原始檔名（僅 type=6 有值，供下載時顯示用）
+
+【讀取 — 三條路徑】
+
+路徑 A：StudentChat.js / TeacherChat.js（靜態資源，無需 JWT）
+  resolveMediaUrl(mediaUrl)：
+    if mediaUrl.startsWith('http') || mediaUrl.startsWith('blob:')
+      → 直接使用
+    else
+      → 補前綴 "/" → "/uploads/<uuid>.<ext>"
+  → WebMvcConfig 靜態資源直接提供
+  → <img src> / <audio src> / <video src> 直接掛載
+
+路徑 B：video-room.js（媒體預覽，帶 JWT）
+  toProxyPath(fullUrl)：
+    → 若 mediaUrl 含完整 host → 擷取 /uploads/... 部分
+    → 否則保持 /uploads/<uuid>.<ext> 不變
+  loadMediaWithAuth(element, mediaUrl)：
+    → axios.get(mediaUrl, { responseType:'arraybuffer',
+                             headers:{ Authorization: 'Bearer '+token } })
+    → new Blob([data]) → URL.createObjectURL(blob)
+    → element.src = blobUrl
+
+路徑 C：下載檔案（messageType=6，帶 JWT）
+  StudentChat.js / TeacherChat.js：
+    downloadFile(storedName, originalName)：
+      → GET /api/chatMessage/download/{storedName}（帶 Authorization header）
+      → responseType:'blob' → Blob → URL.createObjectURL
+      → <a href=blobUrl download="originalName">.click()
+  video-room.js：
+    downloadWithAuth(mediaUrl, originalName)：
+      → axios.get(mediaUrl, responseType:'blob', Authorization header)
+      → 同上觸發 <a download>
 ```
 
 ---
@@ -1446,9 +1543,21 @@ buildMsgHtml(m, conv)：
 → 樂觀更新：先呼 appendMessage 再發 HTTP
 
 上傳檔案（uploadFile）：
-→ detectLocalType()：依 MIME 對應 3/4/5/6
-→ 先顯示 blob URL 預覽，再 POST /api/chatMessage/upload（FormData）
-→ 成功後移除預覽、appendMessage 顯示正式結果
+→ detectLocalType(file.type)：
+     image/*  → 4（IMAGE）
+     audio/*  → 3（AUDIO）
+     video/*  → 5（VIDEO）
+     其他     → 6（FILE）
+→ URL.createObjectURL(file) → blob URL → 先呼 appendMessage 顯示暫時預覽
+→ POST /api/chatMessage/upload（FormData: { file, bookingId, role:1, message:'' }）
+→ 成功：移除 blob 預覽節點，用後端回傳的 ChatMessage 重新 appendMessage
+→ 失敗：移除 blob 預覽節點並顯示錯誤提示
+
+下載檔案（downloadFile，messageType=6）：
+→ GET /api/chatMessage/download/{storedName}（帶 Authorization: Bearer {jwt}）
+→ responseType:'blob' → new Blob → URL.createObjectURL
+→ 動態建立 <a href=blobUrl download="originalName"> 並觸發 .click()
+→ 下載完成後 revokeObjectURL 釋放記憶體
 
 注意：StudentChat.js 無 WebSocket，完全依賴 HTTP REST（不即時推播）
 ```
@@ -1484,8 +1593,11 @@ WebSocket 連線（connectWebSocket / subscribeBooking）：
 → 樂觀更新：先 appendMessage，送出失敗時還原 input
 
 上傳檔案（uploadFile）：
-→ POST /api/chatMessage/upload（FormData: file, bookingId, role:'tutor'）
-→ 先顯示 blob URL 預覽，成功後替換為後端回傳的正式訊息
+→ detectLocalType(file.type)：同 StudentChat.js（4/3/5/6）
+→ URL.createObjectURL(file) → blob URL → 先顯示暫時預覽
+→ POST /api/chatMessage/upload（FormData: { file, bookingId:targetOrderId, role:'tutor', message:'' }）
+→ 成功：移除 blob 預覽，用後端回傳的 ChatMessage 呼 appendMessage
+→ 媒體 URL 透過 resolveMediaUrl() 補 "/" 前綴後掛載靜態資源
 ```
 
 ---
@@ -1501,6 +1613,10 @@ WebSocket 連線（connectWebSocket / subscribeBooking）：
 - ⚠️ StudentChat.js 沒有 WebSocket，完全依賴 HTTP REST（不即時推播）
 - ⚠️ TeacherChat.js 有 WebSocket 即時推播，但也有 HTTP fallback
 - ⚠️ `resolveMediaUrl()`（StudentChat/TeacherChat）和 `loadMediaWithAuth()`（video-room.js）存取 mediaUrl 的方式不同
+- ⚠️ `mediaUrl` 在 DB 中儲存為相對路徑（`uploads/<uuid>.<ext>`），不含 host；前端補 `/` 前綴即可對應靜態資源
+- ⚠️ `message` 欄位在 type=6（FILE）時存的是**原始檔名**，下載時須以此作為 `<a download>` 的顯示名稱
+- ⚠️ `/uploads/**` 目前公開存取（無需 JWT）；若需限制，應改走 `GET /api/chatMessage/download/{filename}` 並移除 SecurityConfig 中的 `permitAll()`
+- ⚠️ 後端 `store()` 以 UUID 命名防衝突；前端 `detectLocalType()` 與後端 `detectMessageType()` 判斷邏輯一致，但各自獨立維護，修改時須同步
 
 ---
 
