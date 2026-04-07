@@ -2,6 +2,8 @@
 
 > **後端位址**：`src/main/java/com/learning/api`
 > **前端位址**：`D:/learning-frontend01/learning-frontend/assets/js`
+>
+> 剛加入專案的開發者請先閱讀 [ONBOARDING.md](./ONBOARDING.md)，本文件為深度模組參考。
 
 ---
 
@@ -40,11 +42,10 @@
                      │ HTTP / WebSocket (STOMP)
                      ▼
 ┌──────────────────────────────────────────────────────┐
-│  後端 (Spring Boot 3, Java)                          │
+│  後端 (Spring Boot 4.0.2, Java 21)                    │
 │  SecurityConfig + JwtFilter (認證層)                 │
 │  Controllers → Services → Repositories               │
 │  WebSocket：VideoRoomController / ChatMessageCtrl    │
-│  排程：ScheduledTaskService（每小時自動執行）          │
 └────────────────────┬─────────────────────────────────┘
                      │ JPA / Hibernate
                      ▼
@@ -60,14 +61,60 @@
 
 | 層級 | 技術 |
 |------|------|
-| 後端框架 | Spring Boot 3, Spring Security, Spring Data JPA |
+| 後端框架 | Spring Boot 4.0.2 (Java 21), Spring Security, Spring Data JPA |
 | 認證 | JWT（Bearer Token） |
 | 即時通訊 | Spring WebSocket + STOMP |
-| 排程任務 | Spring `@Scheduled` |
 | 付款 | ECPay（台灣金流） |
 | Email | JavaMailSender |
 | 前端 | Vanilla JS, Axios, Bootstrap 5, Chart.js, Matter.js |
+| 建置工具 | Vite |
+| 樣式 | SCSS（Sass） |
 | 即時視訊 | WebRTC（STUN/TURN + STOMP 信令） |
+
+### 頁面與 JS 對照表
+
+| HTML 頁面 | 對應 JS | 說明 |
+|-----------|---------|------|
+| `index.html` | `index.js` + `matter.js` | 首頁（老師輪播 + 物理動畫） |
+| `login.html` | `login.js` | 登入頁 |
+| `register.html` | `register.js` | 註冊頁 |
+| `registerV2.html` | `registerV2.js` | 註冊頁（含角色選擇） |
+| `explore.html` | `explore.js` | 瀏覽課程 |
+| `booking.html` | `booking.js` | 預約時段 |
+| `become-tutor.html` | `become-tutor.js` | 申請成為老師 |
+| `credits-success.html` | — | ECPay 付款成功頁（靜態） |
+| **學生後台** | | |
+| `student-dashboard.html` | `student-layout.js` + `student-dashboard.js` | 學生儀表板 |
+| `student-courses.html` | `student-layout.js` + `student-courses.js` | 我的課程（含進入視訊教室） |
+| `student-my-courses.html` | `student-layout.js` + `student-courses.js` | 我的課程（另一入口） |
+| `student-learning-records.html` | `student-layout.js` + `lstudent-courses.js` | 學習記錄 |
+| `student-credits.html` | `student-layout.js` + `student-credits.js` | 點數/儲值 |
+| `student-settings.html` | `student-layout.js` + `student-settings.js` | 帳號設定 |
+| `StudentChat.html` | `StudentChat.js` | 學生訊息中心 |
+| `Student-VideoRoom.html` | `video-room.js` | 學生視訊教室 |
+| **老師後台** | | |
+| `teacher-dashboard.html` | `teacher-layout.js` + `teacher-dashboard.js` | 老師儀表板 |
+| `teacher-courses.html` | `teacher-layout.js` + `teacher-courses.js` | 課程管理 |
+| `teacher-schedule.html` | `teacher-layout.js` + `teacher-schedule.js` | 排程管理 |
+| `teacher-income.html` | `teacher-layout.js` + `teacher-income.js` | 收入分析 |
+| `teacher-reviews.html` | `teacher-layout.js` + `teacher-reviews.js` | 評價管理 |
+| `teacher-settings.html` | `teacher-layout.js` + `teacher-settings.js` | 帳號設定 |
+| `teacher-profile.html` | `teacher-profile.js` | 老師個人頁 |
+| `teacher-messages.html` | `TeacherChat.js` | 老師訊息中心 |
+| `teacher-VideoRoom.html` | `video-room.js` | 老師視訊教室 |
+| **管理後台** | | |
+| `admin-dashboard.html` | `admin-dashboard.js` | 管理員後台 |
+
+### 共用基礎設施 JS
+
+| 檔案 | 說明 |
+|------|------|
+| `navbar.js` | 全站共用：`API_BASE_URL`、JWT 解析、角色導航、`showToast()`、`convertGoogleDriveUrl()` |
+| `student-layout.js` | 學生後台共用：JWT 自動注入 axios header、401/403 攔截自動登出、sidebar toggle |
+| `teacher-layout.js` | 老師後台共用：同上，角色為 TUTOR |
+| `matter.js` | 首頁 hero 區域 Matter.js 物理動畫（互動式圖形） |
+| `tokenTest.js` | 開發用 JWT 除錯面板（注入固定位置面板顯示 token） |
+| `student-message.js` | Tailwind CSS 設計配色物件，非頁面邏輯 |
 
 ### 進入點
 
@@ -123,8 +170,6 @@ sequenceDiagram
     participant S as 學生
     participant UI as 前端（booking.js）
     participant API as 後端 API
-    participant SCH as ScheduledTaskService
-
     S->>UI: 選擇課程與時段
     UI->>API: GET /api/view/teacher_schedule/{tutorId}
     API-->>UI: 7×13 可用時段矩陣
@@ -134,9 +179,6 @@ sequenceDiagram
     UI->>API: POST /api/shop/purchase
     API->>API: 扣除 wallet / 建立 Order / 建立 Booking(slotLocked=true) / 寫 WalletLog(type=2)
     API-->>UI: 購買成功
-    Note over SCH: 每 1 小時自動執行
-    SCH->>API: 查詢時間已過 status=1 的 Booking
-    SCH->>API: 計算老師收入（100% or 80%）/ 寫 WalletLog(type=3) / Booking status→2
 ```
 
 ```
@@ -161,13 +203,6 @@ sequenceDiagram
         4. 寫入 WalletLog（transactionType=2 購課）
         5. 觸發 EmailService 寄送預約確認信
 
-⑤ 課後自動撥款（ScheduledTaskService，每 1 小時）
-      → 找出時間已過且 status=1 的 Booking
-      → 體驗課（isExperienced=true）：老師拿 unitPrice 100%
-      → 正式課（isExperienced=false）：老師拿 unitPrice × 80%
-      → 防重複：merchantTradeNo="TUTOR_EARN_{bookingId}" 唯一性檢查
-      → Booking status 1 → 2（已完成）
-      → 寫入 WalletLog（transactionType=3 授課收入）
 ```
 
 ---
@@ -179,13 +214,15 @@ flowchart TD
     subgraph 來源
         ECP[ECPay 付款成功\ncallback]
         BUY[購買課程\nPOST /api/shop/purchase]
-        SCH[每小時排程\nScheduledTaskService]
+        EARN[授課收入\n課堂完成後]
         CANCEL[取消預約 / 整筆退款]
+        WD[提現\nPOST /api/wallet/withdraw]
     end
     ECP -->|type=1 儲值| W[(WalletLog\n+ wallet 增加)]
     BUY -->|type=2 購課| W
-    SCH -->|type=3 授課收入| W
+    EARN -->|type=3 授課收入| W
     CANCEL -->|type=4 退款| W
+    WD -->|type=5 提現| W
     W --> CHK{merchantTradeNo\n唯一性檢查}
     CHK -->|已存在| SKIP[跳過，防重複]
     CHK -->|不存在| WRITE[寫入並更新 wallet]
@@ -197,8 +234,9 @@ flowchart TD
 |-----------------|------|----------|
 | 1 | 儲值 | ECPay 付款成功 callback |
 | 2 | 購課扣款 | `POST /api/shop/purchase` |
-| 3 | 授課收入 | 每小時排程自動撥款 |
+| 3 | 授課收入 | 老師完成課堂後的收入 |
 | 4 | 退款 | 學生取消預約 / 整筆退款 |
+| 5 | 提現 | 老師提領至銀行帳戶 `POST /api/wallet/withdraw` |
 
 > `merchantTradeNo` 欄位設計為唯一鍵，防止網路重試或排程重跑造成重複入帳。
 
@@ -484,6 +522,7 @@ POST /api/auth/registerV2（含角色 radio 選擇）
 - JWT 解析：決定 navbar 顯示登入/登出/角色入口
 - `navLogout()` — 清除 localStorage，跳回首頁
 - `showToast(msg, type)` — 全站 Toast 通知函數
+- `convertGoogleDriveUrl(url)` — 將 Google Drive 分享連結轉換為可直接嵌入的縮圖 URL（`/uc?export=view&id=` 格式）
 
 ---
 
@@ -508,6 +547,20 @@ JwtFilter → JwtService.email(token) → 查 DB 取 User → 設定 SecurityCon
     ↓
 Controller 方法執行
 ```
+
+---
+
+### 🚀 新人上手指南
+
+**優先閱讀**
+1. `security/SecurityConfig.java` — 路由權限規則，新增 API 時必須在此放行
+2. `security/JwtFilter.java` + `JwtService.java` — JWT 驗證流程
+3. `assets/js/login.js` — 前端登入流程與 localStorage 儲存
+
+**常見踩坑點**
+- ⚠️ SecurityConfig 的路由匹配順序很重要，新端點若忘記加入 `permitAll()` 會收到 403
+- ⚠️ JWT payload 結構（userId, name, role）影響所有前端頁面的 localStorage 解析
+- ⚠️ `navbar.js` 的 `convertGoogleDriveUrl()` 全站共用，修改會影響所有頁面頭像顯示
 
 ---
 
@@ -567,8 +620,26 @@ Controller 方法執行
 
 #### `teacher-settings.js`
 
-- 涵蓋使用者資料更新 + 老師個人檔案編輯（頭像、自我介紹、學歷、經歷、影片、時間表）
-- 亦呼叫 `TutorProfileController` 和 `TutorUploadController` 的端點（詳見模組 13）
+- 涵蓋使用者基本資料 + 老師個人檔案 + 密碼修改 + 檔案上傳
+- `GET /api/users/me` → 填入姓名、Email 等基本資料
+- `PUT /api/users/me` → 更新姓名
+- `PUT /api/users/me/password` → 修改密碼（需提供舊密碼）
+- `GET /api/tutor/me/profile` → 填入老師資料（頭銜、自我介紹、學歷、經歷）
+- `PUT /api/tutor/me/profile` → 更新老師個人資料
+- 檔案上傳：`POST /api/tutor/me/upload/avatar`（大頭照）、`/certificate1`（證書 1）、`/video1`（影片 1）等
+
+---
+
+### 🚀 新人上手指南
+
+**優先閱讀**
+1. `controller/MeController.java` — 使用者資料 CRUD 端點
+2. `assets/js/student-settings.js` — 學生端設定邏輯
+3. `assets/js/teacher-settings.js` — 老師端設定（混合 user + tutor 邏輯）
+
+**常見踩坑點**
+- ⚠️ `teacher-settings.js` 同時處理使用者基本資料、老師個人檔案、密碼修改和檔案上傳，修改時注意區分 API 端點
+- ⚠️ 密碼修改需提供舊密碼驗證
 
 ---
 
@@ -582,33 +653,16 @@ Controller 方法執行
 
 ### 後端
 
-#### Controller — `controller/TutorApplicationController.java`（路由：`/api/tutor`）
+> ⚠️ **注意**：前端 `become-tutor.js` 呼叫 `POST /api/tutor/become`，`navbar.js` 呼叫 `GET /api/tutor/application/status`，但後端目前**尚無對應 Controller 實作**。老師審核功能由 `AdminController.java` 提供部分端點。
+
+#### Controller — `controller/AdminController.java`（路由：`/api/admin`，需 ADMIN 角色）
 
 | 方法 | 路徑 | 說明 |
 |------|------|------|
-| POST | `/api/tutor/become` | 提交老師申請 |
-| GET | `/api/tutor/application/status` | 查詢申請審核狀態 |
-
-#### Controller — `controller/AdminTutorController.java`（路由：`/api/admin/tutors`）
-
-| 方法 | 路徑 | 說明 |
-|------|------|------|
-| GET | `/api/admin/tutors` | 取得所有老師及審核資訊 |
-| GET | `/api/admin/tutors/pending` | 待審核（status=1） |
-| GET | `/api/admin/tutors/qualified` | 已通過（status=2） |
-| GET | `/api/admin/tutors/suspended` | 已停權（status=3） |
-| GET | `/api/admin/tutors/{tutorId}` | 取得單一老師詳情 |
-| PATCH | `/api/admin/tutors/{tutorId}/status` | 更新審核狀態 |
-| GET | `/api/admin/tutors/counts` | 各狀態老師數量 |
-
-#### Services
-
-- **`TutorApplicationService`**
-  - `void becomeTutor(Long userId, BecomeTutorReq req)` — 建立 Tutor 資料（status=1，待審核）
-  - `Integer getApplicationStatus(Long userId)` — 回傳審核狀態碼
-- **`AdminTutorService`**
-  - `List<AdminTutorReviewDTO> getPendingTutors()` — 取得待審核清單
-  - `Map<String, Object> updateStatus(Long tutorId, Integer status)` — 更新狀態
+| GET | `/api/admin/users` | 查詢所有用戶 |
+| GET | `/api/admin/tutors/pending` | 查詢待審核教師（status=1） |
+| PATCH | `/api/admin/tutors/{id}/approve` | 核准教師（status→2） |
+| PATCH | `/api/admin/tutors/{id}/suspend` | 停權教師（status→3） |
 
 #### Entity — `entity/Tutor.java`
 
@@ -630,16 +684,10 @@ Controller 方法執行
 #### Repository — `repo/TutorRepo.java`
 
 - `List<Tutor> findByStatusOrderByApplyDateAsc(Integer status)`
-- `TutorReviewCountDTO countTutorStatus()` — 自訂查詢，取各狀態數量
 
-#### DTOs
+#### Repository — `repo/TutorRepository.java`
 
-| 類別 | 說明 |
-|------|------|
-| `dto/auth/BecomeTutorReq` | 老師申請表單 |
-| `dto/Admin/AdminTutorReviewDTO` | 管理員審核用老師資訊 |
-| `dto/Admin/AdminTutorReviewReq` | 狀態更新請求 |
-| `dto/Admin/TutorReviewCountDTO` | 各狀態數量統計 |
+- `findAll()` — 供 AdminController 篩選使用
 
 ---
 
@@ -688,6 +736,19 @@ navbar 定期或登入時
     → GET /api/tutor/application/status
     → 動態切換顯示
 ```
+
+---
+
+### 🚀 新人上手指南
+
+**優先閱讀**
+1. `controller/AdminController.java` — 目前唯一的後端審核端點
+2. `assets/js/become-tutor.js` — 前端申請流程
+3. `assets/js/admin-dashboard.js` — 管理員審核 UI
+
+**常見踩坑點**
+- ⚠️ **重要**：前端 `become-tutor.js` 呼叫的 `POST /api/tutor/become` 和 `navbar.js` 呼叫的 `GET /api/tutor/application/status` 在後端尚無實作
+- ⚠️ `admin-dashboard.js` 呼叫了多個不存在的後端 API（`/api/admin/dashboard`、`/api/admin/tutors/counts`），這些是前端已做但後端未跟上的部分
 
 ---
 
@@ -787,6 +848,7 @@ GET /api/view/courses?size=50
 
 ```
 GET /api/view/courses?page=0&size=1000（一次全部載入）
+→ 過濾掉 courseName.startsWith("體驗課") 的課程（體驗課已整合至預約流程，不在探索頁獨立顯示）
 → handleSearch()：套用篩選（關鍵字 / 科目 / 週幾 / 時段）
 → displayPage(page)：前端分頁（每頁 8 筆）
 → renderCards()：卡片翻面動畫（正面：課程資訊；背面：時間格）
@@ -809,6 +871,20 @@ GET /api/view/teacher_schedule/{tutorId} → 可用時段
 → renderWeekBar()：週切換按鈕
 → 點選時段 → 加入選擇清單 → 計算總金額
 ```
+
+---
+
+### 🚀 新人上手指南
+
+**優先閱讀**
+1. `Spec/CourseSpec.java` — JPA Specification 動態查詢，理解篩選邏輯
+2. `controller/CourseViewController.java` — 公開的課程搜尋 API
+3. `assets/js/explore.js` — 前端課程瀏覽與篩選
+
+**常見踩坑點**
+- ⚠️ `CourseSpec` 中 `query.distinct(true)` 不可移除，否則 JOIN tutor_schedules 會造成課程記錄重複
+- ⚠️ 科目代碼使用 `subjectCategory` + 9 的範圍慣例（如 11-19 都屬於同一大類）
+- ⚠️ `explore.js` 前端會過濾掉 `courseName.startsWith("體驗課")` 的課程
 
 ---
 
@@ -885,6 +961,19 @@ GET /api/view/teacher_schedule/{tutorId} → 老師可用時段
 
 ---
 
+### 🚀 新人上手指南
+
+**優先閱讀**
+1. `entity/TutorSchedule.java` — 理解時段資料結構
+2. `controller/TutorScheduleController.java` — 排程 API
+3. `assets/js/teacher-schedule.js` — 老師設定排程 UI
+
+**常見踩坑點**
+- ⚠️ `(tutor_id, weekday, hour)` 有唯一約束，重複插入會報錯
+- ⚠️ 時段範圍為 weekday 1-7（週一到週日）、hour 9-21
+
+---
+
 ## 8. 訂課與付款模組（Booking & Checkout）
 
 ### 模組說明
@@ -928,19 +1017,40 @@ GET /api/view/teacher_schedule/{tutorId} → 老師可用時段
 - **`WalletLogsService`**
   - `void processWalletDeposit(EcpayReturnDto dto)` — ECPay callback 後增加使用者點數，並記錄交易
 
-#### ScheduledTaskService（`service/ScheduledTaskService.java`）
+#### Controller — `controller/OrderController.java`（路由：`/api/orders`）
 
-> **核心商業邏輯**：每 3600 秒（1 小時）自動執行
+| 方法 | 路徑 | 說明 |
+|------|------|------|
+| POST | `/api/orders` | 新增訂單 |
+| PUT | `/api/orders/{id}` | 修改訂單（lessonCount / lessonUsed） |
+| GET | `/api/orders/{id}` | 查詢單一訂單 |
+| GET | `/api/orders/user/{userId}` | 查詢使用者所有訂單 |
+| PATCH | `/api/orders/{id}/status` | 更新訂單狀態（pending→deal→complete） |
+| DELETE | `/api/orders/{id}` | 取消訂單（僅限 pending 狀態） |
 
-```
-1. 找出所有時間已過且 status=1 的 Booking
-2. 對每筆 Booking 計算老師收入：
-   - 體驗課（isExperienced=true）→ 老師拿 unitPrice 全額
-   - 正式課（isExperienced=false）→ 老師拿 unitPrice × 80%
-3. 新增 WalletLog（transactionType=3 授課收入）
-4. 防重複撥款：檢查 merchantTradeNo="TUTOR_EARN_{bookingId}" 是否存在
-5. 批次將 Booking status 改為 2（已完成）
-```
+#### Controller — `controller/WalletController.java`（路由：`/api/wallet`）
+
+| 方法 | 路徑 | 說明 |
+|------|------|------|
+| POST | `/api/wallet/topup` | 儲值（body: `{userId, amount}`） |
+| POST | `/api/wallet/withdraw` | 提領至銀行帳戶（教師專用，body: `{tutorId, amount}`） |
+| GET | `/api/wallet/logs/{userId}` | 查詢交易紀錄 |
+
+#### Services
+
+- **`OrderService`**
+  - `boolean createOrder(OrderDto.Req)` — 新增訂單
+  - `boolean updateOrder(Long id, OrderDto.UpdateReq)` — 更新堂數
+  - `OrderDto.Resp getOrderById(Long)` — 查詢訂單
+  - `List<OrderDto.Resp> getOrdersByUserId(Long)` — 查詢使用者訂單
+  - `boolean updateStatus(Long id, OrderDto.StatusReq)` — 狀態遞進（不可回退）
+  - `boolean cancelOrder(Long id)` — 取消 pending 訂單
+- **`WalletService`**
+  - `String topUp(Long userId, long amount)` — 儲值（type=1）
+  - `String withdraw(Long tutorId, long amount)` — 提領（type=5，需有銀行帳戶）
+  - `void credit(Long userId, long amount, int txType, int relatedType, Long relatedId)` — 增加餘額
+  - `void debit(Long userId, long amount, int txType, int relatedType, Long relatedId)` — 扣除餘額
+  - `List<WalletLog> getLogs(Long userId)` — 查詢交易記錄
 
 #### EcpayUtil — `util/EcpayUtil.java`
 
@@ -980,9 +1090,16 @@ GET /api/view/teacher_schedule/{tutorId} → 老師可用時段
 
 | 欄位 | 型別 | 說明 |
 |------|------|------|
-| transactionType | Integer | 1=儲值 2=購課 3=授課收入 4=退款 |
-| amount | Long | 金額（點數） |
+| id | Long | 主鍵 |
+| userId | Long | 使用者 FK |
+| transactionType | Integer | 1=儲值 2=購課 3=授課收入 4=退款 5=提現 |
+| amount | Long | 金額（正=收入，負=支出） |
+| relatedType | Integer | 關聯類型（3=Bank 等） |
+| relatedId | Long | 關聯 ID（orderId / bookingId） |
 | merchantTradeNo | String(100) | 唯一交易序號（防重複） |
+| dType | Integer | 付款方式類型 |
+| paymentAmount | Integer | 實際付款金額 |
+| createdAt | Instant | 自動產生 |
 
 #### Repositories
 
@@ -996,12 +1113,24 @@ GET /api/view/teacher_schedule/{tutorId} → 老師可用時段
 
 #### `booking.js`（預約頁）
 
+> ℹ️ 另有 `bookingV2.js`、`bookingV3.js`、`bookingV4.js` 為預約流程的迭代/備選版本，結構類似但 UI 不同（V3/V4 為 Grid 版本）。主要使用 `booking.js`。
+
 ```
 URL params: tutorId, courseId
-GET /api/view/courses → 課程價格
+GET /api/view/courses → 課程名稱、價格
 GET /api/view/teacher_schedule/{tutorId} → 可用時段
-→ 4 週日期選擇 + 時段格 → 勾選後計算 lessonCount × price
-→ 送出 → 跳至購買流程（結帳頁）
+→ buildFourWeeksDates()：產生 4 週日期陣列
+→ renderWeekBar()：週切換按鈕
+→ 點選時段 → 加入選擇清單 → 計算總金額
+
+方案與折扣邏輯（getDiscountRate）：
+  - 體驗課（1 堂，isTrial=true）：固定 200 點（不依原價計算）
+  - 1 堂：原價 × 1.00（無折扣）
+  - 5 堂：原價 × 0.95（95折）→ 顯示「✦ 95折優惠」
+  - 10 堂：原價 × 0.90（9折）→ 顯示「✦ 9折優惠」
+折扣後單價 = Math.floor(unitPrice × discountRate)
+
+送出 → 跳至購買流程（結帳頁）
 ```
 
 #### `student-credits.js`（點數/儲值）
@@ -1026,6 +1155,27 @@ GET /api/users/wallet-logs → 詳細交易記錄（篩選 transactionType=3）
 → Chart.js 繪製 6 個月收入長條圖 + 課程圓餅圖
 ```
 
+#### `student-wallet.js`（老師收入分析，命名易混淆）
+
+> ⚠️ 檔案名雖為 student-wallet，但實際上是**老師端**收入分析頁，使用 `tutorId = localStorage.getItem('userId')`。
+
+```
+Promise.all([
+  GET /api/users/me → 目前餘額
+  GET /api/tutor/{tutorId}/stats → monthIncome（本月收入）
+  GET /api/users/wallet-logs → 交易記錄
+  GET /api/bookings/tutor/{tutorId} → 預約記錄（用於映射 bookingId → courseName）
+])
+
+統計卡片：目前餘額 / 本月收入 / 累計總收入（wallet-logs type=3 加總）
+
+圖表（Chart.js）：
+  - renderBarChart()：近 6 個月授課收入長條圖（依月份加總 transactionType=3）
+  - renderPieChart()：收入課程佔比甜甜圈圖（依 courseName 分組）
+
+明細列表（renderwalletList()）：授課收入明細（含課程名稱、學生名稱、日期）
+```
+
 ---
 
 ### 資料流：購買課程
@@ -1042,11 +1192,21 @@ GET /api/users/wallet-logs → 詳細交易記錄（篩選 transactionType=3）
     3. 建立 Order（isExperienced 判斷：lessonCount=1）
     4. 逐筆建立 Booking（slotLocked=true）
     5. 寫入 WalletLog（transactionType=2）
-    ↓
-每小時 ScheduledTaskService
-    → Booking 時間過 → status 1→2
-    → 依體驗課/正式課算老師收入 → 寫入 WalletLog（transactionType=3）
 ```
+
+---
+
+### 🚀 新人上手指南
+
+**優先閱讀**
+1. `controller/CheckoutController.java` + `service/CheckoutService.java` — 購課核心流程
+2. `assets/js/booking.js` — 前端預約選時段邏輯
+3. `controller/WalletController.java` + `service/WalletService.java` — 錢包操作
+
+**常見踩坑點**
+- ⚠️ `Booking.slotLocked=true` 是防止同一老師同一時段被重複預約的關鍵機制
+- ⚠️ ECPay callback URL 寫在 `EcpayController.java`，切換環境時需注意
+- ⚠️ `WalletLogRepo` 和 `WalletLogsRepo` 並存（legacy），主要使用 `WalletLogsRepo`
 
 ---
 
@@ -1103,24 +1263,85 @@ GET /api/users/wallet-logs → 詳細交易記錄（篩選 transactionType=3）
 
 ### 前端
 
-#### `student-dashboard.js`（儀表板首頁）
+#### `student-dashboard.js`（學生儀表板首頁）
 
 ```
+Promise.allSettled([...]) 並行載入：
 GET /api/users/me → 顯示點數餘額
-GET /api/today/me → 今日課堂數
-GET /api/future/me → 即將到來的 5 堂課（倒數顯示）
+GET /api/today/me?userId={userId} → 今日課堂數
+GET /api/future/me?userId={userId} → 即將到來的 5 堂課（倒數顯示）
+GET /api/courses/me → 課程資料
 → setGreeting()：依時段顯示早安/午安/晚安
+```
+
+#### `teacher-dashboard.js`（老師儀表板首頁）
+
+```
+loadStats()：
+GET /api/tutor/{tutorId}/stats
+→ monthIncome（本月收入）、weekCount（本週課堂）、avgRating（平均評分）、todayCount（今日課堂）
+
+loadUpcomingBookings()：
+Promise.all([
+  GET /api/bookings/tutor/{tutorId},
+  GET /api/view/courses
+])
+→ 建立 courseId → courseName Map
+→ 顯示即將開始的課程卡片（依日期升序，含「⚡ 即將開始」時間標記）
+→ setGreeting()：依時段顯示早安/午安/晚安
+```
+
+#### `lstudent-courses.js`（學習記錄）
+
+```
+對應頁面：student-learning-records.html
+GET /api/courses/me → 取得學生所有預約
+GET /api/reviews/user/{userId} → 取得學生所有評論（建立 reviewMap）
+→ Tab 切換：upcoming / completed / cancelled
+→ 邏輯與 student-courses.js 幾乎相同，為學習記錄頁的獨立版本
 ```
 
 #### `student-courses.js`（我的課程）
 
 ```
-GET /api/courses/me?userId={userId}
-→ filterCourses()：全部 / 進行中 / 已完成 / 未開始
-→ getProgress()：lessonUsed / lessonCount → 進度條
-→ 每張卡片：聊天按鈕 → StudentChat.html
-             視訊按鈕 → Student-VideoRoom.html?orderId={id}
+GET /api/courses/me  → 取得學生所有預約（bookings）
+GET /api/reviews/user/{userId} → 取得學生所有評論（建立 reviewMap）
+
+Tab 切換：
+→ upcoming  (status=1)：即將開始 → 依日期升序排列
+→ completed (status=2)：已完成   → 依日期降序排列 + loadFeedback()
+→ cancelled (status=3)：已取消   → 依日期降序排列
+
+即將開始課程卡片（renderUpcomingCard）：
+→ 顯示日期徽章、課程名稱、老師名稱
+→「進入視訊教室」按鈕 → enterVideoRoom(bookingId, btn)
+
+enterVideoRoom(bookingId, btn)：
+1. 確認 jwt_token 存在，否則導向 login.html
+2. 按鈕切換為「驗證中...」
+3. GET /api/student/bookings（Authorization: Bearer token）
+   → 比對 bookingId 確認預約存在
+   → 找不到 → 提示錯誤，恢復按鈕
+   → 401 → 清除 localStorage，導向 login.html
+   → API 錯誤（非 401）→ 仍允許進入（由 video-room.js 二次驗證）
+4. 驗證通過 → window.location.href = Student-VideoRoom.html?bookingId={id}
+
+已完成卡片（renderCompletedCard）：
+→ 學生評價（submitReview() → POST /api/reviews）
+→ 老師課後回饋（loadFeedback() → GET /api/feedbacks/lesson/{bookingId}）
 ```
+
+---
+
+### 🚀 新人上手指南
+
+**優先閱讀**
+1. `controller/StudentCourseController.java` — 學生課程/預約/取消/退款 API
+2. `assets/js/student-courses.js` — 我的課程頁面邏輯（含進入視訊教室）
+
+**常見踩坑點**
+- ⚠️ `lstudent-courses.js` 與 `student-courses.js` 邏輯幾乎相同但為獨立檔案，修改時需同步
+- ⚠️ `enterVideoRoom()` 會先驗證 booking 歸屬再導向視訊頁面，API 錯誤時仍允許進入（由 video-room.js 二次驗證）
 
 ---
 
@@ -1194,16 +1415,23 @@ GET /api/courses/me?userId={userId}
 
 ### 前端
 
-#### `student-reviews.js`（學生端）
+#### `student-reviews.js`（老師端，命名易混淆）
+
+> ⚠️ 檔案名雖為 student-reviews，但實際上是**老師端**頁面，使用 `tutorId = localStorage.getItem("userId")`。
 
 ```
-Tab 1 - 我的評論：
-GET /api/reviews/course/{courseId} → 顯示評論列表
-GET /api/reviews/course/{courseId}/average-rating → 顯示平均分
+初始化：
+GET /api/bookings/tutor/{tutorId} → 取得老師所有預約
+GET /api/view/courses → 過濾屬於此老師的課程清單
+
+Tab 1 - 學生評價：
+GET /api/reviews/course/{courseId} → 依課程顯示學生評論
+→ updateOverallStats()：計算平均分、評論數、好評率
 
 Tab 2 - 課後回饋：
-GET /api/feedbacks/lesson/{bookingId} → 查看老師給的回饋
-→ 顯示 focusScore / comprehensionScore / confidenceScore
+GET /api/feedbacks/lesson/{bookingId} → 查看/編輯已撰寫的回饋
+→ openFeedbackModal() → 設定 focusScore / comprehensionScore / confidenceScore
+→ POST /api/feedbacks（新增）或 PUT /api/feedbacks/{id}（更新）
 ```
 
 #### `teacher-reviews.js`（老師端）
@@ -1217,6 +1445,19 @@ GET /api/feedbacks/lesson/{bookingId} → 查看/編輯課堂回饋
 → openFeedbackModal() → 設定 focusScore / comprehensionScore / confidenceScore
 → POST /api/feedbacks（新增）或 PUT /api/feedbacks/{id}（更新）
 ```
+
+---
+
+### 🚀 新人上手指南
+
+**優先閱讀**
+1. `controller/ReviewController.java` — 評價 CRUD
+2. `controller/FeedbackController.java` — 課後回饋 CRUD
+3. `assets/js/student-reviews.js` — 老師端評價/回饋頁面
+
+**常見踩坑點**
+- ⚠️ **命名混淆**：`student-reviews.js` 實際上是**老師端**頁面，使用 `tutorId = localStorage.getItem("userId")`
+- ⚠️ **命名混淆**：`student-wallet.js` 也是**老師端**收入分析頁面
 
 ---
 
@@ -1271,43 +1512,137 @@ GET /api/feedbacks/lesson/{bookingId} → 查看/編輯課堂回饋
 
 **messageType（enums/MessageType.java）**
 
-| 代碼 | 說明 |
-|------|------|
-| 1 | 文字 TEXT |
-| 2 | 貼圖 STICKER |
-| 3 | 語音 VOICE |
-| 4 | 圖片 IMAGE |
-| 5 | 影片 VIDEO |
-| 6 | 檔案 FILE |
+| 代碼 | 說明 | `message` 欄位 | `mediaUrl` 欄位 |
+|------|------|--------------|----------------|
+| 1 | 文字 TEXT | 訊息內容 | `null` |
+| 2 | 貼圖 STICKER | emoji / 貼圖字元 | `null` |
+| 3 | 語音 VOICE | `null` | 後端 `uploads/` 相對路徑 |
+| 4 | 圖片 IMAGE | `null` | 後端 `uploads/` 相對路徑 |
+| 5 | 影片 VIDEO | `null` | 後端 `uploads/` 相對路徑 |
+| 6 | 檔案 FILE | 原始檔名（顯示用） | 後端 `uploads/` 相對路徑 |
 
-#### 靜態檔案
+**mediaUrl 存取方式（三個前端的差異）**
 
-**`config/WebMvcConfig.java`** — 將 `/uploads/**` 對應至伺服器上的實體目錄，供前端直接存取上傳的媒體檔。
+| 前端 | 存取方式 | 原因 |
+|------|---------|------|
+| `StudentChat.js` | `resolveMediaUrl()`：`http`/`blob:` 直接使用；否則補前綴 `/` | 純 HTTP，無額外授權 |
+| `TeacherChat.js` | 同上 `resolveMediaUrl()`，直接放入 `<img src>` / `<audio src>` / `<video src>` | 純 HTTP，依賴 WebMvcConfig 靜態路徑 |
+| `video-room.js` | `loadMediaWithAuth()`：透過 Axios 帶 `Authorization: Bearer` header 取得 blob，再 `URL.createObjectURL()` 設為 src | 視訊教室需 JWT 鑑權 |
+
+**各 messageType 前端渲染邏輯**
+
+| 代碼 | StudentChat.js / TeacherChat.js | video-room.js |
+|------|---------------------------------|---------------|
+| 1 TEXT | `escapeHtml(m.message)` | `bubble.textContent` + `fetchAndAppendLinkPreview()`（自動解析 URL 卡片） |
+| 2 STICKER | 走 else 分支：`escapeHtml(m.message)`（顯示 emoji 字元） | `bubble.textContent`，樣式：`font-size:2.5rem; background:transparent` |
+| 3 VOICE | `<audio src="${resolveMediaUrl(m.mediaUrl)}" controls>` | `loadMediaWithAuth(audio, msg.mediaUrl)` → blob URL |
+| 4 IMAGE | `<img src="${resolveMediaUrl(m.mediaUrl)}">` 最大寬 200px | `loadMediaWithAuth(img, msg.mediaUrl)` → blob URL，點擊開新分頁 |
+| 5 VIDEO | `<video src="${resolveMediaUrl(m.mediaUrl)}" controls>` 最大寬 240px | `loadMediaWithAuth(video, msg.mediaUrl)` → blob URL |
+| 6 FILE | 取 `m.mediaUrl.split('/').pop()` 為 storedName；非 blob 時呼叫 `downloadFile(storedName, originalName)` → `GET /api/chatMessage/download/{storedName}` | `downloadWithAuth(msg.mediaUrl, msg.message)`：Axios blob + `<a download>` 觸發下載 |
+
+**上傳流程（`POST /api/chatMessage/upload`）**
+
+```
+FormData 欄位：
+  file      : Blob
+  bookingId : number（最新的 orderId）
+  role      : 1（學生）| 'tutor'（老師）| number（視訊室）
+  message   : ''（後端從 MIME type 自動判斷 messageType 並存入 mediaUrl）
+
+detectMessageType(mimeType)：
+  image/* → 4    audio/* → 3    video/* → 5    其他 → 6
+
+後端 FileStorageService.store()：
+  → 儲存至 uploads/ 目錄，回傳含 mediaUrl 的 ChatMessage 物件
+  → WebMvcConfig 將 /uploads/** 映射為靜態資源（StudentChat / TeacherChat 直接存取）
+  → video-room.js 透過 toProxyPath() 轉換完整 URL 為 /uploads/... 相對路徑走 Vite proxy
+```
 
 ---
 
 ### 前端
 
-#### `StudentChat.js`（學生訊息中心）
+#### `StudentChat.js`（學生訊息中心）— 純 HTTP 版本
 
 ```
-GET /api/chatMessage/conversations → 左側對話列表（按老師分組）
-→ selectConversation() → GET /api/chatMessage/booking/{bookingId}
-→ buildMsgHtml()：依 messageType 渲染不同 UI（圖片 / 影片 / 音訊 / 檔案預覽）
+初始化：GET /api/chatMessage/conversations
+→ 後端回傳含 orderId / bookingIds[] / participantName / avatar / subject
+→ 對話以 bookingId (=orderId) 為 key 管理，支援 URL ?bookingId= 直接開啟
 
-發送文字：POST /api/chatMessage
-上傳媒體：POST /api/chatMessage/upload（FormData）
-下載檔案：GET /api/chatMessage/download/{storedName}
+選取對話（selectConversation）：
+→ 若 conv.bookingIds.length > 0：
+     GET /api/chatMessage/orders?ids={id1,id2,...}（批次取得多訂單訊息）
+→ 否則：
+     GET /api/chatMessage/booking/{bookingId}
+→ renderMessages() 渲染訊息列表
+
+buildMsgHtml(m, conv)：
+→ role=1（自己）→ 右側氣泡；其他 → 左側氣泡含頭像
+→ messageType 4：<img>  5：<video>  3：<audio>
+→ messageType 6（檔案）：
+     - 非 blob → downloadFile()：GET /api/chatMessage/download/{storedName}
+     - blob → <a download>
+
+發送文字（sendMessage）：
+→ POST /api/chatMessage { bookingId, role:1, messageType:1, message }
+→ 樂觀更新：先呼 appendMessage 再發 HTTP
+
+上傳檔案（uploadFile）：
+→ detectLocalType()：依 MIME 對應 3/4/5/6
+→ 先顯示 blob URL 預覽，再 POST /api/chatMessage/upload（FormData）
+→ 成功後移除預覽、appendMessage 顯示正式結果
+
+注意：StudentChat.js 無 WebSocket，完全依賴 HTTP REST（不即時推播）
 ```
 
-#### `TeacherChat.js`（老師訊息中心）
+#### `TeacherChat.js`（老師訊息中心）— REST + WebSocket
 
 ```
-GET /api/chatMessage/conversations/tutor/{tutorId} → 左側學生對話列表
-→ 與 StudentChat.js 邏輯相似
-→ 額外支援 WebSocket STOMP：stompClient.subscribe('/topic/chat/{bookingId}')
-   即時接收學生訊息（不需重整頁面）
+初始化：GET /api/chatMessage/conversations/tutor/{tutorId}
+→ 後端回傳 flat List<ConversationDTO>
+→ 依 studentId 分組：同一學生多筆訂單合併為一個對話
+→ 對話物件：{ studentId, studentName, orderIds[], courses[], lastMessage, lastMessageTime }
+→ 依 lastMessageTime 降序排列
+
+選取對話（selectConversation）：
+→ GET /api/chatMessage/orders?ids={orderIds.join(',')}（批次取全部訊息）
+→ connectWebSocket(orderIds[0]) 建立 STOMP 連線
+
+buildMsgHtml(m, conv)：
+→ role='tutor'（自己）→ 右側；其他 → 左側含頭像
+→ messageType 渲染邏輯同 StudentChat.js
+
+WebSocket 連線（connectWebSocket / subscribeBooking）：
+→ 優先使用 StompJs.Client，降級使用 Stomp.over(SockJS)
+→ 連線位址：{WS_BASE_URL}/ws（從 API_BASE_URL 自動推導）
+→ connectHeaders：Authorization: Bearer {jwt}
+→ 訂閱 /topic/room/{bookingId}/chat
+     → 收到訊息若 role !== 'tutor' 才呼 appendMessage（避免重複顯示自己的訊息）
+→ 訂閱 /topic/room/{bookingId}/errors：記錄儲存失敗訊息
+
+發送訊息（sendMessage）：
+→ STOMP 已連線 → stompClient.publish /app/chat/{targetOrderId}
+→ STOMP 未連線 → fallback POST /api/chatMessage
+→ 樂觀更新：先 appendMessage，送出失敗時還原 input
+
+上傳檔案（uploadFile）：
+→ POST /api/chatMessage/upload（FormData: file, bookingId, role:'tutor'）
+→ 先顯示 blob URL 預覽，成功後替換為後端回傳的正式訊息
 ```
+
+---
+
+### 🚀 新人上手指南
+
+**優先閱讀**
+1. `controller/ChatAndVideoController/ChatMessageController.java` — 訊息 API 全覽
+2. `assets/js/StudentChat.js` — 學生端（純 HTTP）
+3. `assets/js/TeacherChat.js` — 老師端（REST + WebSocket）
+
+**常見踩坑點**
+- ⚠️ StudentChat.js 沒有 WebSocket，完全依賴 HTTP REST（不即時推播）
+- ⚠️ TeacherChat.js 有 WebSocket 即時推播，但也有 HTTP fallback
+- ⚠️ `resolveMediaUrl()`（StudentChat/TeacherChat）和 `loadMediaWithAuth()`（video-room.js）存取 mediaUrl 的方式不同
 
 ---
 
@@ -1320,6 +1655,8 @@ GET /api/chatMessage/conversations/tutor/{tutorId} → 左側學生對話列表
 ---
 
 ### 後端
+
+> ℹ️ **兩個 VideoRoomController**：後端存在兩個同名檔案。`controller/VideoRoomController.java`（根層級）為簡化版，僅做信令轉發；`controller/ChatAndVideoController/VideoRoomController.java`（子目錄）為完整版，包含預約驗證、角色檢查和 RoomService 整合。以下記錄的是**完整版**。
 
 #### WebSocket Controller — `controller/ChatAndVideoController/VideoRoomController.java`
 
@@ -1367,36 +1704,174 @@ STOMP 訊息端點（前綴 `/app`，後端呼叫）：
 
 ---
 
-### 前端 — `video-room.js`（最複雜的檔案，54KB）
+### 前端 — `video-room.js`（最複雜的檔案）
+
+#### 全域常數與身份
 
 ```
-URL params: bookingId, token（JWT）
+API_BASE_URL = '/api'
+WS_URL       = window.location.origin + '/ws'
+bookingId    ← URL ?bookingId=
+token        ← localStorage.jwt_token
+userId       ← localStorage.userId
+userRole     ← normalizeRole(localStorage.userRole)  → 'student' | 'tutor'
+```
 
-初始化流程：
-1. isTokenExpired() → 驗證 JWT 有效性與角色
-2. 建立 STOMP WebSocket 連線（/ws）
-3. getUserMedia() → 取得本地鏡頭/麥克風串流
-4. 建立 RTCPeerConnection（ICE server 設定）
+#### 初始化流程（DOMContentLoaded）
 
-信令流程：
-老師端（Offerer）：
+```
+1. Guard：無 bookingId → alert + 導向 student-courses.html
+2. Guard：無 token → 存 redirect_after_login → 導向 login.html
+3. isTokenExpired(jwt)：
+   - base64 decode JWT payload 驗證 exp 欄位
+   - 比對 payload.role / authorities 與 userRole 是否一致
+   → 失效 → 導向 login.html
+4. 頁面角色驗證：
+   - teacher-VideoRoom.html + userRole=student → 強制導向 Student-VideoRoom.html
+   - Student-VideoRoom.html  + userRole=tutor  → 強制導向 teacher-VideoRoom.html
+5. 偵測非安全上下文（HTTP 非 localhost）→ console.warn
+6. 有 #prejoin-overlay → initPreJoin()；否則直接 enterRoom()
+```
+
+#### Pre-join 前置畫面（initPreJoin）
+
+```
+GET /api/${userRole === 'tutor' ? 'tutor' : 'student'}/bookings
+→ 比對 bookingId，取得課程名稱顯示於 #prejoin-course-name
+
+getUserMediaSafe()：
+→ 依序嘗試多種 constraints（含 facingMode:'user'）
+→ 失敗若 NotFoundError → 顯示「未偵測到裝置」提示
+→ 其他失敗 → 顯示「點擊以開啟預覽」retry 按鈕
+
+iOS 相容：設定 video.playsinline + muted + autoplay
+
+點擊「進入教室」→ enterRoom(previewStream)
+```
+
+#### 進入教室（enterRoom）
+
+```
+1. startLocalMedia(existingStream)：將本地串流掛載至 #local-video
+2. connectStomp()：建立 STOMP over SockJS 連線
+   - URL 帶 ?token= 供 Spring HandshakeInterceptor 讀取
+   - connectHeaders 帶 Authorization: Bearer {token}
+   - reconnectDelay: 5000ms
+3. loadChatHistory()：GET /api/chatMessage/booking/{bookingId}
+4. bindControls() + bindChat()：綁定 UI 事件
+5. fetchRoomStatus()：GET /api/room/{bookingId}/participants
+```
+
+#### STOMP 訂閱（onStompConnected）
+
+```
+訂閱 /topic/room/{bookingId}/signal  → onSignalMessage（WebRTC 信令）
+訂閱 /topic/room/{bookingId}/chat    → onChatMessage（課中聊天）
+訂閱 /topic/room/{bookingId}/events  → onRoomEvent（進出房間）
+訂閱 /topic/room/{bookingId}/errors  → onRoomError
+
+publishEvent('joined')
+延遲 2 秒 → checkPeerViaRest()（備援：REST 確認對方是否已在房間）
+```
+
+#### WebRTC 信令流程
+
+```
+角色分工：
+→ 學生（Answerer）接收到 peer joined 事件後呼叫 initiateCallIfCaller()
+→ 老師（Offerer 角色在此實作中由學生發起 offer，老師回 answer）
+   → 實際上：學生 = Offerer，老師 = Answerer（студент initiates）
+
+onRoomEvent('joined')：
+→ peerReady = true
+→ initiateCallIfCaller()：
+   - userRole === 'student' 才執行
+   - 防重複：peerConnection 已在 new/connecting/connected 則跳過
+   - createPeerConnection() → sendOffer()
+
+createPeerConnection()：
+→ 有本地媒體 → addTrack；無 → 加入 recvonly transceiver
+→ ontrack：掛載遠端串流至 #remote-video，呼叫 .play()
+→ onicecandidate → STOMP publish /app/signal/{bookingId} {type:'candidate'}
+→ onconnectionstatechange：connected → 更新狀態徽章 ACTIVE
+→ oniceconnectionstatechange：failed + role=student → ICE restart
+
+sendOffer()：
 → createOffer() → setLocalDescription()
-→ STOMP publish /app/signal/{bookingId} { type: "offer", sdp }
-→ 等待 answer → setRemoteDescription()
+→ STOMP publish { type:'offer', senderRole, senderId, sdp }
+→ 失敗自動重試（MAX_OFFER_RETRIES=3，scheduleOfferRetry()）
 
-學生端（Answerer）：
-→ 收到 offer → setRemoteDescription()
-→ createAnswer() → setLocalDescription()
-→ STOMP publish /app/signal/{bookingId} { type: "answer", sdp }
-
-雙方：
-→ onicecandidate → publish { type: "candidate", candidate }
-→ 對方 addIceCandidate()
-
-ICE Servers：
-- Google STUN：stun:stun.l.google.com:19302
-- OpenRelay TURN：turn:openrelay.metered.ca:80
+onSignalMessage(frame)：
+→ type='offer'  → setRemoteDescription + createAnswer + publish answer
+→ type='answer' → setRemoteDescription
+→ type='candidate' → 若 remoteDescription 已設 → addIceCandidate
+                      否則 → 加入 iceCandidateQueue
+→ flushIceCandidates()：排空佇列中待加入的 ICE candidates
 ```
+
+#### ICE Servers
+
+```
+- Google STUN： stun:stun.l.google.com:19302
+                stun:stun1.l.google.com:19302
+- OpenRelay TURN（NAT 穿透備援）：
+    turn:openrelay.metered.ca:80
+    turn:openrelay.metered.ca:443
+    turn:openrelay.metered.ca:443?transport=tcp
+iceCandidatePoolSize: 2
+```
+
+#### 課中聊天（Chat Panel）
+
+```
+loadChatHistory()：
+→ GET /api/chatMessage/booking/{bookingId}
+→ 逐筆呼 appendMessage(msg, normalizeRole(msg.role) === userRole)
+
+onChatMessage(frame)：STOMP 即時接收 → appendMessage
+
+sendTextMessage()：
+→ STOMP publish /app/chat/{bookingId} { role:userRole, messageType:1, message }
+
+handleFileUpload()：
+→ POST /api/chatMessage/upload（FormData: file, bookingId, role）
+→ 上傳成功後再透過 STOMP publish 廣播給雙方
+
+appendMessage(msg, isMine)：
+→ 依 messageType 渲染（文字/貼圖/語音/圖片/影片/檔案）
+→ isMine=true → .mine 氣泡（右）；false → .theirs（左）
+```
+
+#### 控制列
+
+```
+toggleMic()   → localStream audioTracks.enabled 切換
+toggleCam()   → localStream videoTracks.enabled 切換
+toggleScreen()→ getDisplayMedia() 取得螢幕串流 → replaceTrack
+stopScreenShare() → 恢復原鏡頭 track
+hangUp()      → confirm → publishEvent('left') → cleanup() → index.html
+cleanup()     → 清除 offerRetryTimer / localStream / screenStream / peerConnection / stompClient
+```
+
+#### 畫中畫（PiP）調整大小
+
+```
+initPipResize()：本地視訊視窗右下角 resize handle
+→ mousedown/touchstart → 拖曳計算新寬度（MIN_W=90 / MAX_W=320）
+```
+
+---
+
+### 🚀 新人上手指南
+
+**優先閱讀**
+1. `assets/js/video-room.js` — 最複雜的前端檔案，WebRTC + STOMP + 聊天一體
+2. `controller/ChatAndVideoController/VideoRoomController.java` — 完整版 STOMP 信令
+
+**常見踩坑點**
+- ⚠️ 學生是 Offerer（發起方），老師是 Answerer（回應方）——與直覺相反
+- ⚠️ 後端存在兩個 `VideoRoomController`（根層級簡化版 vs ChatAndVideoController 完整版），注意區分
+- ⚠️ iOS 裝置需要 `video.playsinline + muted + autoplay` 否則無法播放
 
 ---
 
@@ -1404,31 +1879,22 @@ ICE Servers：
 
 ### 模組說明
 
-管理員查看平台統計數據，並審核老師申請。
+管理員審核老師申請與管理平台使用者。
 
 ---
 
 ### 後端
 
-#### Controller — `controller/AdminPanelController.java`（路由：`/api/admin/dashboard`）
+#### Controller — `controller/AdminController.java`（路由：`/api/admin`，需 ADMIN 角色）
 
 | 方法 | 路徑 | 說明 |
 |------|------|------|
-| GET | `/api/admin/dashboard` | 取得平台統計（使用者數、老師數、課程數、訂單數等） |
+| GET | `/api/admin/users` | 查詢所有用戶 |
+| GET | `/api/admin/tutors/pending` | 查詢待審核教師（status=1） |
+| PATCH | `/api/admin/tutors/{id}/approve` | 核准教師（status→2） |
+| PATCH | `/api/admin/tutors/{id}/suspend` | 停權教師（status→3） |
 
-#### Services
-
-- **`AdminPanelService`**
-  - `DashboardDTO getDashboard()` — 聚合平台數據
-- **`AdminTutorService`**（見模組 4）
-
-#### Repository — `repo/DashboardRepo.java`
-
-- 自訂原生 SQL 查詢：本月新增學生數、本月新增老師數、當日/本月收入、熱門課程列表
-
-#### DTO — `dto/DashboardDTO.java`
-
-包含：總使用者數、總老師數、總課程數、總預約數、本月新增、今日收入、本月收入、熱門課程
+> ⚠️ **注意**：前端 `admin-dashboard.js` 呼叫了 `GET /api/admin/dashboard`、`GET /api/admin/tutors`、`GET /api/admin/tutors/counts` 等端點，但後端目前尚無這些 API 的實作。
 
 ---
 
@@ -1447,6 +1913,18 @@ GET /api/admin/tutors/counts → 各狀態數字
 → 點擊老師 → Modal 顯示詳細資訊（學歷、證書連結、影片）
 → 核准 / 拒絕 → PATCH /api/admin/tutors/{id}/status
 ```
+
+---
+
+### 🚀 新人上手指南
+
+**優先閱讀**
+1. `controller/AdminController.java` — 後端僅有的 4 個管理端點
+2. `assets/js/admin-dashboard.js` — 前端管理 UI
+
+**常見踩坑點**
+- ⚠️ 前端呼叫了多個後端尚未實作的 API（`/api/admin/dashboard`、`/api/admin/tutors`、`/api/admin/tutors/counts`、`/api/admin/tutors/qualified`、`/api/admin/tutors/suspended`）
+- ⚠️ 後端目前只有 `pending` 篩選和 `approve`/`suspend` 操作
 
 ---
 
@@ -1537,6 +2015,19 @@ GET /api/tutor/me/profile → 填入現有資料
 
 ---
 
+### 🚀 新人上手指南
+
+**優先閱讀**
+1. `controller/TutorProfileController.java` — 老師資料 GET/PUT
+2. `controller/TutorUploadController.java` — 檔案上傳端點
+3. `assets/js/teacher-settings.js` — 前端設定與上傳邏輯
+
+**常見踩坑點**
+- ⚠️ 上傳新大頭照/證書時，舊檔會被自動刪除（FileStorageService 會覆蓋）
+- ⚠️ `student-profile.js` 和 `teacher-profile.js` 邏輯幾乎相同，是不同角色看同一老師頁面
+
+---
+
 ## 15. Email 通知模組
 
 ### 模組說明
@@ -1558,16 +2049,6 @@ GET /api/tutor/me/profile → 填入現有資料
 - 設定 `JavaMailSender`（SMTP 帳號、密碼、主機）
 - 透過 Spring Boot Mail 自動組態覆蓋或自訂
 
-#### Controller — `controller/TestEmailController.java`（路由：`/test-email`）
-
-僅供開發測試：
-
-| 方法 | 路徑 | 說明 |
-|------|------|------|
-| GET | `/test-email/send` | 發送測試簡單 Email |
-| POST | `/test-email/send-booking` | 發送測試預約 Email |
-| POST | `/test-email/send-feedback` | 發送測試回饋 Email |
-
 #### DTOs
 
 | 類別 | 說明 |
@@ -1578,4 +2059,16 @@ GET /api/tutor/me/profile → 填入現有資料
 
 ---
 
-*文件由 Claude Code 自動產生，基於實際原始碼分析。*
+### 🚀 新人上手指南
+
+**優先閱讀**
+1. `service/EmailService.java` — Email 發送方法
+2. `config/MailConfig.java` — SMTP 設定
+
+**常見踩坑點**
+- ⚠️ `JavaMailSender` 需要正確的 SMTP 設定才會啟動，本機開發若無 SMTP 設定會導致 Email 功能靜默失效
+- ⚠️ Email 是由 `CheckoutService` 等服務層觸發，不是由 Controller 直接呼叫
+
+---
+
+*文件由 Claude Code 自動產生，基於實際原始碼分析。最後更新：2026-04-07。*
