@@ -124,6 +124,24 @@
 
 **`exception/GlobalExceptionHandler.java`** — 以 `@ControllerAdvice` 統一攔截所有 Controller 拋出的例外，回傳一致的 JSON 錯誤格式。
 
+### 排程任務
+
+**`service/ScheduledTaskService.java`** — 以 `@Scheduled(fixedRate = 3600000)` 每小時執行：
+1. 找出已過期且 status=1 的 Booking（上課時間已過）
+2. 對每筆完成的 Booking 撥款給老師（新增 WalletLog，`merchantTradeNo = "TUTOR_EARN_" + bookingId` 防重複）
+3. 批次更新 Booking status=2（已完成）
+
+### 角色轉換器
+
+**`enums/UserRoleConverter.java`** — JPA `@Converter(autoApply = true)`，將 `UserRole` 列舉與資料庫 Integer 欄位雙向轉換（`getCode()` / `fromCode()`）。
+
+### 已註解 / Legacy 檔案
+
+| 檔案 | 狀態 | 說明 |
+|------|------|------|
+| `controller/UserController.java` | 全檔註解 | 早期認證 Controller，已被 `AuthController` 取代 |
+| `entity/LessonFeedback.java` | 全檔註解 | 早期課堂回饋 Entity，已被 `Feedback.java` 取代 |
+
 ### 角色體系
 
 | 代碼 | 角色 | 說明 |
@@ -584,10 +602,8 @@ Controller 方法執行
 #### Repository — `repo/TutorRepo.java`
 
 - `List<Tutor> findByStatusOrderByApplyDateAsc(Integer status)`
-
-#### Repository — `repo/TutorRepository.java`
-
-- `findAll()` — 供 AdminController 篩選使用
+- `TutorReviewCountDTO countTutorStatus()` — 各狀態老師數量統計（自訂 JPQL）
+- 繼承 `JpaRepository`，`findAll()` 供 AdminController 篩選使用
 
 ---
 
@@ -1081,8 +1097,9 @@ Promise.all([
 
 **優先閱讀**
 1. `controller/CheckoutController.java` + `service/CheckoutService.java` — 購課核心流程
-2. `assets/js/bookingV3.js` — 前端預約選時段邏輯（目前頁面掛載）
-3. `controller/WalletController.java` + `service/WalletService.java` — 錢包操作
+2. `controller/BookingController.java` + `service/BookingService.java` — 預約狀態管理
+3. `controller/MeController.java`（`GET /api/users/wallet-logs`）+ `service/WalletLogsService.java` — 錢包流水查詢與 ECPay 儲值入帳
+4. `assets/js/bookingV3.js` — 前端預約選時段邏輯（目前頁面掛載）
 
 **常見踩坑點**
 - ⚠️ `Booking.slotLocked=true` 是防止同一老師同一時段被重複預約的關鍵機制
@@ -1381,7 +1398,7 @@ GET /api/feedbacks/lesson/{bookingId} → 查看/編輯課堂回饋
   - `Resource load(String filename)` — 以 `UrlResource` 載入 `uploads/` 目錄下的檔案，供下載 API 回傳
   - `Integer detectMessageType(String contentType)` — 依 MIME type 對應 messageType 代碼（`image/* → 4`、`audio/* → 3`、`video/* → 5`、其他 → `6`）
 
-#### Entity — `entity/ChatMessage.java`（推測）
+#### Entity — `entity/ChatMessage.java`
 
 | 欄位 | 型別 | 說明 |
 |------|------|------|
@@ -1683,8 +1700,6 @@ WebSocket 連線（connectWebSocket / subscribeBooking）：
 
 ### 後端
 
-> ℹ️ **兩個 VideoRoomController**：後端存在兩個同名檔案。`controller/VideoRoomController.java`（根層級）為簡化版，僅做信令轉發；`controller/ChatAndVideoController/VideoRoomController.java`（子目錄）為完整版，包含預約驗證、角色檢查和 RoomService 整合。以下記錄的是**完整版**。
-
 #### WebSocket Controller — `controller/ChatAndVideoController/VideoRoomController.java`
 
 STOMP 訊息端點（前綴 `/app`，後端呼叫）：
@@ -1728,6 +1743,8 @@ STOMP 訊息端點（前綴 `/app`，後端呼叫）：
 | `dto/videoroom/RoomParticipant` | 參與者資訊（userId, role） |
 | `dto/videoroom/RoomStatus` | 房間狀態（參與者清單） |
 | `dto/videoroom/RoomError` | 錯誤訊息 |
+| `dto/videoroom/RoomEvent` | 進出房間事件（type: joined/left, role, userId, timestamp） |
+| `dto/videoroom/SignalingMessage` | WebRTC 信令（type: offer/answer/candidate, senderRole, sdp, candidate 等） |
 
 ---
 
@@ -1896,7 +1913,6 @@ initPipResize()：本地視訊視窗右下角 resize handle
 
 **常見踩坑點**
 - ⚠️ 學生是 Offerer（發起方），老師是 Answerer（回應方）——與直覺相反
-- ⚠️ 後端存在兩個 `VideoRoomController`（根層級簡化版 vs ChatAndVideoController 完整版），注意區分
 - ⚠️ iOS 裝置需要 `video.playsinline + muted + autoplay` 否則無法播放
 
 ---
@@ -1911,16 +1927,35 @@ initPipResize()：本地視訊視窗右下角 resize handle
 
 ### 後端
 
-#### Controller — `controller/AdminController.java`（路由：`/api/admin`，需 ADMIN 角色）
+#### Controller — `controller/AdminPanelController.java`（路由：`/api/admin`，需 ADMIN 角色）
 
 | 方法 | 路徑 | 說明 |
 |------|------|------|
+| GET | `/api/admin/dashboard` | 取得平台統計數據（總用戶、總課程、總收入等） |
 | GET | `/api/admin/users` | 查詢所有用戶 |
-| GET | `/api/admin/tutors/pending` | 查詢待審核教師（status=1） |
-| PATCH | `/api/admin/tutors/{id}/approve` | 核准教師（status→2） |
-| PATCH | `/api/admin/tutors/{id}/suspend` | 停權教師（status→3） |
 
-> ⚠️ **注意**：前端 `admin-dashboard.js` 呼叫了 `GET /api/admin/dashboard`、`GET /api/admin/tutors`、`GET /api/admin/tutors/counts` 等端點，但後端目前尚無這些 API 的實作。
+#### Services
+
+- **`AdminPanelService`**
+  - `DashboardDTO getDashboard()` — 彙總平台統計資料（學生數、老師數、課程數、熱門課程排行、本月新增、營收等）
+
+#### Repository — `repo/DashboardRepo.java`
+
+- `countStudents()` / `countQualifiedTutors()` / `countCourseTypes()` — 各類人數/課程統計
+- `findTop5PopularCoursesRaw()` — 熱門課程排行（依訂購總堂數降冪，前 5）
+- 本月新增、營收等多個 native query
+
+#### Controller — `controller/AdminTutorController.java`（路由：`/api/admin/tutors`，需 ADMIN 角色）
+
+| 方法 | 路徑 | 說明 |
+|------|------|------|
+| GET | `/api/admin/tutors` | 全部老師（所有狀態） |
+| GET | `/api/admin/tutors/pending` | 待審核（status=1） |
+| GET | `/api/admin/tutors/qualified` | 已核准（status=2） |
+| GET | `/api/admin/tutors/suspended` | 停權（status=3） |
+| GET | `/api/admin/tutors/{tutorId}` | 單一老師詳細資料 |
+| GET | `/api/admin/tutors/counts` | 各狀態老師的數量統計 |
+| PATCH | `/api/admin/tutors/{tutorId}/status` | 執行審核（body: `{status: 2\|3}`） |
 
 ---
 
@@ -1945,12 +1980,13 @@ GET /api/admin/tutors/counts → 各狀態數字
 ### 🚀 新人上手指南
 
 **優先閱讀**
-1. `controller/AdminController.java` — 後端僅有的 4 個管理端點
-2. `assets/js/admin-dashboard.js` — 前端管理 UI
+1. `controller/AdminPanelController.java` — 平台統計與用戶管理
+2. `controller/AdminTutorController.java` — 老師審核端點（與第 5 章共用）
+3. `assets/js/admin-dashboard.js` — 前端管理 UI
 
 **常見踩坑點**
-- ⚠️ 前端呼叫了多個後端尚未實作的 API（`/api/admin/dashboard`、`/api/admin/tutors`、`/api/admin/tutors/counts`、`/api/admin/tutors/qualified`、`/api/admin/tutors/suspended`）
-- ⚠️ 後端目前只有 `pending` 篩選和 `approve`/`suspend` 操作
+- ⚠️ 老師審核邏輯同時記錄於第 5 章（Tutor Application 模組）與本章，修改時請保持同步
+- ⚠️ `AdminTutorController` 的狀態轉換有規則限制（見 `AdminTutorService.validateStatusTransition`）
 
 ---
 
