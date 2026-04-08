@@ -800,6 +800,106 @@ List<ScheduleDTO.Res> schedule = tutorScheduleService.getWeeklySchedule(tutorId)
 
 ---
 
+### 情境 F：將檔案上傳位置從本地改為雲端儲存（以 AWS S3 / Azure Blob 為例）
+
+目前 `FileStorageService` 將檔案儲存在後端執行目錄下的 `uploads/` 資料夾（本地磁碟）。若要改用雲端物件儲存，依下列步驟調整：
+
+#### 1. 新增雲端 SDK 相依
+
+**AWS S3（Maven）**
+```xml
+<dependency>
+    <groupId>software.amazon.awssdk</groupId>
+    <artifactId>s3</artifactId>
+    <version>2.25.x</version>
+</dependency>
+```
+
+**Azure Blob Storage（Maven）**
+```xml
+<dependency>
+    <groupId>com.azure</groupId>
+    <artifactId>azure-storage-blob</artifactId>
+    <version>12.x.x</version>
+</dependency>
+```
+
+#### 2. 在 `application.properties` 新增雲端憑證設定
+
+```properties
+# AWS S3
+cloud.aws.region=ap-northeast-1
+cloud.aws.s3.bucket=your-bucket-name
+cloud.aws.credentials.access-key=YOUR_ACCESS_KEY
+cloud.aws.credentials.secret-key=YOUR_SECRET_KEY
+
+# 或 Azure Blob
+azure.storage.connection-string=DefaultEndpointsProtocol=https;AccountName=...
+azure.storage.container-name=uploads
+```
+
+> ⚠️ 這些金鑰**不可提交到 Git**，請確認已加入 `.gitignore`。
+
+#### 3. 改寫 `FileStorageService`
+
+將 `store()` 方法由寫入本地磁碟改為上傳至雲端，並回傳雲端公開 URL 或物件鍵值。
+
+```java
+// AWS S3 範例
+@Service
+public class FileStorageService {
+
+    private final S3Client s3Client;
+
+    @Value("${cloud.aws.s3.bucket}")
+    private String bucket;
+
+    public String store(MultipartFile file) throws IOException {
+        String key = "uploads/" + UUID.randomUUID() + getExtension(file);
+        s3Client.putObject(
+            PutObjectRequest.builder()
+                .bucket(bucket)
+                .key(key)
+                .contentType(file.getContentType())
+                .build(),
+            RequestBody.fromBytes(file.getBytes())
+        );
+        // 回傳公開 URL（需搭配 Bucket Policy 設為公開，或改用 presigned URL）
+        return "https://" + bucket + ".s3.amazonaws.com/" + key;
+    }
+
+    public Resource load(String filename) {
+        // 產生有效期限的 presigned URL 供前端下載
+        GetObjectPresignRequest req = GetObjectPresignRequest.builder()
+            .signatureDuration(Duration.ofMinutes(15))
+            .getObjectRequest(r -> r.bucket(bucket).key(filename))
+            .build();
+        return new UrlResource(s3Presigner.presignGetObject(req).url());
+    }
+}
+```
+
+#### 4. 調整靜態資源映射
+
+改用雲端後，`WebMvcConfig` 的 `/uploads/**` 本地映射可移除（前端直接存取雲端 URL）；但 `/api/chatMessage/download/{filename}` 端點若改為回傳 presigned URL 需同步修改前端取用邏輯。
+
+#### 5. 前端注意事項
+
+- `mediaUrl` 欄位原本儲存相對路徑（`uploads/<uuid>.<ext>`），改雲端後需儲存完整 URL 或物件鍵值，**需評估資料遷移計畫**。
+- Vite proxy 的 `/uploads/**` 代理規則可移除。
+- `StudentChat.js` / `TeacherChat.js` 中直接拼接 `/uploads/...` 的地方須改為使用 `mediaUrl` 回傳的完整 URL。
+
+#### 雲端方案比較
+
+| 方案 | 優點 | 注意事項 |
+|------|------|----------|
+| AWS S3 | 成熟、SDK 完整 | 需 IAM 權限設定；台灣延遲較高可選 ap-northeast-1（東京） |
+| Azure Blob | 與 Azure AD 整合方便 | 連線字串需妥善保管 |
+| GCP Cloud Storage | 與 GKE 整合佳 | 需啟用 Service Account |
+| Cloudflare R2 | S3 相容、無出流量費 | 台灣使用者友善 |
+
+---
+
 ## 14. 已知問題與 TODO
 
 > 以下為目前已知的前後端對齊缺口，接手開發時請特別注意：
