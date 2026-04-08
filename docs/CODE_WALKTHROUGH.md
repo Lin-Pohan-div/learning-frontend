@@ -80,14 +80,14 @@
 | `register.html` | `register.js` | 註冊頁 |
 | `registerV2.html` | `registerV2.js` | 註冊頁（含角色選擇） |
 | `explore.html` | `explore.js` | 瀏覽課程 |
-| `booking.html` | `booking.js` | 預約時段 |
+| `booking.html` | `bookingV3.js` | 預約時段（目前正式掛載版本） |
 | `become-tutor.html` | `become-tutor.js` | 申請成為老師 |
-| `credits-success.html` | — | ECPay 付款成功頁（靜態） |
+| `credits-success.html` | `student-layout.js` + `student-credits.js` | ECPay 付款成功頁（含回跳後狀態處理） |
 | **學生後台** | | |
 | `student-dashboard.html` | `student-layout.js` + `student-dashboard.js` | 學生儀表板 |
 | `student-courses.html` | `student-layout.js` + `student-courses.js` | 我的課程（含進入視訊教室） |
-| `student-my-courses.html` | `student-layout.js` + `student-courses.js` | 我的課程（另一入口） |
-| `student-learning-records.html` | `student-layout.js` + `lstudent-courses.js` | 學習記錄 |
+| `student-my-courses.html` | `student-layout.js` + 頁面內嵌 script | 我的課程（另一入口，非 `student-courses.js`） |
+| `student-learning-records.html` | `student-layout.js` + 頁面內嵌 script | 學習記錄（非 `lstudent-courses.js`） |
 | `student-credits.html` | `student-layout.js` + `student-credits.js` | 點數/儲值 |
 | `student-settings.html` | `student-layout.js` + `student-settings.js` | 帳號設定 |
 | `StudentChat.html` | `StudentChat.js` | 學生訊息中心 |
@@ -142,7 +142,7 @@
 
 ### 2.1 使用者角色與身份升級
 
-[Mermaid 原始檔](./docs/mermaid/code-walkthrough/2-1-user-role-upgrade.mmd)
+[Mermaid 原始檔](./mermaid/code-walkthrough/2-1-user-role-upgrade.mmd)
 
 平台以 **三角色** 設計：
 
@@ -158,13 +158,13 @@
 
 ### 2.2 課程預約完整流程
 
-[Mermaid 原始檔](./docs/mermaid/code-walkthrough/2-2-booking-flow.mmd)
+[Mermaid 原始檔](./mermaid/code-walkthrough/2-2-booking-flow.mmd)
 
 ```
 ① 學生在 explore.js 瀏覽課程
       GET /api/view/courses（含篩選：科目 / 週幾 / 時段 / 價格）
 
-② 進入 booking.js 選取時段
+② 進入 bookingV3.js（booking.html 目前掛載）選取時段
       GET /api/view/teacher_schedule/{tutorId} → 取得老師 7×13 可用矩陣
       → buildFourWeeksDates()：產生 4 週日期
       → 學生勾選 → lessonCount × unitPrice = 總金額
@@ -188,7 +188,7 @@
 
 ### 2.3 點數（Wallet）體系
 
-[Mermaid 原始檔](./docs/mermaid/code-walkthrough/2-3-wallet-flow.mmd)
+[Mermaid 原始檔](./mermaid/code-walkthrough/2-3-wallet-flow.mmd)
 
 平台以「點數」取代直接金流，所有交易都記錄於 `WalletLog`：
 
@@ -206,7 +206,7 @@
 
 ### 2.4 即時通訊架構
 
-[Mermaid 原始檔](./docs/mermaid/code-walkthrough/2-4-chat-architecture.mmd)
+[Mermaid 原始檔](./mermaid/code-walkthrough/2-4-chat-architecture.mmd)
 
 平台同時支援 **HTTP REST**（持久化訊息）與 **WebSocket STOMP**（即時推播）：
 
@@ -236,12 +236,12 @@ WebSocket STOMP
 
 ### 2.5 視訊課（WebRTC）信令流程
 
-[Mermaid 原始檔：時序圖](./docs/mermaid/code-walkthrough/2-5-webrtc-signaling-sequence.mmd)
+[Mermaid 原始檔：時序圖](./mermaid/code-walkthrough/2-5-webrtc-signaling-sequence.mmd)
 
-[Mermaid 原始檔：流程圖](./docs/mermaid/code-walkthrough/2-5-webrtc-signaling-flow.mmd)
+[Mermaid 原始檔：流程圖](./mermaid/code-walkthrough/2-5-webrtc-signaling-flow.mmd)
 
 ```
-老師進入房間（Offerer）            學生進入房間（Answerer）
+學生進入房間（Offerer）            老師進入房間（Answerer）
        ↓                                    ↓
   getUserMedia()                      getUserMedia()
   createOffer()                              ↓
@@ -260,7 +260,7 @@ ICE Server：Google STUN + OpenRelay TURN（確保不同網路環境下均可連
 
 ### 2.6 動態課程搜尋（CourseSpec）
 
-[Mermaid 原始檔](./docs/mermaid/code-walkthrough/2-6-course-spec-flow.mmd)
+[Mermaid 原始檔](./mermaid/code-walkthrough/2-6-course-spec-flow.mmd)
 
 `CourseSpec.java` 使用 **JPA Specification** 動態組合 WHERE 條件，支援：
 
@@ -274,7 +274,7 @@ ICE Server：Google STUN + OpenRelay TURN（確保不同網路環境下均可連
 
 ### 2.7 老師審核狀態機
 
-[Mermaid 原始檔](./docs/mermaid/code-walkthrough/2-7-tutor-review-state.mmd)
+[Mermaid 原始檔](./mermaid/code-walkthrough/2-7-tutor-review-state.mmd)
 
 ```
 申請（status=1）
@@ -288,7 +288,7 @@ ICE Server：Google STUN + OpenRelay TURN（確保不同網路環境下均可連
 
 ### 2.8 安全性設計重點
 
-[Mermaid 原始檔](./docs/mermaid/code-walkthrough/2-8-security-flow.mmd)
+[Mermaid 原始檔](./mermaid/code-walkthrough/2-8-security-flow.mmd)
 
 | 機制 | 實作位置 | 說明 |
 |------|----------|------|
@@ -381,6 +381,8 @@ ADMIN ：/api/admin/**
 ```
 POST /api/auth/registerV2（含角色 radio 選擇）
 ```
+
+> ⚠️ 目前 `registerV2.js` 內 `API_BASE_URL` 為硬編碼 `http://localhost:8080/api`，與其他頁面共用 `navbar.js` 的 `/api` 設定不同；切換環境時需一併調整。
 
 #### `navbar.js`（全站共用）
 
@@ -519,16 +521,48 @@ Controller 方法執行
 
 ### 後端
 
-> ⚠️ **注意**：前端 `become-tutor.js` 呼叫 `POST /api/tutor/become`，`navbar.js` 呼叫 `GET /api/tutor/application/status`，但後端目前**尚無對應 Controller 實作**。老師審核功能由 `AdminController.java` 提供部分端點。
+老師申請流程由 `TutorApplicationController` 負責（學生端入口），審核作業則由 `AdminTutorController` 負責（管理員端）。
 
-#### Controller — `controller/AdminController.java`（路由：`/api/admin`，需 ADMIN 角色）
+#### Controller — `controller/TutorApplicationController.java`（路由：`/api/tutor`，需登入）
 
 | 方法 | 路徑 | 說明 |
 |------|------|------|
-| GET | `/api/admin/users` | 查詢所有用戶 |
-| GET | `/api/admin/tutors/pending` | 查詢待審核教師（status=1） |
-| PATCH | `/api/admin/tutors/{id}/approve` | 核准教師（status→2） |
-| PATCH | `/api/admin/tutors/{id}/suspend` | 停權教師（status→3） |
+| POST | `/api/tutor/become` | 申請成為老師：將 `User.role` 升為 TUTOR，並建立 `Tutor` 記錄（`status=1` 待審） |
+| GET | `/api/tutor/application/status` | 查詢自己的申請狀態（回傳 `{status: 1\|2\|3}`，無紀錄回 404） |
+
+#### Controller — `controller/AdminTutorController.java`（路由：`/api/admin/tutors`，需 ADMIN 角色）
+
+| 方法 | 路徑 | 說明 |
+|------|------|------|
+| GET | `/api/admin/tutors` | 全部老師（所有狀態） |
+| GET | `/api/admin/tutors/pending` | 待審核（status=1） |
+| GET | `/api/admin/tutors/qualified` | 已核准（status=2） |
+| GET | `/api/admin/tutors/suspended` | 停權（status=3） |
+| GET | `/api/admin/tutors/{tutorId}` | 單一老師詳細資料 |
+| GET | `/api/admin/tutors/counts` | 各狀態老師的數量統計 |
+| PATCH | `/api/admin/tutors/{tutorId}/status` | 執行審核（body: `{status: 2\|3}`） |
+
+#### Services
+
+- **`TutorApplicationService`**
+  - `void becomeTutor(Long userId, BecomeTutorReq req)` — 升級 User.role=TUTOR、建立 Tutor 記錄（含 title / intro / education / experience1-2 / certificateName1-2）
+  - `Integer getApplicationStatus(Long userId)` — 回傳申請狀態（1/2/3 或 null）
+- **`AdminTutorService`**
+  - `getAllTutors() / getPendingTutors() / getQualifiedTutors() / getSuspendedTutors()` — 各狀態的老師清單
+  - `getTutorReview(Long tutorId)` — 單一老師詳細資料
+  - `Map<String,Object> updateStatus(Long tutorId, Integer newStatus)` — 執行審核轉換並驗證合法性
+  - `TutorReviewCountDTO getCounts()` — 各狀態統計
+
+#### 狀態轉換規則（`AdminTutorService.validateStatusTransition`）
+
+```
+待審核(1) → 核准(2) 或 停權(3)
+已核准(2) → 停權(3)
+停權(3)   → 核准(2)
+不允許轉換成相同狀態
+```
+
+> ⚠️ 審核通過時（→2）會同步把 `User.role` 設為 TUTOR；停權時（→3）會把 `User.role` 改回 STUDENT。
 
 #### Entity — `entity/Tutor.java`
 
@@ -580,9 +614,12 @@ GET /api/tutor/application/status
 #### `admin-dashboard.js`（老師審核 tab）
 
 ```
-GET /api/admin/tutors/pending → 渲染待審清單
-點擊老師 → GET /api/admin/tutors/{id} → 顯示詳情 Modal
-管理員核准/拒絕 → PATCH /api/admin/tutors/{id}/status
+GET /api/admin/tutors/pending    → 渲染待審清單
+GET /api/admin/tutors/qualified  → 已核准清單
+GET /api/admin/tutors/suspended  → 已停權清單
+GET /api/admin/tutors/counts     → 各狀態數字
+點擊老師 → GET /api/admin/tutors/{tutorId} → 顯示詳情 Modal
+管理員核准/拒絕/停權 → PATCH /api/admin/tutors/{tutorId}/status（body: {status: 2|3}）
 ```
 
 ---
@@ -608,13 +645,15 @@ navbar 定期或登入時
 ### 🚀 新人上手指南
 
 **優先閱讀**
-1. `controller/AdminController.java` — 目前唯一的後端審核端點
-2. `assets/js/become-tutor.js` — 前端申請流程
-3. `assets/js/admin-dashboard.js` — 管理員審核 UI
+1. `controller/TutorApplicationController.java` + `service/TutorApplicationService.java` — 老師申請與狀態查詢
+2. `controller/AdminTutorController.java` + `service/AdminTutorService.java` — 管理員審核流程與狀態機
+3. `assets/js/become-tutor.js` — 前端申請流程
+4. `assets/js/admin-dashboard.js` — 管理員審核 UI
 
 **常見踩坑點**
-- ⚠️ **重要**：前端 `become-tutor.js` 呼叫的 `POST /api/tutor/become` 和 `navbar.js` 呼叫的 `GET /api/tutor/application/status` 在後端尚無實作
-- ⚠️ `admin-dashboard.js` 呼叫了多個不存在的後端 API（`/api/admin/dashboard`、`/api/admin/tutors/counts`），這些是前端已做但後端未跟上的部分
+- ⚠️ 申請即立刻把 `User.role` 升為 TUTOR（`TutorApplicationService.becomeTutor`），但仍須以 `Tutor.status` 判斷是否真有開課資格——`navbar.js` 應依 `/api/tutor/application/status` 顯示「審核中／老師後台／已停權」
+- ⚠️ 狀態轉換有規則限制（見 `validateStatusTransition`）：例如已核准(2) 不能直接退回待審核(1)，會被丟 `IllegalArgumentException`
+- ⚠️ 停權（→3）時 Service 會把 `User.role` 改回 STUDENT；若前端 JWT 已快取舊角色，需提示重新登入
 
 ---
 
@@ -728,7 +767,9 @@ GET /api/tutor/me/courses → 顯示老師自己的課程清單
 → 顯示：total / done / leave / remaining 課堂數
 ```
 
-#### `booking.js`（預約時段選擇）
+#### `bookingV3.js`（預約時段選擇，booking.html 目前掛載）
+
+> ℹ️ `booking.js`、`bookingV2.js`、`bookingV4.js` 仍存在於 repo，屬於舊版或備選流程。
 
 ```
 GET /api/view/courses → 課程名稱、價格
@@ -855,8 +896,9 @@ GET /api/view/teacher_schedule/{tutorId} → 老師可用時段
 | 方法 | 路徑 | 說明 |
 |------|------|------|
 | GET | `/api/shop/course/{courseId}/futurebookings` | 老師未來可預約時段 |
+| GET | `/api/shop/trial/eligible` | 學生是否還有體驗課資格（由 JWT 取得 studentId） |
 | GET | `/api/shop/me/futurebookings` | 學生已選的未來時段 |
-| POST | `/api/shop/purchase` | 購買課程並建立訂單+預約 |
+| POST | `/api/shop/purchase` | 購買課程並建立訂單+預約（由 JWT 取得 studentId/role） |
 
 #### Controller — `controller/BookingController.java`（路由：`/api/bookings`）
 
@@ -869,54 +911,27 @@ GET /api/view/teacher_schedule/{tutorId} → 老師可用時段
 
 | 方法 | 路徑 | 說明 |
 |------|------|------|
-| POST | `/api/ecpay/pay` | 初始化 ECPay 付款（回傳 HTML form） |
-| POST | `/api/ecpay/return` | ECPay 付款完成 callback（更新錢包） |
+| POST | `/api/ecpay/pay` | 初始化 ECPay 付款（回傳自動 submit 的 HTML form） |
+| POST | `/api/ecpay/return` | ECPay 付款完成 callback（驗證 CheckMacValue 後 → `WalletLogsService.processWalletDeposit`） |
+| POST | `/api/ecpay/simulate` | 開發環境用：模擬入帳（直接呼叫 `processWalletDeposit`） |
+| GET | `/api/ecpay/wallet/byTradeNo` | 依 `merchantTradeNo` 查 WalletLog |
+
+> ℹ️ 沒有獨立的 `/api/orders` 或 `/api/wallet` 控制器：訂單在 `/api/shop/purchase` 內一次寫入；錢包餘額在 `MeController` `GET /api/users/me` 取得；錢包流水帳由 `MeController` `GET /api/users/wallet-logs` 提供。
 
 #### Services
 
 - **`CheckoutService`**
-  - `List<Slot> getTutorFutureBookings(Long courseId)` — 篩選老師排程中未被預約的未來時段
-  - `String processPurchase(CheckoutReq req, Long studentId, UserRole role)` — 扣除學生點數、建立 Order + Booking 記錄
+  - `boolean isTrialEligible(Long studentId)` — 是否有過體驗課（`existsByUserIdAndIsExperiencedTrue`）
+  - `List<CheckoutReq.Slot> getTutorFutureBookings(Long courseId)` — 篩選老師排程中未被預約的未來時段
+  - `List<CheckoutReq.Slot> getStudentFutureBookings(Long studentId)` — 學生已預約的未來時段
+  - `String processPurchase(CheckoutReq req, Long studentId, UserRole role)` — 扣除學生點數、建立 Order + Booking、寫 WalletLog、寄發 Email
 - **`BookingService`**
-  - `Booking createBooking(...)` — 新增預約（slotLocked=true 防止重複預約）
+  - `Booking createBooking(...)` — 新增預約（`slotLocked=true` 防止重複預約）
   - `boolean updateStatus(Long id, Integer status)`
+  - `List<BookingDTO> getTutorBookings(Long tutorId)`
 - **`WalletLogsService`**
-  - `void processWalletDeposit(EcpayReturnDto dto)` — ECPay callback 後增加使用者點數，並記錄交易
-
-#### Controller — `controller/OrderController.java`（路由：`/api/orders`）
-
-| 方法 | 路徑 | 說明 |
-|------|------|------|
-| POST | `/api/orders` | 新增訂單 |
-| PUT | `/api/orders/{id}` | 修改訂單（lessonCount / lessonUsed） |
-| GET | `/api/orders/{id}` | 查詢單一訂單 |
-| GET | `/api/orders/user/{userId}` | 查詢使用者所有訂單 |
-| PATCH | `/api/orders/{id}/status` | 更新訂單狀態（pending→deal→complete） |
-| DELETE | `/api/orders/{id}` | 取消訂單（僅限 pending 狀態） |
-
-#### Controller — `controller/WalletController.java`（路由：`/api/wallet`）
-
-| 方法 | 路徑 | 說明 |
-|------|------|------|
-| POST | `/api/wallet/topup` | 儲值（body: `{userId, amount}`） |
-| POST | `/api/wallet/withdraw` | 提領至銀行帳戶（教師專用，body: `{tutorId, amount}`） |
-| GET | `/api/wallet/logs/{userId}` | 查詢交易紀錄 |
-
-#### Services
-
-- **`OrderService`**
-  - `boolean createOrder(OrderDto.Req)` — 新增訂單
-  - `boolean updateOrder(Long id, OrderDto.UpdateReq)` — 更新堂數
-  - `OrderDto.Resp getOrderById(Long)` — 查詢訂單
-  - `List<OrderDto.Resp> getOrdersByUserId(Long)` — 查詢使用者訂單
-  - `boolean updateStatus(Long id, OrderDto.StatusReq)` — 狀態遞進（不可回退）
-  - `boolean cancelOrder(Long id)` — 取消 pending 訂單
-- **`WalletService`**
-  - `String topUp(Long userId, long amount)` — 儲值（type=1）
-  - `String withdraw(Long tutorId, long amount)` — 提領（type=5，需有銀行帳戶）
-  - `void credit(Long userId, long amount, int txType, int relatedType, Long relatedId)` — 增加餘額
-  - `void debit(Long userId, long amount, int txType, int relatedType, Long relatedId)` — 扣除餘額
-  - `List<WalletLog> getLogs(Long userId)` — 查詢交易記錄
+  - `void processWalletDeposit(EcpayReturnDto dto)` — ECPay callback 後依儲值方案（1500/3000/5000）加碼贈點，更新 `User.wallet` 並寫 WalletLog
+  - `List<WalletLog> getLogsByUserId(Long userId)` — 取得使用者錢包流水（給 `MeController` 用）
 
 #### EcpayUtil — `util/EcpayUtil.java`
 
@@ -977,9 +992,9 @@ GET /api/view/teacher_schedule/{tutorId} → 老師可用時段
 
 ### 前端
 
-#### `booking.js`（預約頁）
+#### `bookingV3.js`（預約頁，當前掛載）
 
-> ℹ️ 另有 `bookingV2.js`、`bookingV3.js`、`bookingV4.js` 為預約流程的迭代/備選版本，結構類似但 UI 不同（V3/V4 為 Grid 版本）。主要使用 `booking.js`。
+> ℹ️ 另有 `booking.js`、`bookingV2.js`、`bookingV4.js` 為預約流程的迭代/備選版本，結構類似但 UI 不同（V3/V4 為 Grid 版本）。`booking.html` 目前使用 `bookingV3.js`。
 
 ```
 URL params: tutorId, courseId
@@ -1048,7 +1063,7 @@ Promise.all([
 
 ```
 [student-credits 確認餘額] ─── 點數足夠 ───→
-[booking.js 選時段] → POST /api/shop/purchase {
+[bookingV3.js 選時段] → POST /api/shop/purchase {
     courseId, lessonCount, slots: [{date, hour}, ...]
 }
     ↓
@@ -1066,7 +1081,7 @@ Promise.all([
 
 **優先閱讀**
 1. `controller/CheckoutController.java` + `service/CheckoutService.java` — 購課核心流程
-2. `assets/js/booking.js` — 前端預約選時段邏輯
+2. `assets/js/bookingV3.js` — 前端預約選時段邏輯（目前頁面掛載）
 3. `controller/WalletController.java` + `service/WalletService.java` — 錢包操作
 
 **常見踩坑點**
@@ -1157,15 +1172,16 @@ Promise.all([
 → setGreeting()：依時段顯示早安/午安/晚安
 ```
 
-#### `lstudent-courses.js`（學習記錄）
+#### `student-learning-records.html` 內嵌 script（學習記錄）
 
 ```
 對應頁面：student-learning-records.html
-GET /api/courses/me → 取得學生所有預約
-GET /api/reviews/user/{userId} → 取得學生所有評論（建立 reviewMap）
-→ Tab 切換：upcoming / completed / cancelled
-→ 邏輯與 student-courses.js 幾乎相同，為學習記錄頁的獨立版本
+GET /api/courses/me → 取得學生課程紀錄
+→ 彙總統計（總堂數 / 已完成 / 已取消 / 學習時數）
+→ 依課程狀態渲染紀錄卡片
 ```
+
+> ℹ️ `lstudent-courses.js` 目前在 repo 中仍存在，但未被 `student-learning-records.html` 掛載。
 
 #### `student-courses.js`（我的課程）
 
@@ -1206,7 +1222,7 @@ enterVideoRoom(bookingId, btn)：
 2. `assets/js/student-courses.js` — 我的課程頁面邏輯（含進入視訊教室）
 
 **常見踩坑點**
-- ⚠️ `lstudent-courses.js` 與 `student-courses.js` 邏輯幾乎相同但為獨立檔案，修改時需同步
+- ⚠️ `student-my-courses.html` 與 `student-learning-records.html` 目前使用頁面內嵌 script，不是掛載 `student-courses.js` / `lstudent-courses.js`
 - ⚠️ `enterVideoRoom()` 會先驗證 booking 歸屬再導向視訊頁面，API 錯誤時仍允許進入（由 video-room.js 二次驗證）
 
 ---
@@ -1647,13 +1663,13 @@ WebSocket 連線（connectWebSocket / subscribeBooking）：
 
 ### 訊息模組架構圖
 
-[Mermaid 原始檔](./docs/mermaid/code-walkthrough/11-chat-architecture.mmd)
+[Mermaid 原始檔](./mermaid/code-walkthrough/11-chat-architecture.mmd)
 
 ---
 
 ### 訊息模組流程圖
 
-[Mermaid 原始檔](./docs/mermaid/code-walkthrough/11-chat-flow.mmd)
+[Mermaid 原始檔](./mermaid/code-walkthrough/11-chat-flow.mmd)
 
 ---
 
@@ -1676,7 +1692,7 @@ STOMP 訊息端點（前綴 `/app`，後端呼叫）：
 | 路徑 | 說明 |
 |------|------|
 | `/app/signal/{bookingId}` | WebRTC 信令（offer / answer / candidate） |
-| `/app/chat/{bookingId}` | 課中聊天（持久化 + broadcast 到 `/topic/chat/{bookingId}`） |
+| `/app/chat/{bookingId}` | 課中聊天（持久化 + broadcast 到 `/topic/room/{bookingId}/chat`） |
 | `/app/event/{bookingId}` | 進出房間事件（joined / left） |
 
 #### REST Controller — `controller/ChatAndVideoController/RoomRestController.java`（路由：`/api/room`）
@@ -1789,9 +1805,8 @@ publishEvent('joined')
 
 ```
 角色分工：
-→ 學生（Answerer）接收到 peer joined 事件後呼叫 initiateCallIfCaller()
-→ 老師（Offerer 角色在此實作中由學生發起 offer，老師回 answer）
-   → 實際上：學生 = Offerer，老師 = Answerer（ICE candidates）
+→ 學生（Offerer）接收到 peer joined 事件後呼叫 initiateCallIfCaller()
+→ 老師（Answerer）收到 offer 後回傳 answer
 
 onRoomEvent('joined')：
 → peerReady = true
